@@ -18,7 +18,7 @@ Solo freelance designer working with multiple clients, using this as a personal 
 
 ## Product Principles
 
-See [CLAUDE.md](CLAUDE.md) for philosophy, UX rules, and development rules that every feature must satisfy.
+See [../CLAUDE.md](../CLAUDE.md) for philosophy, UX rules, and development rules that every feature must satisfy.
 
 ## MVP Goal
 
