@@ -1,64 +1,65 @@
 # Features — Designer Workspace
 
-Grouped by module. Each item tagged `MVP` or `Later` (see [ROADMAP.md](ROADMAP.md)).
+Grouped by module. All items below are MVP — this scope is intentionally small and flat, see [ROADMAP.md](ROADMAP.md) for build order.
 
-## Auth — `MVP`
+## Dashboard
 
-- Sign up / log in / log out (Supabase Auth, email+password)
-- Personal workspace auto-created on first sign-up
+Purpose: quick overview of the workspace.
 
-## Projects — `MVP`
+Content:
+- Recent Projects
+- Recent Inspiration
+- Recent Notes
+- Quick Actions ("Create New...")
 
-- Create / edit / delete a project
-- Fields: name, status, deadline, linked client, description
-- Status values: active, on hold, completed, archived
-- Project detail view aggregates its tasks, notes, attachments
+No analytics, charts, statistics, or widgets.
 
-## Clients — `MVP`
+## Projects
 
-- Create / edit / delete a client
-- Fields: name, email, contact info, free-text notes
-- Client detail view lists all their projects
+Fields: Title, Cover Image, Description, Status, Tags, External Links (Figma, GitHub, Demo, etc.), Notes, optional lightweight Attachments.
 
-## Tasks — `MVP`
+Features: Create, Edit, Delete, Search (matches title, description, notes, tags).
 
-- Add / toggle done / delete a task within a project
-- Manual reordering
-- Simple checklist UI, not a full kanban/board (per "avoid unnecessary features")
+No deadlines, calendars, or project management features.
 
-## Notes — `MVP`
+## Inspiration
 
-- One free-text note area per project (not multiple notes v1)
-- Autosave on edit
+Fields: Title, URL, Cover Image/Preview, Tags, Notes, optional lightweight Attachments.
 
-## Attachments — `MVP`
+Features: Create, Edit, Delete, Search (matches title, notes, tags).
 
-- Add a link (URL + label) — e.g. pointing at Figma/Drive
-- Upload a small file (brief, screenshot, PDF) — size-limited, stored in Supabase Storage
-- List view per project, delete individual attachments
+## Notes
 
-## Dashboard — `Later (Phase 2)`
+Fields: Title, Text.
 
-- Overview of all projects across the workspace
-- Group/sort by status and upcoming deadline
-- Entry point / primary action always visible (per UX rules)
+Features: Create, Edit, Delete, Search (matches title, text).
 
-## Search & Filter — `Later (Phase 2)`
+No folders, markdown editor, formatting tools, or attachments.
 
-- Search projects and clients by name
-- Filter project list by status, client, deadline range
+## Resources
 
-## Polish — `Later (Phase 3)`
+Fields: Title, URL, Short Description, Tags.
 
-- Empty states with a clear next action for every list (no projects yet, no tasks yet, etc.)
-- Intentional loading and error states (not generic spinners)
-- Keyboard shortcuts for: new project, new task, focus search
-- Full responsive + accessibility pass
+Features: Create, Edit, Delete, Search (matches title, description, tags).
 
-## Deferred beyond MVP — `Later (Phase 4)`
+No fixed categories — tags are used for organization instead.
 
-- Team workspaces, invites, member roles (enabled by `workspace_members`, see [DATABASE.md](DATABASE.md))
-- Project templates (Logo, Brand Book, Web Design, ...)
-- Deadline reminders/notifications
-- Figma/Drive API integrations (live previews instead of manual links)
-- Premium tier / monetization
+## Search
+
+Local search inside each module only. No global search.
+
+## Tags
+
+Supported only in Projects, Inspiration, Resources. Used for organization; automatically included in each module's search. No separate tag-filtering UI.
+
+## File Handling
+
+Link-first: external links are the primary way of storing resources. Optional lightweight attachments (PNG, JPG, WEBP, SVG, small PDF) supported only for additional context, only on Projects and Inspiration. Not a file storage service.
+
+## Authentication
+
+None. Single-user application, no login.
+
+## Excluded from MVP
+
+Multi-user support, teams or workspaces, roles and permissions, authentication, payments or subscriptions, global search, favorites, advanced filtering, light theme, deadlines, calendar, CRM features, time tracking, analytics, drag & drop, full file storage, real-time collaboration.

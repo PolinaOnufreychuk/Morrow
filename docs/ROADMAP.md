@@ -5,36 +5,31 @@ Phases are sequential. Do not start a phase until the previous one works end-to-
 ## Phase 0 — Setup
 
 - Repo scaffold: Vite + React + TypeScript + Tailwind + shadcn/ui
-- Supabase project: Auth (email/password) + Postgres + Storage bucket
+- Supabase project: Postgres + Storage bucket (no Auth — single-user app)
 - Base layout, routing (React Router), design tokens/theme
-- Deployed skeleton (empty dashboard behind login)
+- Deployed skeleton (empty dashboard)
 
 ## Phase 1 — Core CRUD (the actual product)
 
-- Auth: sign up / log in / log out; personal workspace auto-created per user
-- Clients: create/edit/delete, list
-- Projects: create/edit/delete, status, deadline, linked client
-- Tasks: checklist per project (add/toggle/delete/reorder)
-- Notes: free-text notes per project
-- Attachments: add a link OR upload a small file (brief, screenshot, PDF) per project
+- Projects: create/edit/delete, search; fields per [FEATURES.md](FEATURES.md)
+- Inspiration: create/edit/delete, search
+- Notes: create/edit/delete, search
+- Resources: create/edit/delete, search
+- Attachments: optional lightweight file upload (PNG/JPG/WEBP/SVG/small PDF) on Projects and Inspiration only
 
-## Phase 2 — Dashboard & Findability
+## Phase 2 — Dashboard
 
-- Dashboard: overview of all projects, grouped/sorted by status and upcoming deadline
-- Search: across projects and clients
-- Filters: by status, by client, by deadline range
+- Recent Projects, Recent Inspiration, Recent Notes
+- Quick Actions ("Create New...")
+- No analytics, charts, statistics, or widgets
 
 ## Phase 3 — Polish (per UX rules in CLAUDE.md)
 
-- Empty states for every list (guide toward next action)
+- Empty states with a clear next action for every list
 - Loading and error states designed intentionally (no generic spinners/blank screens)
-- Keyboard shortcuts for high-frequency actions (new project, new task, search)
+- Keyboard shortcuts for high-frequency actions (new project, new note, focus search)
 - Responsive pass, accessibility pass
 
-## Phase 4 — Post-MVP (not started until MVP is validated)
+## Not Planned
 
-- Multi-user workspaces & team collaboration (enabled by `workspaces`/`workspace_members` tables already in [DATABASE.md](DATABASE.md))
-- Project templates (e.g. "Logo", "Brand Book", "Web Design")
-- Deadline notifications/reminders
-- Figma/Drive API integrations (auto-preview instead of manual links)
-- Monetization/premium tier — architecture allows it, MVP does not implement it
+The MVP scope update explicitly excludes the following — they are not deferred to a later phase, they are simply out of scope: multi-user/teams/roles, authentication, payments/subscriptions, global search, favorites, advanced filtering, light theme, deadlines/calendar, CRM features, time tracking, analytics, drag & drop, full file storage, real-time collaboration.
