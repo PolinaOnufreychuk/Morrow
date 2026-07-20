@@ -37,23 +37,38 @@ Individual images within a board — supports the fullscreen viewer's navigation
 - `created_at` (timestamptz)
 
 ### notes
-Typed content — see [FEATURES.md](FEATURES.md) for the 8 visual types.
+Typed content — see [FEATURES.md](FEATURES.md) for the 10 visual types. `type` determines which of the type-specific columns are populated; all are nullable and unused columns stay `NULL` for a given type.
 - `id` (uuid, PK)
-- `type` (text enum: `'text'` | `'todo'` | `'checklist'` | `'idea'` | `'meeting'` | `'research'` | `'code'` | `'bookmark'`)
+- `type` (text enum: `'text'` | `'checklist'` | `'bookmark'` | `'image'` | `'moodboard'` | `'code'` | `'quote'` | `'recipe'` | `'pdf'` | `'meeting'`)
 - `title` (text)
-- `content` (text, nullable — used by `text`, `idea`, `meeting`, `research`, `code`)
-- `items` (jsonb, nullable — array of `{ text: string, done: boolean }`, used by `todo`, `checklist`)
+- `body` (text, nullable — used by `text`)
+- `items` (jsonb, nullable — array of `{ text: string, done: boolean }`, used by `checklist`)
 - `url` (text, nullable — used by `bookmark`)
+- `favicon_url` (text, nullable), `domain` (text, nullable), `snippet` (text, nullable) — used by `bookmark`
+- `cover_image_url` (text, nullable — used by `image`)
+- `images` (text[], nullable — exactly 4 image URLs, used by `moodboard`)
+- `language` (text, nullable), `code` (text, nullable) — used by `code`
+- `quote` (text, nullable), `author` (text, nullable) — used by `quote`
+- `ingredients` (text[], nullable — used by `recipe`)
+- `filename` (text, nullable), `page_count` (int, nullable) — used by `pdf`
+- `attendees` (jsonb, nullable — array of `{ name: string, avatar_url: string|null }`), `agenda` (text[], nullable) — used by `meeting`
 - `project_id` (uuid, FK → projects.id, nullable — lets a note appear embedded on a Project Details page)
 - `is_archived` (boolean, default `false`)
 - `created_at`, `updated_at` (timestamptz)
 
 ### resources
+`kind` determines which of the type-specific columns are populated.
 - `id` (uuid, PK)
+- `kind` (text enum: `'link'` | `'repo'` | `'video'` | `'pdf'` | `'preview'` | `'image'`)
 - `title` (text)
 - `url` (text)
 - `description` (text, nullable)
 - `tags` (text[], default `{}`)
+- `owner` (text, nullable), `repo_name` (text, nullable), `language` (text, nullable), `stars` (int, nullable) — used by `repo`
+- `thumbnail_url` (text, nullable), `duration` (text, nullable) — used by `video`
+- `filename` (text, nullable) — used by `pdf`
+- `preview_image_url` (text, nullable), `is_figma` (boolean, default `false`) — used by `preview`
+- `cover_image_url` (text, nullable) — used by `image`
 - `project_id` (uuid, FK → projects.id, nullable — lets a resource appear embedded on a Project Details page)
 - `is_archived` (boolean, default `false`)
 - `created_at`, `updated_at` (timestamptz)
@@ -89,7 +104,7 @@ No RLS / auth-based access control — the app uses the Supabase anon key direct
 Local, per-module only — no global search or cross-table index. Use Postgres trigram/full-text indexes scoped to each table's searchable columns:
 - `projects`: `title`, `description`, `notes`, `tags`
 - `inspiration_boards`: `title`, `notes`, `tags`
-- `notes`: `title`, `content` (where applicable)
+- `notes`: `title`, plus whichever of `body`/`snippet`/`quote`/`ingredients`/`agenda` applies to the row's `type`
 - `resources`: `title`, `description`, `tags`
 
 ## Storage

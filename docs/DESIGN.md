@@ -24,12 +24,48 @@ This is the finalized visual/interaction rulebook. Treat it as source of truth f
 - The platform has branded greens, warm backgrounds, and visual depth — avoid overusing neutral gray UI.
 - Use illustrations, photography, and color intentionally. The interface should never feel flat or overly corporate.
 
+## Design Tokens (exact values)
+
+Extracted from the approved hi-fi export (`designer-workspace-wireframes/project/Dashboard.dc.html` + its design-system bundle). These are the literal values `tailwind.config.ts` and `src/design-system/tokens/*.css` must encode — this section supersedes any general color/spacing prose elsewhere in this file if the two ever disagree.
+
+**Radius family** (law — no pill/fully-rounded controls anywhere except tiny status dots and progress bars): cards `20px`; card inner images `14px` (`10px` in the sidebar-pinned variant); search field `16px`; buttons/CTAs `12–14px`; tab container `13px` / tab buttons `9px`; small chips/badges `8px`; nav items `13px`; avatar tile `12px`.
+
+**Colors** (base palette from the design-system token file, with the hi-fi build's page-level overrides applied — the overrides win):
+```
+sage-100 #EEF1EA   sage-200 #D3DAA7   sage-300 #B4C09C   sage-400 #8FA987
+sage-500 #748C5A   sage-600 #6B8C6D   sage-700 #557057   sage-900 #2F4635
+blush-100 #FBF0F0  blush-200 #EFC7CF  blush-300 #DAB0BC  blush-400 #D8A5A1  blush-600 #BF6968
+cream-50 #FBFAF8   cream-100 #F2F2F2  cream-200 #EEEAE6
+warm-300 #CAC9C7   warm-500 #9A9793
+ink-700 #4A4B45    ink-900 #242621
+
+surface-page = cream-50        surface-card = #FFFFFF        surface-dark = sage-900
+text-primary = ink-900
+text-secondary = #4B473E   (override — base token was ink-700 #4A4B45; the hi-fi build darkens it for contrast, use the override)
+text-tertiary  = #6E695F   (override — base token was warm-500 #9A9793)
+border-subtle  = rgba(36,38,33,.09)   (override — base token was a color-mix())
+border-default = warm-300
+brand-primary = sage-600 · brand-primary-hover = sage-700 · accent-coral = blush-600
+focus-ring = color-mix(in oklch, sage-600 55%, transparent)
+```
+Primary CTA is always `sage-900 #2F4635`. Interface stays mostly neutral; imagery is the main color source; blush/coral accents are sparse.
+
+**Typography**: display font is **Canela** (Thin 200 / Light 300, + italics only — no regular/medium/bold faces exist), used only for large headlines and rare italic accent moments. UI/body font is **Helvetica Neue Cyr** (not Satoshi — Satoshi was superseded by explicit decision during the hi-fi pass), loaded from `.woff2` files, weights 300/400/500/700 + italics. Body stack: `'HelveticaNeueCyr','Helvetica Neue',Helvetica,sans-serif`. UI weights are 400/500 only; 700 is reserved for tiny uppercase eyebrow labels (`10.5px`, `700`, letter-spacing `.12–.13em`, uppercase). Headings use `text-wrap:balance/pretty` to avoid widows.
+
+**Spacing scale**: `4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64 · 80 · 96 · 128px`.
+
+**Glassmorphism** (every floating surface is translucent glass over the photographic/warm background): sidebar `rgba(247,246,243,.52)` + `blur(28px) saturate(1.25)`; cards `rgba(255,255,255,.55–.6)` + `blur(16–20px)`; search/tabs/sort controls `~.42–.55` white + blur. Borders: `1px rgba(255,255,255,.5–.65)` only — never dark outlines. Inner top highlight: `inset 0 1px 0 rgba(255,255,255,.55–.6)`. Shadows: soft, warm, layered — `0 16px 40px -18px hsl(30 25% 20% / .16)`, deepening on hover to `0 26px 56px -18px hsl(30 25% 20% / .2)` — never heavy or pure black. Blur applies only inside panels; a background photo itself is never blurred.
+
+**Motion**: `ease-breath: cubic-bezier(.34,.02,.28,1)` (panel/width transitions), `ease-out: cubic-bezier(.16,1,.3,1)` (hover/press). Durations: `160ms` fast, `360ms` medium, `720ms` slow. Hover = opacity/fill increase + 1px lift (`translateY(-1px)` on controls, `-3px` on cards) — never bounce, never color inversion.
+
+**One real responsive breakpoint**: `1180px` — below it, masonry grids drop from 3 to 2 columns. This is a desktop-first product; no dedicated mobile/tablet layout is in scope for MVP.
+
 ## Buttons
 
 - One consistent system across the whole platform.
-- **Primary CTA**: dark green, same color everywhere, same corner radius everywhere.
+- **Primary CTA**: dark green (`sage-900 #2F4635`), same color everywhere, same corner radius everywhere.
 - **Secondary buttons**: subtle, neutral, never compete visually with the primary CTA.
-- Buttons are never fully rounded — all controls use rounded rectangles with a consistent corner radius.
+- Buttons are never fully rounded — all controls use rounded rectangles with a consistent corner radius (see Design Tokens above).
 
 ## Modals
 

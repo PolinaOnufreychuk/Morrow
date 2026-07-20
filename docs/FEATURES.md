@@ -39,28 +39,37 @@ Board cards always preserve their visual identity — never downgraded to a plai
 
 ## Notes
 
-Notes are designed around 8 visual content types, picked via a visual (icon/preview-driven) type picker at creation — not a plain text-only list:
+Notes are designed around 10 visual content types, picked via a visual (icon/preview-driven) type picker at creation — not a plain text-only list:
 
-- 📝 Text Note
-- ✅ To-Do List
-- ☑️ Checklist
-- 💡 Idea
-- 🎯 Meeting Notes
-- 📚 Research Notes
-- 💻 Code Snippet
-- 🔗 Bookmark
+- Text — free-text body
+- Checklist — checkable items list
+- Bookmark — URL + favicon + domain + snippet
+- Image — a cover image
+- Moodboard — a 2×2 grid of 4 images
+- Code Snippet — language + monospace code block
+- Quote — quote text + author (Canela italic treatment)
+- Recipe — bulleted ingredient list
+- PDF — filename + page count
+- Meeting Notes — attendee avatars + bulleted agenda
 
-Fields: Title, plus type-specific content (free text for Text/Idea/Meeting/Research/Code; checkable items for To-Do/Checklist; a URL for Bookmark).
+Fields: Title, plus the type-specific content listed above (see [docs/DATABASE.md](DATABASE.md) for the exact schema).
 
 Features: Create, Edit, Delete, Search (matches title and content). Editing happens inside modals; a three-dot menu exposes note actions (edit, delete, archive).
 
 ## Resources
 
-Fields: Title, URL, Short Description, Tags.
+Fields: Title, URL, Short Description, Tags, plus a `kind` that determines the card's visual treatment:
+
+- Link — plain title + description, no media
+- Repo (GitHub) — owner/repo, language, star count
+- Video (YouTube) — thumbnail with play overlay, duration
+- PDF — filename
+- Preview — generic embed preview, or a Figma-specific tile when the link is a Figma file
+- Image — a cover image
 
 Features: Create, Edit, Delete, Search (matches title, description, tags).
 
-No fixed categories — tags are used for organization instead.
+No fixed categories — tags are used for organization instead; `kind` only drives card layout, not filtering.
 
 ## Archive
 
