@@ -1,4 +1,4 @@
-# Product — Designer Workspace
+# Product — Morrow
 
 ## Problem
 
@@ -6,7 +6,7 @@ As a UI/UX designer, project work, inspiration, notes, and useful resources end 
 
 ## Solution
 
-A single personal hub with four simple modules — Projects, Inspiration, Notes, Resources — each link-first, taggable, and searchable within itself. Designer Workspace does not replace Figma/Drive; it organizes references to them.
+A single personal hub with five modules — Projects, Inspiration (boards), Notes (typed), Resources, and Archive — each link-first, taggable where relevant, and searchable within itself. Morrow does not replace Figma/Drive; it organizes references to them. The experience is premium, calm, and creative — not a generic SaaS dashboard.
 
 ## Target User (MVP)
 
@@ -18,22 +18,30 @@ A single UI/UX designer using this as a personal, daily-use tool — no other us
 
 ## Product Principles
 
-See [../CLAUDE.md](../CLAUDE.md) for philosophy, UX rules, and development rules that every feature must satisfy.
+See [../CLAUDE.md](../CLAUDE.md) for philosophy, UX rules, and development rules, and [DESIGN.md](DESIGN.md) for the visual design system that every screen must satisfy.
+
+## Primary Experiences
+
+- **Dashboard** — quick overview and entry point.
+- **Project Details** — one of the platform's flagship screens: a premium workspace view, not a standard CRUD detail page (see [DESIGN.md](DESIGN.md)).
+- **Inspiration boards** — visual-first reference collections.
 
 ## MVP Goal
 
-Ship a polished, simple personal workspace covering Dashboard, Projects, Inspiration, Notes, and Resources — prioritizing simplicity, maintainability, and UX polish over feature completeness.
+Ship a polished, simple personal workspace covering Dashboard, Projects, Inspiration, Notes, Resources, and Archive — prioritizing simplicity, maintainability, and UX polish over feature completeness.
 
 ## Explicitly Out of Scope (MVP)
 
-- Multi-user support, teams or workspaces, roles and permissions
-- Authentication (single-user app, no login)
+- User profiles, team collaboration, permissions, workspace switching
+- Authentication, sign out flow, onboarding for multiple users (single-user app, no login)
+- Notifications
+- Account settings, help center, keyboard shortcuts
 - Payments or subscriptions
 - Global search (only local search per module)
 - Favorites
 - Advanced filtering
 - Light theme
-- Deadlines, calendar
+- Calendar UI (Projects have a manual deadline field only, no calendar view)
 - CRM features
 - Time tracking
 - Analytics
@@ -43,4 +51,4 @@ Ship a polished, simple personal workspace covering Dashboard, Projects, Inspira
 
 ## Success Signal for MVP
 
-The designer prefers opening Designer Workspace over their old mix of bookmarks/notes app for tracking their own projects, inspiration, and resources.
+The designer prefers opening Morrow over their old mix of bookmarks/notes app for tracking their own projects, inspiration, and resources.

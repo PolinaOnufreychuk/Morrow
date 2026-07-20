@@ -1,25 +1,34 @@
-# Designer Workspace
+# Morrow
 
 A personal creative workspace for a solo UI/UX designer — a single place for projects, inspiration, notes, and resources, instead of scattering context across Figma/Drive/chats/notes. Built primarily for learning modern web development and for the designer's own daily workflow. No code written yet.
+
+Brand assets (logo in black/color/white, 3D illustrations, photography) live in `morrow/` at the repo root — use them intentionally. The interface should feel premium, calm, and creative, never flat or corporate. See [docs/DESIGN.md](docs/DESIGN.md) for the full visual/interaction rulebook.
 
 ## Confirmed MVP Decisions
 
 - **User**: single UI/UX designer, personal use only. No authentication, no login screen — the app assumes exactly one user.
 - **Platform**: web app (responsive SPA).
-- **Modules**: Dashboard, Projects, Inspiration, Notes, Resources (see [docs/FEATURES.md](docs/FEATURES.md) for fields/behavior of each).
-- **Files**: link-first. External links are the primary way of storing resources/inspiration. Optional lightweight attachments (PNG, JPG, WEBP, SVG, small PDF) for extra context on Projects and Inspiration only — this is not a file storage service.
+- **Modules**: Dashboard, Projects, Inspiration (boards), Notes (typed), Resources, Archive (see [docs/FEATURES.md](docs/FEATURES.md) for fields/behavior of each).
+- **Inspiration** is organized as boards (not flat items) — each board holds multiple image references with a fullscreen viewer.
+- **Notes** have 8 visual content types (Text, To-Do, Checklist, Idea, Meeting, Research, Code Snippet, Bookmark), picked visually on creation, edited in modals.
+- **Projects** have a manual deadline field (date only — no calendar UI) and are the platform's flagship screen (see [docs/DESIGN.md](docs/DESIGN.md)).
+- **Archive** replaces the sidebar's old account-section slot (a lightweight lower-nav item) — Projects/Boards/Notes/Resources can be archived and appear there in one unified card style, disambiguated by badge.
+- **Files**: link-first. External links are the primary way of storing resources/inspiration. Optional lightweight attachments (PNG, JPG, WEBP, SVG, small PDF) for extra context on Projects and Inspiration boards only — this is not a file storage service.
 - **Search**: local search inside each module only (matches title/description/notes/tags). No global cross-module search.
 - **Tags**: supported only on Projects, Inspiration, Resources, for organization; search automatically includes tags; no dedicated tag-filter UI.
 - **Approved stack**: React + TypeScript + Vite, Tailwind CSS, shadcn/ui, React Router, TanStack Query, React Hook Form + Zod, Supabase — **Postgres + Storage only, no Supabase Auth** (see [docs/DATABASE.md](docs/DATABASE.md)).
 - **Code style priority**: clarity, readability, and maintainability over cleverness or premature optimization. Keep every feature as simple as possible; do not introduce unnecessary complexity. Codebase should be educational, well-structured, easy to understand.
 
-## Explicitly Out of Scope (MVP)
+## Current Product Scope — do NOT introduce
 
-Multi-user support, teams/workspaces, roles and permissions, authentication, payments/subscriptions, global search, favorites, advanced filtering, light theme, deadlines, calendar, CRM features, time tracking, analytics, drag & drop, full file storage service, real-time collaboration.
+User profiles, team collaboration, notifications, permissions, workspace switching, account settings, keyboard shortcuts, help center, sign out flow, onboarding flows for multiple users. Also excluded: payments/subscriptions, global search, favorites, advanced filtering, light theme, calendar UI, CRM features, time tracking, analytics, drag & drop, full file storage service, real-time collaboration.
+
+These may be introduced later but must not influence current design or implementation.
 
 ## Project Docs
 
 - [docs/PRODUCT.md](docs/PRODUCT.md) — problem, target user, value proposition, scope boundaries
+- [docs/DESIGN.md](docs/DESIGN.md) — visual design system: philosophy, brand identity, buttons, modals, cards, per-screen UX patterns
 - [docs/ROADMAP.md](docs/ROADMAP.md) — phased build plan
 - [docs/DATABASE.md](docs/DATABASE.md) — schema, storage design
 - [docs/FEATURES.md](docs/FEATURES.md) — feature list by module
@@ -40,7 +49,7 @@ Only move to implementation after architecture is discussed and approved.
 
 ## Philosophy
 
-Every feature must solve a real problem encountered during daily design work. Avoid adding functionality that is not explicitly scoped for the MVP.
+Every feature must solve a real problem encountered during daily design work. Avoid adding functionality that is not explicitly scoped for the MVP. Prefer the simpler, more intentional solution over generic SaaS functionality — consistency across the platform matters more than new visual ideas.
 
 ## Core Principles
 
@@ -49,6 +58,7 @@ Every feature must solve a real problem encountered during daily design work. Av
 - Accessibility considered from the start.
 - Every screen has one clear primary action.
 - Build only what supports the designer's workflow — avoid unnecessary features.
+- Never introduce a new UI component unless it solves a real UX problem.
 
 ## UX Rules
 
@@ -61,9 +71,12 @@ Every feature must solve a real problem encountered during daily design work. Av
 
 ## Development Rules
 
-- Build reusable components; avoid duplicated logic.
+- Build reusable components; avoid duplicated logic or UI.
 - Prefer composition over large monolithic components.
 - Keep the codebase modular and scalable.
 - Prioritize readability over cleverness.
+- Avoid hardcoded styling — use the design system's tokens/components.
+- Preserve design accuracy over implementation speed; maintain visual parity with the approved design in [docs/DESIGN.md](docs/DESIGN.md).
+- When unsure about a UI decision, prefer consistency with an existing component over inventing something new.
 - Every new feature integrates naturally into the existing design system.
 - Focus on delivering a polished, production-quality MVP rather than more features.
