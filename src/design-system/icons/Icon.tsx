@@ -55,7 +55,7 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <path d="M9.5 3.5 17 16.5H2z" strokeLinejoin="round" />
       <path d="M9.5 8v3.5" />
-      <circle cx="9.5" cy="14" r="0.15" fill="currentColor" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="9.5" cy="14" r="1" fill="currentColor" stroke="none" />
     </>
   ),
 };

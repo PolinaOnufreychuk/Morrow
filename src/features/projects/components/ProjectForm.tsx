@@ -34,7 +34,7 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
     resolver: zodResolver(projectInputSchema),
     defaultValues: {
       title: defaultValues?.title ?? "",
-      coverImageUrl: defaultValues?.coverImageUrl ?? null,
+      coverImageUrl: defaultValues?.coverImageUrl ?? "",
       description: defaultValues?.description ?? "",
       status: defaultValues?.status ?? "planning",
       deadline: defaultValues?.deadline ?? null,
@@ -72,6 +72,25 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
         {formState.errors.title && (
           <p id={`${formId}-title-error`} className="text-[12px] text-blush-600">
             {formState.errors.title.message}
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`${formId}-cover`} className="eyebrow text-text-tertiary">
+          Cover image URL
+        </label>
+        <Input
+          id={`${formId}-cover`}
+          type="url"
+          placeholder="https://…"
+          aria-invalid={Boolean(formState.errors.coverImageUrl)}
+          aria-describedby={formState.errors.coverImageUrl ? `${formId}-cover-error` : undefined}
+          {...register("coverImageUrl")}
+        />
+        {formState.errors.coverImageUrl && (
+          <p id={`${formId}-cover-error`} className="text-[12px] text-blush-600">
+            {formState.errors.coverImageUrl.message}
           </p>
         )}
       </div>

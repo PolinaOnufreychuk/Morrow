@@ -25,11 +25,24 @@ export const externalLinkSchema = z.object({
   url: z.string().trim().url("Enter a valid URL"),
 });
 
-/** ISO date (YYYY-MM-DD) — the deadline field is date-only, no calendar UI. */
-const isoDateSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date")
-  .nullable();
+/** Controlled inputs represent "empty" as `""`; the domain model uses `null`. */
+const emptyToNull = (value: unknown) => (value === "" ? null : value);
+
+function isRealCalendarDate(value: string): boolean {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+/** ISO date (YYYY-MM-DD) — the deadline field is date-only, no calendar UI.
+ * Validates real calendar dates (e.g. rejects "2026-02-30"), not just shape. */
+const isoDateSchema = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date")
+    .refine(isRealCalendarDate, "Use a valid date")
+    .nullable(),
+);
 
 export const projectTagSchema = z
   .string()
@@ -40,13 +53,19 @@ export const projectTagSchema = z
 /** Shape shared by create and update — update layers `.partial()` on top. */
 export const projectInputSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(120, "Title is too long"),
-  coverImageUrl: z.string().trim().url("Enter a valid image URL").nullable(),
-  description: z.string().trim().max(2000, "Description is too long").nullable(),
+  coverImageUrl: z.preprocess(
+    emptyToNull,
+    z.string().trim().url("Enter a valid image URL").nullable(),
+  ),
+  description: z.preprocess(
+    emptyToNull,
+    z.string().trim().max(2000, "Description is too long").nullable(),
+  ),
   status: projectStatusSchema,
   deadline: isoDateSchema,
   tags: z.array(projectTagSchema).max(20, "Too many tags"),
   externalLinks: z.array(externalLinkSchema).max(20, "Too many links"),
-  notes: z.string().trim().max(4000, "Notes are too long").nullable(),
+  notes: z.preprocess(emptyToNull, z.string().trim().max(4000, "Notes are too long").nullable()),
 });
 
 export const createProjectSchema = projectInputSchema;
