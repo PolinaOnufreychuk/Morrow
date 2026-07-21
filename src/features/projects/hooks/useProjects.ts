@@ -1,39 +1,87 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/queryKeys";
+import type { Project } from "@/types/entities";
+import type { CreateProjectInput, UpdateProjectInput } from "../schema";
 import {
   archiveProject,
+  bulkArchiveProjects,
+  bulkDeleteProjects,
   createProject,
   deleteProject,
-  fetchProjectById,
-  fetchProjects,
+  getProject,
+  listArchivedProjects,
+  listProjects,
+  unarchiveProject,
   updateProject,
-} from "../api/projectsApi";
+} from "../api/projects.service";
 
 /**
- * TanStack Query hooks wrapping the stub api. The query/mutation shape is
- * real (keys, invalidation) even though the data is still fixtures.
+ * TanStack Query hooks — the only thing feature components talk to for
+ * Projects data. All mutations are optimistic: the cache updates
+ * immediately and rolls back on failure, so the UI never waits on the
+ * (simulated) network round-trip to feel responsive.
  */
 
 export function useProjects() {
   return useQuery({
     queryKey: queryKeys.projects.all(),
-    queryFn: fetchProjects,
+    queryFn: listProjects,
+  });
+}
+
+/** Backs the Archive screen's Project rows. */
+export function useArchivedProjects() {
+  return useQuery({
+    queryKey: queryKeys.archive.all(),
+    queryFn: listArchivedProjects,
   });
 }
 
 export function useProject(id: string) {
   return useQuery({
     queryKey: queryKeys.projects.byId(id),
-    queryFn: () => fetchProjectById(id),
+    queryFn: () => getProject(id),
     enabled: Boolean(id),
   });
+}
+
+type ProjectListContext = { previous?: Project[] };
+
+function snapshotList(queryClient: ReturnType<typeof useQueryClient>): ProjectListContext {
+  return { previous: queryClient.getQueryData<Project[]>(queryKeys.projects.all()) };
+}
+
+function rollbackList(
+  queryClient: ReturnType<typeof useQueryClient>,
+  context: ProjectListContext | undefined,
+) {
+  if (context?.previous) {
+    queryClient.setQueryData(queryKeys.projects.all(), context.previous);
+  }
 }
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createProject,
-    onSuccess: () => {
+    mutationFn: (input: CreateProjectInput) => createProject(input),
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.projects.all() });
+      const context = snapshotList(queryClient);
+      const optimistic: Project = {
+        ...input,
+        id: `optimistic-${Date.now()}`,
+        isArchived: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      queryClient.setQueryData<Project[]>(queryKeys.projects.all(), (old = []) => [
+        optimistic,
+        ...old,
+      ]);
+      return context;
+    },
+    onError: (_error, _input, context) => rollbackList(queryClient, context),
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all() });
     },
   });
@@ -42,31 +90,87 @@ export function useCreateProject() {
 export function useUpdateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateProject,
-    onSuccess: (_data, variables) => {
+    mutationFn: (input: UpdateProjectInput) => updateProject(input),
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.projects.all() });
+      await queryClient.cancelQueries({ queryKey: queryKeys.projects.byId(input.id) });
+      const context = snapshotList(queryClient);
+      const previousDetail = queryClient.getQueryData<Project | null>(
+        queryKeys.projects.byId(input.id),
+      );
+      const patch = { ...input, updatedAt: new Date().toISOString() };
+      queryClient.setQueryData<Project[]>(queryKeys.projects.all(), (old = []) =>
+        old.map((project) => (project.id === input.id ? { ...project, ...patch } : project)),
+      );
+      if (previousDetail) {
+        queryClient.setQueryData(queryKeys.projects.byId(input.id), {
+          ...previousDetail,
+          ...patch,
+        });
+      }
+      return { ...context, previousDetail, id: input.id };
+    },
+    onError: (_error, _input, context) => {
+      rollbackList(queryClient, context);
+      if (context?.previousDetail) {
+        queryClient.setQueryData(queryKeys.projects.byId(context.id), context.previousDetail);
+      }
+    },
+    onSettled: (_data, _error, input) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.byId(variables.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.byId(input.id) });
     },
   });
 }
 
-export function useArchiveProject() {
+/** Optimistically drops a set of ids from the active (non-archived) list cache. */
+function useRemoveFromListMutation<TVariables extends string | string[]>(
+  mutationFn: (variables: TVariables) => Promise<unknown>,
+) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: archiveProject,
-    onSuccess: () => {
+    mutationFn,
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.projects.all() });
+      const context = snapshotList(queryClient);
+      const ids = new Set(Array.isArray(variables) ? variables : [variables]);
+      queryClient.setQueryData<Project[]>(queryKeys.projects.all(), (old = []) =>
+        old.filter((project) => !ids.has(project.id)),
+      );
+      return context;
+    },
+    onError: (_error, _variables, context) => rollbackList(queryClient, context),
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.archive.all() });
     },
   });
 }
 
+export function useArchiveProject() {
+  return useRemoveFromListMutation<string>((id) => archiveProject(id));
+}
+
 export function useDeleteProject() {
+  return useRemoveFromListMutation<string>((id) => deleteProject(id));
+}
+
+export function useBulkArchiveProjects() {
+  return useRemoveFromListMutation<string[]>((ids) => bulkArchiveProjects(ids));
+}
+
+export function useBulkDeleteProjects() {
+  return useRemoveFromListMutation<string[]>((ids) => bulkDeleteProjects(ids));
+}
+
+/** Restore a project from the Archive screen — not a list-removal shape. */
+export function useUnarchiveProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteProject,
+    mutationFn: (id: string) => unarchiveProject(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.archive.all() });
     },
   });
 }
