@@ -4,7 +4,9 @@ import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Icon } from "@/design-system/icons/Icon";
+import { notify } from "@/components/shared/Toast";
 import type { Resource } from "@/types/entities";
 import { useResources } from "../hooks/useResources";
 import { ResourceCard } from "../components/ResourceCard";
@@ -16,6 +18,7 @@ export function ResourcesPage() {
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Resource | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Resource | null>(null);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -27,6 +30,11 @@ export function ResourcesPage() {
         resource.tags.some((tag) => tag.toLowerCase().includes(normalized)),
     );
   }, [resources, query]);
+
+  const confirmDelete = () => {
+    // TODO: wire to useDeleteResource() — undo would re-insert via cache restore.
+    notify.info(`"${pendingDelete?.title}" deleted`, "Undo isn't wired yet in this static build.");
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,10 +65,10 @@ export function ResourcesPage() {
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query} />
       ) : (
-        <div className="columns-1 gap-5 board:columns-2 [@media(min-width:1400px)]:columns-3">
+        <div className="masonry3">
           {filtered.map((resource) => (
-            <div key={resource.id} className="mb-5 break-inside-avoid">
-              <ResourceCard resource={resource} onEdit={setEditing} />
+            <div key={resource.id} className="masonry-item">
+              <ResourceCard resource={resource} onEdit={setEditing} onDelete={setPendingDelete} />
             </div>
           ))}
         </div>
@@ -74,6 +82,16 @@ export function ResourcesPage() {
           resource={editing}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete resource?"
+        description={pendingDelete ? `"${pendingDelete.title}" will be removed from Resources.` : undefined}
+        confirmLabel="Delete resource"
+        destructive
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

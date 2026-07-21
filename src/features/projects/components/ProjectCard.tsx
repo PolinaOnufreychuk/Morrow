@@ -14,6 +14,7 @@ export interface ProjectCardProps {
   variant?: ProjectCardVariant;
   onEdit?: (project: Project) => void;
   onArchive?: (project: Project) => void;
+  onDelete?: (project: Project) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function ProjectCard({
   variant = "compact",
   onEdit,
   onArchive,
+  onDelete,
 }: ProjectCardProps) {
   const isFull = variant === "full";
   return (
@@ -40,6 +42,7 @@ export function ProjectCard({
           entityType="project"
           onEdit={onEdit ? () => onEdit(project) : undefined}
           onArchive={onArchive ? () => onArchive(project) : undefined}
+          onDelete={onDelete ? () => onDelete(project) : undefined}
           triggerClassName="bg-surface-card/70 backdrop-blur-sm"
         />
       </div>

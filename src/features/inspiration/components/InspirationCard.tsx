@@ -14,6 +14,7 @@ export interface InspirationCardProps {
   variant?: InspirationCardVariant;
   onEdit?: (board: InspirationBoard) => void;
   onArchive?: (board: InspirationBoard) => void;
+  onDelete?: (board: InspirationBoard) => void;
 }
 
 const FAN_ROTATIONS = ["-rotate-6", "rotate-0", "rotate-6"];
@@ -30,6 +31,7 @@ export function InspirationCard({
   variant = "compact",
   onEdit,
   onArchive,
+  onDelete,
 }: InspirationCardProps) {
   const images = (previewImages && previewImages.length > 0
     ? previewImages
@@ -47,6 +49,7 @@ export function InspirationCard({
           entityType="collection"
           onEdit={onEdit ? () => onEdit(board) : undefined}
           onArchive={onArchive ? () => onArchive(board) : undefined}
+          onDelete={onDelete ? () => onDelete(board) : undefined}
           triggerClassName="bg-surface-card/70 backdrop-blur-sm"
         />
       </div>

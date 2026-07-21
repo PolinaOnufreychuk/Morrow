@@ -53,10 +53,14 @@ export function ProjectDetailPage() {
 
       <ProjectHero project={project} onEdit={() => setEditOpen(true)} />
 
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[30px] font-light leading-tight text-text-primary">{project.title}</h1>
+      <div className="flex flex-col gap-1.5">
+        <h1 className="font-display text-[34px] font-light leading-tight text-text-primary [text-wrap:balance]">
+          {project.title}
+        </h1>
         {project.description && (
-          <p className="max-w-2xl text-[15px] text-text-secondary">{project.description}</p>
+          <p className="max-w-2xl text-[15px] leading-relaxed text-text-secondary">
+            {project.description}
+          </p>
         )}
       </div>
 

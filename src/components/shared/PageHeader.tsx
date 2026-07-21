@@ -16,7 +16,9 @@ export function PageHeader({ title, eyebrow, description, actions, className }: 
     <header className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
       <div className="flex flex-col gap-1">
         {eyebrow && <span className="eyebrow text-text-tertiary">{eyebrow}</span>}
-        <h1 className="text-[28px] font-light leading-tight text-text-primary">{title}</h1>
+        <h1 className="font-display text-[32px] font-light leading-tight text-text-primary [text-wrap:balance]">
+          {title}
+        </h1>
         {description && <p className="text-[14px] text-text-secondary">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}

@@ -4,6 +4,7 @@ import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Icon } from "@/design-system/icons/Icon";
 import type { Note, NoteType } from "@/types/entities";
 import { useNotes } from "../hooks/useNotes";
@@ -17,6 +18,7 @@ export function NotesPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editorType, setEditorType] = useState<NoteType | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Note | null>(null);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -64,10 +66,10 @@ export function NotesPage() {
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query} />
       ) : (
-        <div className="columns-1 gap-5 board:columns-2 [@media(min-width:1400px)]:columns-3">
+        <div className="masonry3">
           {filtered.map((note) => (
-            <div key={note.id} className="mb-5 break-inside-avoid">
-              <NoteCard note={note} onEdit={editNote} />
+            <div key={note.id} className="masonry-item">
+              <NoteCard note={note} onEdit={editNote} onDelete={setPendingDelete} />
             </div>
           ))}
         </div>
@@ -92,6 +94,18 @@ export function NotesPage() {
           type={editorType}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete note?"
+        description={pendingDelete ? `"${pendingDelete.title}" will be permanently removed.` : undefined}
+        confirmLabel="Delete note"
+        destructive
+        onConfirm={() => {
+          // TODO: wire to useDeleteNote()
+        }}
+      />
     </div>
   );
 }

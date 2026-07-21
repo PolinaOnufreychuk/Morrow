@@ -1,21 +1,27 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Icon } from "@/design-system/icons/Icon";
 import { useProjects } from "../hooks/useProjects";
 import { ProjectCard } from "../components/ProjectCard";
 import { ProjectStatusTabs } from "../components/ProjectStatusTabs";
 import { ProjectCreateModal } from "../components/ProjectCreateModal";
-import type { ProjectStatusFilter } from "../types";
+import { ProjectBulkEditBar } from "../components/ProjectBulkEditBar";
+import type { Project, ProjectStatusFilter } from "../types";
 
 export function ProjectsPage() {
   const { data: projects = [] } = useProjects();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatusFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -31,16 +37,26 @@ export function ProjectsPage() {
     });
   }, [projects, query, statusFilter]);
 
+  const toggleEditMode = () => {
+    setEditMode((mode) => !mode);
+    setSelected([]);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Workspace"
         title="Projects"
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Icon name="plus" size={17} />
-            New project
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={toggleEditMode}>
+              {editMode ? "Done" : "Edit"}
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Icon name="plus" size={17} />
+              New project
+            </Button>
+          </div>
         }
       />
 
@@ -63,14 +79,61 @@ export function ProjectsPage() {
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query || statusFilter} />
       ) : (
-        <div className="grid grid-cols-1 gap-5 board:grid-cols-2 [@media(min-width:1400px)]:grid-cols-3">
+        <div className="masonry3">
           {filtered.map((project) => (
-            <ProjectCard key={project.id} project={project} variant="full" />
+            <div key={project.id} className="masonry-item relative">
+              {editMode && (
+                <div
+                  className="absolute left-3 top-3 z-20"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Checkbox
+                    checked={selected.includes(project.id)}
+                    onCheckedChange={() =>
+                      setSelected((current) =>
+                        current.includes(project.id)
+                          ? current.filter((id) => id !== project.id)
+                          : [...current, project.id],
+                      )
+                    }
+                    aria-label={`Select ${project.title}`}
+                    className="bg-surface-card/90 shadow-resting"
+                  />
+                </div>
+              )}
+              <ProjectCard
+                project={project}
+                variant="full"
+                onDelete={editMode ? undefined : setPendingDelete}
+              />
+            </div>
           ))}
         </div>
       )}
 
+      <ProjectBulkEditBar
+        selectedCount={selected.length}
+        onArchiveSelected={() => setSelected([])}
+        onClearSelection={() => setSelected([])}
+      />
+
       <ProjectCreateModal open={createOpen} onOpenChange={setCreateOpen} />
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete project?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" and its links to inspiration, notes, and resources will be permanently removed.`
+            : undefined
+        }
+        confirmLabel="Delete project"
+        destructive
+        onConfirm={() => {
+          // TODO: wire to useDeleteProject()
+        }}
+      />
     </div>
   );
 }

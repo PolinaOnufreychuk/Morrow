@@ -52,7 +52,9 @@ export function BoardDetailPage() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[28px] font-light leading-tight text-text-primary">{board.title}</h1>
+          <h1 className="font-display text-[32px] font-light leading-tight text-text-primary [text-wrap:balance]">
+            {board.title}
+          </h1>
           {board.notes && <p className="text-[14px] text-text-secondary">{board.notes}</p>}
         </div>
         <div className="flex items-center gap-4">
