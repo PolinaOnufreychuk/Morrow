@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatRelativeDeadline } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -85,6 +86,23 @@ export function ProjectCard({
           )}
         </div>
       </Link>
+    </GlassCard>
+  );
+}
+
+/** Matches ProjectCard's "full" shape so the loading state doesn't jump. */
+export function ProjectCardSkeleton() {
+  return (
+    <GlassCard className="flex flex-col overflow-hidden" aria-hidden="true">
+      <Skeleton className="m-2 h-52 rounded-card-image" />
+      <div className="flex flex-col gap-2 p-4 pt-2">
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-5 w-24 rounded-chip" />
+          <Skeleton className="h-4 w-14" />
+        </div>
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+      </div>
     </GlassCard>
   );
 }

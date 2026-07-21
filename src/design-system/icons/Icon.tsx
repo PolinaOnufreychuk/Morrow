@@ -14,7 +14,8 @@ export type IconName =
   | "chevron-right"
   | "plus"
   | "overflow-dots"
-  | "arrow-left";
+  | "arrow-left"
+  | "alert";
 
 const paths: Record<IconName, ReactNode> = {
   search: (
@@ -48,6 +49,13 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <path d="M15 9.5H4" />
       <path d="M9 4.5 4 9.5 9 14.5" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M9.5 3.5 17 16.5H2z" strokeLinejoin="round" />
+      <path d="M9.5 8v3.5" />
+      <circle cx="9.5" cy="14" r="0.15" fill="currentColor" stroke="currentColor" strokeWidth="1.4" />
     </>
   ),
 };

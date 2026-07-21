@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "./ModalShell";
 
@@ -7,8 +8,12 @@ export interface ConfirmDialogProps {
   title: string;
   description?: string;
   confirmLabel?: string;
+  pendingLabel?: string;
   destructive?: boolean;
-  onConfirm: () => void;
+  /** May return a promise — the dialog shows a pending state and only
+   * closes after it resolves; on rejection it stays open with an inline
+   * error so the user can retry without re-triggering the whole flow. */
+  onConfirm: () => void | Promise<void>;
 }
 
 /**
@@ -23,34 +28,60 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = "Confirm",
+  pendingLabel,
   destructive = false,
   onConfirm,
 }: ConfirmDialogProps) {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleOpenChange = (next: boolean) => {
+    if (isPending) return; // don't allow Escape/overlay-close mid-flight
+    if (next) setError(null);
+    onOpenChange(next);
+  };
+
+  const handleConfirm = async () => {
+    setError(null);
+    setIsPending(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   return (
     <ModalShell
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={title}
       description={description}
       className="max-w-sm"
       footer={
         <>
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+          <Button variant="secondary" onClick={() => handleOpenChange(false)} disabled={isPending}>
             Cancel
           </Button>
           <Button
             variant={destructive ? "destructive" : "primary"}
-            onClick={() => {
-              onConfirm();
-              onOpenChange(false);
-            }}
+            onClick={handleConfirm}
+            disabled={isPending}
+            aria-busy={isPending}
           >
-            {confirmLabel}
+            {isPending ? (pendingLabel ?? "Working…") : confirmLabel}
           </Button>
         </>
       }
     >
-      <span className="sr-only">{title}</span>
+      {error && (
+        <p role="alert" className="text-[13px] text-blush-600">
+          {error}
+        </p>
+      )}
     </ModalShell>
   );
 }

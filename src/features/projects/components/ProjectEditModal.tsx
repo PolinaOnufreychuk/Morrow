@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { ModalShell } from "@/components/shared/ModalShell";
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/shared/Toast";
 import { ProjectForm, type ProjectFormValues } from "./ProjectForm";
+import { useUpdateProject } from "../hooks/useProjects";
+import { ProjectValidationError } from "../types";
 import type { Project } from "@/types/entities";
 
 export interface ProjectEditModalProps {
@@ -16,23 +20,50 @@ const FORM_ID = "project-edit-form";
  * Reuses ProjectForm so create/edit stay visually identical.
  */
 export function ProjectEditModal({ open, onOpenChange, project }: ProjectEditModalProps) {
+  const updateProject = useUpdateProject();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const handleSubmit = (values: ProjectFormValues) => {
-    void values; // TODO: wire to useUpdateProject()
-    onOpenChange(false);
+    setSubmitError(null);
+    updateProject.mutate(
+      { id: project.id, ...values },
+      {
+        onSuccess: () => {
+          notify.success("Project updated");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          setSubmitError(
+            error instanceof ProjectValidationError
+              ? error.message
+              : "Couldn't save your changes. Please try again.",
+          );
+        },
+      },
+    );
   };
 
   return (
     <ModalShell
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next) => {
+        if (updateProject.isPending) return;
+        setSubmitError(null);
+        onOpenChange(next);
+      }}
       title="Edit project"
       footer={
-        <Button type="submit" form={FORM_ID}>
-          Save changes
+        <Button type="submit" form={FORM_ID} disabled={updateProject.isPending} aria-busy={updateProject.isPending}>
+          {updateProject.isPending ? "Saving…" : "Save changes"}
         </Button>
       }
     >
-      <ProjectForm formId={FORM_ID} defaultValues={project} onSubmit={handleSubmit} />
+      <ProjectForm
+        formId={FORM_ID}
+        defaultValues={project}
+        onSubmit={handleSubmit}
+        submitError={submitError}
+      />
     </ModalShell>
   );
 }

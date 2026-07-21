@@ -1,64 +1,78 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TagInput } from "@/components/shared/TagInput";
 import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
 import { ProjectDeadlineField } from "./ProjectDeadlineField";
+import { ExternalLinksField } from "./ExternalLinksField";
+import { PROJECT_STATUSES, projectInputSchema, type ProjectInput } from "../schema";
 import type { Project, ProjectStatus } from "@/types/entities";
 
-/**
- * Field-shape validation only (per the brief — no submit handler wired to a
- * real mutation). The parent modal decides what to do with `values`.
- */
-export const projectFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  status: z.enum(["planning", "in-progress", "review", "done", "on-hold"]),
-  deadline: z.string().nullable(),
-  tags: z.array(z.string()),
-});
+export type ProjectFormValues = ProjectInput;
 
-export type ProjectFormValues = z.infer<typeof projectFormSchema>;
+const STATUS_LABELS: Record<ProjectStatus, string> = {
+  planning: "Planning",
+  "in-progress": "In progress",
+  review: "In review",
+  done: "Done",
+  "on-hold": "On hold",
+};
 
-const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
-  { value: "planning", label: "Planning" },
-  { value: "in-progress", label: "In progress" },
-  { value: "review", label: "In review" },
-  { value: "done", label: "Done" },
-  { value: "on-hold", label: "On hold" },
-];
+const STATUS_OPTIONS = PROJECT_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] }));
 
 export interface ProjectFormProps {
   formId: string;
   defaultValues?: Partial<Project>;
   onSubmit: (values: ProjectFormValues) => void;
+  /** Server/mutation-level error not tied to a specific field. */
+  submitError?: string | null;
 }
 
-export function ProjectForm({ formId, defaultValues, onSubmit }: ProjectFormProps) {
+export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: ProjectFormProps) {
   const { register, handleSubmit, setValue, watch, formState } = useForm<ProjectFormValues>({
-    resolver: zodResolver(projectFormSchema),
+    resolver: zodResolver(projectInputSchema),
     defaultValues: {
       title: defaultValues?.title ?? "",
+      coverImageUrl: defaultValues?.coverImageUrl ?? null,
       description: defaultValues?.description ?? "",
       status: defaultValues?.status ?? "planning",
       deadline: defaultValues?.deadline ?? null,
       tags: defaultValues?.tags ?? [],
+      externalLinks: defaultValues?.externalLinks ?? [],
+      notes: defaultValues?.notes ?? "",
     },
   });
 
   const status = watch("status");
   const deadline = watch("deadline");
+  const tags = watch("tags");
+  const externalLinks = watch("externalLinks");
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      {submitError && (
+        <p role="alert" className="rounded-chip bg-blush-100 px-3 py-2 text-[13px] text-blush-600">
+          {submitError}
+        </p>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${formId}-title`} className="eyebrow text-text-tertiary">
           Title
         </label>
-        <Input id={`${formId}-title`} placeholder="Project title" {...register("title")} />
+        <Input
+          id={`${formId}-title`}
+          placeholder="Project title"
+          autoFocus
+          aria-invalid={Boolean(formState.errors.title)}
+          aria-describedby={formState.errors.title ? `${formId}-title-error` : undefined}
+          {...register("title")}
+        />
         {formState.errors.title && (
-          <p className="text-[12px] text-blush-600">{formState.errors.title.message}</p>
+          <p id={`${formId}-title-error`} className="text-[12px] text-blush-600">
+            {formState.errors.title.message}
+          </p>
         )}
       </div>
 
@@ -78,9 +92,42 @@ export function ProjectForm({ formId, defaultValues, onSubmit }: ProjectFormProp
           label="Status"
           options={STATUS_OPTIONS}
           value={status}
-          onValueChange={(value) => setValue("status", value)}
+          onValueChange={(value) => setValue("status", value, { shouldDirty: true })}
         />
-        <ProjectDeadlineField value={deadline} onChange={(value) => setValue("deadline", value)} />
+        <ProjectDeadlineField
+          value={deadline}
+          onChange={(value) => setValue("deadline", value, { shouldDirty: true })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`${formId}-tags`} className="eyebrow text-text-tertiary">
+          Tags
+        </label>
+        <TagInput
+          id={`${formId}-tags`}
+          value={tags}
+          onChange={(value) => setValue("tags", value, { shouldDirty: true })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="eyebrow text-text-tertiary">External links</span>
+        <ExternalLinksField
+          value={externalLinks}
+          onChange={(value) => setValue("externalLinks", value, { shouldDirty: true })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`${formId}-notes`} className="eyebrow text-text-tertiary">
+          Notes
+        </label>
+        <Textarea
+          id={`${formId}-notes`}
+          placeholder="Anything worth remembering about this project…"
+          {...register("notes")}
+        />
       </div>
     </form>
   );

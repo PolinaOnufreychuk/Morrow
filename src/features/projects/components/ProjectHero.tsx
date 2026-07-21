@@ -6,6 +6,7 @@ export interface ProjectHeroProps {
   project: Project;
   onEdit?: () => void;
   onArchive?: () => void;
+  onDelete?: () => void;
 }
 
 /**
@@ -14,7 +15,7 @@ export interface ProjectHeroProps {
  * This is a deliberate gap-fix vs the wireframe export, which never placed
  * tags/menu on the image.
  */
-export function ProjectHero({ project, onEdit, onArchive }: ProjectHeroProps) {
+export function ProjectHero({ project, onEdit, onArchive, onDelete }: ProjectHeroProps) {
   return (
     <div className="relative h-[240px] w-full overflow-hidden rounded-card board:h-[300px]">
       {project.coverImageUrl ? (
@@ -32,6 +33,7 @@ export function ProjectHero({ project, onEdit, onArchive }: ProjectHeroProps) {
           entityType="project"
           onEdit={onEdit}
           onArchive={onArchive}
+          onDelete={onDelete}
           triggerClassName="bg-surface-card/80 backdrop-blur-sm text-text-primary"
         />
       </div>

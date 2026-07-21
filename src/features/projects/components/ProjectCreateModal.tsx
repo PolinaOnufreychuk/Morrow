@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { ModalShell } from "@/components/shared/ModalShell";
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/shared/Toast";
 import { ProjectForm, type ProjectFormValues } from "./ProjectForm";
+import { useCreateProject } from "../hooks/useProjects";
+import { ProjectValidationError } from "../types";
 
 export interface ProjectCreateModalProps {
   open: boolean;
@@ -10,25 +14,43 @@ export interface ProjectCreateModalProps {
 const FORM_ID = "project-create-form";
 
 export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalProps) {
-  // Scaffolding: no real mutation wired. Logs shape, then closes.
+  const createProject = useCreateProject();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const handleSubmit = (values: ProjectFormValues) => {
-    void values; // TODO: wire to useCreateProject()
-    onOpenChange(false);
+    setSubmitError(null);
+    createProject.mutate(values, {
+      onSuccess: () => {
+        notify.success("Project created");
+        onOpenChange(false);
+      },
+      onError: (error) => {
+        setSubmitError(
+          error instanceof ProjectValidationError
+            ? error.message
+            : "Couldn't create the project. Please try again.",
+        );
+      },
+    });
   };
 
   return (
     <ModalShell
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next) => {
+        if (createProject.isPending) return;
+        setSubmitError(null);
+        onOpenChange(next);
+      }}
       title="New project"
       description="Create a new project workspace."
       footer={
-        <Button type="submit" form={FORM_ID}>
-          Create project
+        <Button type="submit" form={FORM_ID} disabled={createProject.isPending} aria-busy={createProject.isPending}>
+          {createProject.isPending ? "Creating…" : "Create project"}
         </Button>
       }
     >
-      <ProjectForm formId={FORM_ID} onSubmit={handleSubmit} />
+      <ProjectForm formId={FORM_ID} onSubmit={handleSubmit} submitError={submitError} />
     </ModalShell>
   );
 }
