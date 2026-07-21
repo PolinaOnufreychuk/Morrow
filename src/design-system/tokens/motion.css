@@ -1,0 +1,15 @@
+/**
+ * Motion tokens — docs/DESIGN.md § "Design Tokens (exact values)".
+ * Hover = opacity/fill increase + a small lift, never bounce or color inversion.
+ */
+:root {
+  --ease-breath: cubic-bezier(0.34, 0.02, 0.28, 1); /* panel/width transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* hover/press */
+
+  --duration-fast: 160ms;
+  --duration-medium: 360ms;
+  --duration-slow: 720ms;
+
+  --lift-control: -1px; /* translateY on hovered controls */
+  --lift-card: -3px; /* translateY on hovered cards */
+}

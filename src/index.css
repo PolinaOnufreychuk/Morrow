@@ -1,0 +1,51 @@
+@import "./design-system/tokens/colors.css";
+@import "./design-system/tokens/spacing.css";
+@import "./design-system/tokens/radius.css";
+@import "./design-system/tokens/typography.css";
+@import "./design-system/tokens/motion.css";
+@import "./design-system/tokens/shadows.css";
+@import "./design-system/tokens/glass.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border-default;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-surface-page text-text-primary font-body text-[15px] leading-relaxed;
+    font-weight: var(--font-weight-regular);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .eyebrow {
+    font-size: var(--font-eyebrow-size);
+    font-weight: var(--font-eyebrow-weight);
+    letter-spacing: var(--font-eyebrow-tracking);
+    text-transform: uppercase;
+  }
+}

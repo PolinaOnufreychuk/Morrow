@@ -1,0 +1,93 @@
+/**
+ * Typography tokens + @font-face declarations.
+ *
+ * Display font: Canela (Thin 200 / Light 300 + italics only, per DESIGN.md).
+ * Canela is not available as font files in this repo, so --font-display
+ * falls back to a serif system stack until real Canela files are added.
+ *
+ * UI/body font: Helvetica Neue Cyr, loaded from the 8 .woff2 files copied
+ * into src/design-system/fonts/ (Light/Roman/Medium/Bold + italics).
+ * NOT Satoshi — Satoshi was superseded by explicit decision during the
+ * hi-fi design pass and no Satoshi files exist in this repo.
+ */
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-Roman.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HelveticaNeueCyr";
+  src: url("../fonts/HelveticaNeueCyr-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* UI weights are 400/500 only; 700 is reserved for tiny uppercase eyebrow labels */
+  --font-body: "HelveticaNeueCyr", "Helvetica Neue", Helvetica, sans-serif;
+
+  /* Canela not available as files — serif fallback stack until real files land */
+  --font-display: "Canela", Georgia, "Iowan Old Style", "Times New Roman", serif;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Eyebrow label spec: 10.5px / 700 / uppercase */
+  --font-eyebrow-size: 10.5px;
+  --font-eyebrow-weight: 700;
+  --font-eyebrow-tracking: 0.125em; /* midpoint of .12–.13em */
+}

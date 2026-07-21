@@ -1,0 +1,17 @@
+/**
+ * Radius family — law: no pill/fully-rounded controls anywhere except
+ * tiny status dots and progress bars. docs/DESIGN.md § "Design Tokens".
+ */
+:root {
+  --radius-card: 20px;
+  --radius-card-image: 14px;
+  --radius-card-image-sidebar: 10px; /* sidebar-pinned variant */
+  --radius-search: 16px;
+  --radius-button: 13px; /* midpoint of the 12–14px button/CTA range */
+  --radius-tab-container: 13px;
+  --radius-tab-button: 9px;
+  --radius-chip: 8px;
+  --radius-nav-item: 13px;
+  --radius-avatar: 12px;
+  --radius-full: 9999px; /* status dots / progress bars only */
+}

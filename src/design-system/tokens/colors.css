@@ -1,0 +1,66 @@
+/**
+ * Color tokens — Morrow design system.
+ * Source of truth: docs/DESIGN.md § "Design Tokens (exact values)".
+ * Base palette + the hi-fi build's page-level overrides (overrides win).
+ *
+ * Values are stored as space-separated RGB channel triplets (e.g. `47 70 53`)
+ * rather than hex, so Tailwind can inject alpha via the `<alpha-value>`
+ * placeholder — this is what makes opacity modifiers like `bg-surface-card/60`
+ * (used heavily by the glass surfaces) resolve correctly. The comment beside
+ * each line is the original hex for reference.
+ */
+:root {
+  /* Sage */
+  --color-sage-100: 238 241 234; /* #EEF1EA */
+  --color-sage-200: 211 218 167; /* #D3DAA7 */
+  --color-sage-300: 180 192 156; /* #B4C09C */
+  --color-sage-400: 143 169 135; /* #8FA987 */
+  --color-sage-500: 116 140 90; /* #748C5A */
+  --color-sage-600: 107 140 109; /* #6B8C6D */
+  --color-sage-700: 85 112 87; /* #557057 */
+  --color-sage-900: 47 70 53; /* #2F4635 */
+
+  /* Blush */
+  --color-blush-100: 251 240 240; /* #FBF0F0 */
+  --color-blush-200: 239 199 207; /* #EFC7CF */
+  --color-blush-300: 218 176 188; /* #DAB0BC */
+  --color-blush-400: 216 165 161; /* #D8A5A1 */
+  --color-blush-600: 191 105 104; /* #BF6968 */
+
+  /* Cream */
+  --color-cream-50: 251 250 248; /* #FBFAF8 */
+  --color-cream-100: 242 242 242; /* #F2F2F2 */
+  --color-cream-200: 238 234 230; /* #EEEAE6 */
+
+  /* Warm neutrals */
+  --color-warm-300: 202 201 199; /* #CAC9C7 */
+  --color-warm-500: 154 151 147; /* #9A9793 */
+
+  /* Ink */
+  --color-ink-700: 74 75 69; /* #4A4B45 */
+  --color-ink-900: 36 38 33; /* #242621 */
+
+  /* Surfaces */
+  --color-surface-page: var(--color-cream-50);
+  --color-surface-card: 255 255 255; /* #FFFFFF */
+  --color-surface-dark: var(--color-sage-900);
+
+  /* Text — the 3 hi-fi overrides win over the base tokens */
+  --color-text-primary: var(--color-ink-900);
+  --color-text-secondary: 75 71 62; /* #4B473E — override (base was ink-700 #4A4B45) */
+  --color-text-tertiary: 110 105 95; /* #6E695F — override (base was warm-500 #9A9793) */
+
+  /* Borders */
+  --color-border-default: var(--color-warm-300);
+  /* Fixed-alpha border — a full color, intentionally NOT alpha-modulated.
+     Override — base token was a color-mix(). */
+  --border-subtle: rgba(36, 38, 33, 0.09);
+
+  /* Brand */
+  --color-brand-primary: var(--color-sage-600);
+  --color-brand-primary-hover: var(--color-sage-700);
+  --color-accent-coral: var(--color-blush-600);
+
+  /* Focus — fixed color, used without an opacity modifier */
+  --focus-ring: color-mix(in oklch, rgb(var(--color-sage-600)) 55%, transparent);
+}

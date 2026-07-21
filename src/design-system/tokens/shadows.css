@@ -1,0 +1,8 @@
+/**
+ * Shadow tokens — soft, warm, layered. Never heavy or pure black.
+ * docs/DESIGN.md § "Design Tokens (exact values)".
+ */
+:root {
+  --shadow-resting: 0 16px 40px -18px hsl(30 25% 20% / 0.16);
+  --shadow-hover: 0 26px 56px -18px hsl(30 25% 20% / 0.2);
+}
