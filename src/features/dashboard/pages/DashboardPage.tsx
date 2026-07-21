@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 import { DESIGNER_NAME } from "../dashboard.fixtures";
 import { HeroGreeting } from "../components/HeroGreeting";
