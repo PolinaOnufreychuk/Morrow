@@ -1,56 +1,52 @@
 import { type ReactNode } from "react";
-import { Icon } from "@/design-system/icons/Icon";
+import { NavLink } from "react-router-dom";
 import { useSidebar } from "@/context/SidebarContext";
 import { cn } from "@/lib/utils";
-import { SidebarNavItem } from "./SidebarNavItem";
+import logoLockup from "@/assets/morrow-logo-horizontal-black.svg";
+import logoIcon from "@/assets/morrow-icon-black.svg";
+import pinnedCover from "@/assets/petal-macro-1.png";
 
 /**
- * Collapsible primary navigation. Width animates 264px ↔ 78px with
- * `ease-breath`. Explicitly NO profile/avatar footer — single-user app
- * (docs/DESIGN.md). Archive is pinned to the bottom of the nav.
+ * Collapsible primary navigation, recreated from Dashboard.dc.html (lines
+ * 51–111). Glass panel over the page background, width animates 264 ↔ 78px
+ * with ease-breath. Logo cross-fades lockup ↔ icon on collapse. Pinned
+ * project mini-card + Archive item pinned to the bottom. Collapse toggle is a
+ * frosted circle straddling the right edge. NO profile/avatar footer
+ * (single-user app).
  *
- * Nav glyphs are simple inline SVGs kept local to the sidebar — the shared
- * Icon set is intentionally minimal (search/close/chevron/plus/dots/arrow)
- * per the scaffolding brief, so per-destination glyphs live here.
+ * Nav glyphs are the exact rounded-stroke 19px SVGs from the source so every
+ * screen shares one icon voice.
  */
 const NAV_GLYPH = {
   dashboard: (
     <NavGlyph>
-      <rect x="3" y="3" width="7" height="7" rx="2" />
-      <rect x="12" y="3" width="7" height="7" rx="2" />
-      <rect x="3" y="12" width="7" height="7" rx="2" />
-      <rect x="12" y="12" width="7" height="7" rx="2" />
+      <rect x="3.6" y="3.6" width="7.1" height="7.1" rx="2.3" />
+      <rect x="13.3" y="3.6" width="7.1" height="7.1" rx="2.3" />
+      <rect x="3.6" y="13.3" width="7.1" height="7.1" rx="2.3" />
+      <rect x="13.3" y="13.3" width="7.1" height="7.1" rx="2.3" />
     </NavGlyph>
   ),
   projects: (
     <NavGlyph>
-      <path d="M3 6.5a2 2 0 0 1 2-2h3l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      <path d="M3.5 8.2c0-1.5 1.2-2.7 2.7-2.7h2.4c.8 0 1.6.4 2.1 1l.8 1c.4.5 1 .7 1.6.7h4.7c1.5 0 2.7 1.2 2.7 2.7v6.4c0 1.5-1.2 2.7-2.7 2.7H6.2c-1.5 0-2.7-1.2-2.7-2.7z" />
     </NavGlyph>
   ),
   inspiration: (
     <NavGlyph>
-      <rect x="3" y="3" width="16" height="16" rx="3" />
-      <circle cx="8.5" cy="8.5" r="1.8" />
-      <path d="m4 15 4-4 4 4 3-3 4 4" />
+      <rect x="3.6" y="5" width="16.8" height="14" rx="3.4" />
+      <circle cx="8.8" cy="9.9" r="1.5" />
+      <path d="m4.6 16.9 4.2-3.6c.6-.5 1.5-.5 2.1 0l2.8 2.4 2.3-1.9c.6-.5 1.5-.5 2.1 0l2 1.7" />
     </NavGlyph>
   ),
   notes: (
     <NavGlyph>
-      <path d="M6 3h7l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-      <path d="M13 3v5h5" />
+      <path d="M5 6.6c0-1.7 1.3-3 3-3h5.4c.5 0 1 .2 1.4.6l3.6 3.6c.4.4.6.9.6 1.4v8.2c0 1.7-1.3 3-3 3H8c-1.7 0-3-1.3-3-3z" />
+      <path d="M8.7 12.5h6.6M8.7 15.7h4.2" />
     </NavGlyph>
   ),
   resources: (
     <NavGlyph>
-      <path d="M9 12a3 3 0 0 0 4.5.3l2.5-2.5a3 3 0 0 0-4.2-4.2L10.5 6.8" />
-      <path d="M13 10a3 3 0 0 0-4.5-.3L6 12.2a3 3 0 0 0 4.2 4.2l1.3-1.2" />
-    </NavGlyph>
-  ),
-  archive: (
-    <NavGlyph>
-      <rect x="3" y="4" width="16" height="4" rx="1.5" />
-      <path d="M4.5 8v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V8" />
-      <path d="M9 12h4" />
+      <path d="M6 6.9C6 5.3 7.3 4 8.9 4h6.2C16.7 4 18 5.3 18 6.9v11.7c0 .9-1 1.5-1.8.9l-3.6-2.5c-.35-.24-.85-.24-1.2 0l-3.6 2.5c-.8.6-1.8 0-1.8-.9z" />
     </NavGlyph>
   ),
 } satisfies Record<string, ReactNode>;
@@ -60,7 +56,7 @@ function NavGlyph({ children }: { children: ReactNode }) {
     <svg
       width="19"
       height="19"
-      viewBox="0 0 22 22"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.6"
@@ -77,7 +73,7 @@ const PRIMARY_NAV = [
   { to: "/", label: "Dashboard", icon: NAV_GLYPH.dashboard, end: true },
   { to: "/projects", label: "Projects", icon: NAV_GLYPH.projects },
   { to: "/inspiration", label: "Inspiration", icon: NAV_GLYPH.inspiration },
-  { to: "/notes", label: "Notes", icon: NAV_GLYPH.notes },
+  { to: "/notes", label: "Notes", icon: NAV_GLYPH.notes, count: 12 },
   { to: "/resources", label: "Resources", icon: NAV_GLYPH.resources },
 ] as const;
 
@@ -85,54 +81,155 @@ export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
 
   return (
-    <aside
-      className={cn(
-        "glass-sidebar sticky top-0 flex h-screen flex-col rounded-none p-4 transition-[width] duration-medium ease-breath",
-        collapsed ? "w-[78px]" : "w-[264px]",
-      )}
-    >
-      {/* Brand + collapse toggle */}
-      <div className={cn("mb-6 flex items-center gap-2", collapsed ? "justify-center" : "justify-between")}>
-        {!collapsed && (
-          <span className="font-display text-[22px] font-light text-text-primary">Morrow</span>
+    <div className="relative z-[3] h-full flex-shrink-0">
+      <aside
+        className={cn(
+          "flex h-full flex-col gap-[22px] border-r border-white/55 px-[14px] pb-[18px] pt-[22px] transition-[width] duration-[340ms] ease-breath",
+          collapsed ? "w-[78px]" : "w-[264px]",
         )}
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex h-8 w-8 items-center justify-center rounded-chip text-text-secondary transition-colors duration-fast ease-out hover:bg-surface-card/60 hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        style={{
+          background: "rgba(247,246,243,.52)",
+          backdropFilter: "blur(28px) saturate(1.25)",
+          WebkitBackdropFilter: "blur(28px) saturate(1.25)",
+        }}
+      >
+        {/* Brand — lockup / icon crossfade */}
+        <div className="relative mx-[6px] my-[2px] h-[30px] flex-shrink-0">
+          <img
+            src={logoLockup}
+            alt="Morrow"
+            className="absolute left-[2px] top-1/2 h-[21px] -translate-y-1/2 transition-opacity duration-[240ms] ease-breath"
+            style={{ opacity: collapsed ? 0 : 1 }}
+          />
+          <img
+            src={logoIcon}
+            alt=""
+            className="absolute inset-x-0 top-1/2 mx-auto h-[26px] w-[26px] -translate-y-1/2 transition-opacity duration-[240ms] ease-breath"
+            style={{ opacity: collapsed ? 1 : 0 }}
+          />
+        </div>
+
+        {/* Scrollable nav + pinned region (keeps Archive from clipping) */}
+        <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-[22px] overflow-y-auto overflow-x-hidden px-1">
+          <nav className="flex flex-col gap-[3px]">
+            {PRIMARY_NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={"end" in item ? item.end : undefined}
+                className={({ isActive }) =>
+                  cn(
+                    "group flex items-center gap-[13px] whitespace-nowrap rounded-[13px] px-3 py-[10px] transition-colors duration-[160ms]",
+                    collapsed && "justify-center",
+                    isActive
+                      ? "bg-white/80 text-sage-900 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.28)]"
+                      : "text-text-tertiary hover:bg-white/45 hover:text-text-primary",
+                  )
+                }
+              >
+                <span className="flex flex-shrink-0">{item.icon}</span>
+                {!collapsed && (
+                  <span className="flex-1 text-[13.5px] font-medium leading-none">{item.label}</span>
+                )}
+                {!collapsed && "count" in item && item.count ? (
+                  <span className="rounded-[7px] bg-ink-900/[.06] px-2 py-0.5 text-[11.5px] font-medium leading-none text-text-tertiary">
+                    {item.count}
+                  </span>
+                ) : null}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Pinned */}
+          <div className="flex flex-col gap-[11px] border-t border-border-subtle pt-[18px]">
+            {!collapsed && (
+              <span className="eyebrow px-[6px] text-text-tertiary">Pinned</span>
+            )}
+            <NavLink
+              to="/projects"
+              className="flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-white/60 bg-white/55 p-[9px] shadow-[0_10px_26px_-14px_hsl(30_25%_20%_/_.14)] transition-[transform,box-shadow] duration-[340ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-16px_hsl(30_25%_20%_/_.2)]"
+            >
+              {!collapsed && (
+                <div className="flex flex-col gap-[6px] px-[5px] pb-[10px] pt-[4px]">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center rounded-chip border border-border-subtle bg-ink-900/[.05] px-[9px] py-1 text-[10.5px] font-medium leading-none text-text-secondary">
+                      Project
+                    </span>
+                    <span className="text-[10.5px] text-text-tertiary">2d ago</span>
+                  </div>
+                  <span className="text-[12.5px] font-medium leading-[1.35] text-text-primary">
+                    Fintech onboarding redesign
+                  </span>
+                </div>
+              )}
+              <div
+                className="rounded-[10px] bg-cover bg-center transition-[height] duration-[340ms] ease-breath"
+                style={{
+                  height: collapsed ? 44 : 86,
+                  backgroundImage: `url(${pinnedCover})`,
+                }}
+              />
+            </NavLink>
+          </div>
+        </div>
+
+        {/* Archive — pinned to bottom, separated by hairline */}
+        <div className="flex-shrink-0 border-t border-border-subtle pt-[14px]">
+          <NavLink
+            to="/archive"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-[13px] whitespace-nowrap rounded-[12px] px-3 py-[9px] opacity-[.88] transition-[background,color,opacity] duration-[160ms] hover:bg-white/45 hover:text-text-secondary hover:opacity-100",
+                collapsed && "justify-center",
+                isActive ? "bg-white/70 text-sage-900 opacity-100" : "text-text-tertiary",
+              )
+            }
+          >
+            <span className="flex flex-shrink-0">
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3.6" y="5.2" width="16.8" height="4.4" rx="1.8" />
+                <path d="M5 9.8v7c0 1.3 1.1 2.4 2.4 2.4h9.2c1.3 0 2.4-1.1 2.4-2.4v-7" />
+                <path d="M10.2 13.2h3.6" />
+              </svg>
+            </span>
+            {!collapsed && <span className="flex-1 text-[13px] leading-none">Archive</span>}
+          </NavLink>
+        </div>
+      </aside>
+
+      {/* Collapse toggle — frosted circle straddling the right edge */}
+      <button
+        type="button"
+        onClick={toggle}
+        title="Toggle sidebar"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        className="absolute right-[-12px] top-[32px] flex h-6 w-6 items-center justify-center rounded-full border border-white/75 bg-white/90 text-text-primary shadow-[0_3px_10px_-3px_hsl(30_25%_20%_/_.22)] backdrop-blur-[10px] transition-[transform,background] duration-[340ms] ease-breath hover:bg-white"
+        style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
+      >
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
         >
-          <Icon
-            name="chevron-right"
-            size={18}
-            className={cn("transition-transform duration-medium ease-breath", !collapsed && "rotate-180")}
-          />
-        </button>
-      </div>
-
-      {/* Primary nav */}
-      <nav className="flex flex-1 flex-col gap-1">
-        {PRIMARY_NAV.map((item) => (
-          <SidebarNavItem
-            key={item.to}
-            to={item.to}
-            label={item.label}
-            icon={item.icon}
-            collapsed={collapsed}
-            end={"end" in item ? item.end : undefined}
-          />
-        ))}
-      </nav>
-
-      {/* Archive pinned to the bottom — replaces the old account section. */}
-      <div className="mt-auto border-t border-border-subtle pt-2">
-        <SidebarNavItem
-          to="/archive"
-          label="Archive"
-          icon={NAV_GLYPH.archive}
-          collapsed={collapsed}
-        />
-      </div>
-    </aside>
+          <path d="m14 6-6 6 6 6" />
+        </svg>
+      </button>
+    </div>
   );
 }

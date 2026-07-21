@@ -1,22 +1,26 @@
 export interface HeroGreetingProps {
   name: string;
+  /** Preformatted date label, e.g. "Saturday · 18 July". */
+  dateLabel: string;
 }
 
 /**
- * Dashboard hero greeting. The name is set in Canela italic (`font-display`)
- * as the single accent moment, per the typography rules in docs/DESIGN.md.
+ * Dashboard hero text block (Dashboard.dc.html lines 119–122). Centered,
+ * editorial: a letter-spaced date eyebrow in forest green, a large Canela
+ * greeting with the NAME as the single italic accent, and a balanced subtitle.
  */
-export function HeroGreeting({ name }: HeroGreetingProps) {
-  const hour = new Date().getHours();
-  const partOfDay = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-
+export function HeroGreeting({ name, dateLabel }: HeroGreetingProps) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="eyebrow text-text-tertiary">Good {partOfDay}</span>
-      <h1 className="text-[36px] font-light leading-tight text-text-primary">
-        Welcome back,{" "}
-        <span className="font-display font-light italic text-sage-700">{name}</span>
+    <>
+      <span className="inline-flex items-center gap-3 text-[10px] font-medium uppercase tracking-[.28em] text-sage-900">
+        {dateLabel}
+      </span>
+      <h1 className="m-0 font-display text-[clamp(40px,4.6vw,58px)] font-light leading-[1.08] tracking-[-.01em] text-text-primary [text-wrap:balance]">
+        Welcome back, <em className="font-light italic">{name}</em>
       </h1>
-    </div>
+      <p className="m-0 max-w-[600px] text-[15px] leading-[1.55] text-[#7B7C76] [text-wrap:balance]">
+        Here&rsquo;s what&rsquo;s fresh across your projects, inspiration and notes.
+      </p>
+    </>
   );
 }
