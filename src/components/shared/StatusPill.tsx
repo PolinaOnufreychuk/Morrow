@@ -2,15 +2,14 @@ import { cn } from "@/lib/utils";
 import type { ProjectStatus } from "@/types/entities";
 
 /**
- * Small status indicator with a tiny colored dot (dots are one of the two
- * allowed fully-rounded shapes). The pill body itself uses radius-chip.
+ * Small status indicator — a tinted pill (background + text share the
+ * status's hue), matching the approved reference design. No dot; the tint
+ * itself carries the status.
  */
-const STATUS_META: Record<ProjectStatus, { label: string; dot: string }> = {
-  planning: { label: "Planning", dot: "bg-warm-500" },
-  "in-progress": { label: "In progress", dot: "bg-sage-600" },
-  review: { label: "In review", dot: "bg-blush-400" },
-  done: { label: "Done", dot: "bg-sage-900" },
-  "on-hold": { label: "On hold", dot: "bg-warm-300" },
+const STATUS_META: Record<ProjectStatus, { label: string; className: string }> = {
+  "in-progress": { label: "In progress", className: "bg-sage-100 text-sage-700" },
+  review: { label: "Review", className: "bg-blush-100 text-blush-600" },
+  done: { label: "Completed", className: "bg-sage-100 text-sage-700" },
 };
 
 export interface StatusPillProps {
@@ -23,11 +22,11 @@ export function StatusPill({ status, className }: StatusPillProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-chip bg-cream-100 px-2 py-1 text-[12px] font-medium text-text-secondary",
+        "inline-flex items-center rounded-chip px-2.5 py-1 text-[12px] font-medium",
+        meta.className,
         className,
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", meta.dot)} />
       {meta.label}
     </span>
   );

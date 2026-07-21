@@ -38,11 +38,12 @@ export function NoteCard({ note, variant = "compact", onEdit, onArchive, onDelet
   const meta = NOTE_TYPE_META[note.type];
   return (
     <GlassCard className="group relative flex flex-col gap-3 p-4">
-      <header className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 text-text-secondary">
-          <NoteTypeIcon type={note.type} size={17} />
-          <span className="eyebrow text-text-tertiary">{meta.label}</span>
-        </div>
+      <h3 className="text-[15px] font-medium leading-snug text-text-primary">{note.title}</h3>
+
+      <NoteBody note={note} variant={variant} />
+
+      <footer className="mt-auto flex items-center justify-between gap-2 pt-1">
+        <Badge variant="neutral">{meta.label}</Badge>
         <div className="opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
           <EntityOverflowMenu
             entityType="note"
@@ -51,11 +52,7 @@ export function NoteCard({ note, variant = "compact", onEdit, onArchive, onDelet
             onDelete={onDelete ? () => onDelete(note) : undefined}
           />
         </div>
-      </header>
-
-      <h3 className="text-[15px] font-medium leading-snug text-text-primary">{note.title}</h3>
-
-      <NoteBody note={note} variant={variant} />
+      </footer>
     </GlassCard>
   );
 }
@@ -120,6 +117,7 @@ function ChecklistBody({ note, isFull }: { note: ChecklistNote; isFull: boolean 
 }
 
 function BookmarkBody({ note }: { note: BookmarkNote }) {
+  const domain = note.domain ?? note.url;
   return (
     <a
       href={note.url}
@@ -128,8 +126,14 @@ function BookmarkBody({ note }: { note: BookmarkNote }) {
       className="flex flex-col gap-1 rounded-card-image border border-border-subtle bg-surface-card/60 p-3"
     >
       <span className="flex items-center gap-2 text-[13px] font-medium text-text-primary">
-        {note.faviconUrl && <img src={note.faviconUrl} alt="" className="h-4 w-4 rounded-[4px]" />}
-        {note.domain ?? note.url}
+        {note.faviconUrl ? (
+          <img src={note.faviconUrl} alt="" className="h-4 w-4 rounded-[4px]" />
+        ) : (
+          <span className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-border-subtle text-[9px] font-semibold uppercase text-text-tertiary">
+            {domain.charAt(0)}
+          </span>
+        )}
+        {domain}
       </span>
       {note.snippet && <span className="line-clamp-2 text-[12px] text-text-secondary">{note.snippet}</span>}
     </a>
@@ -220,12 +224,26 @@ function MeetingBody({ note, isFull }: { note: MeetingNote; isFull: boolean }) {
   const agenda = isFull ? note.agenda : note.agenda.slice(0, 3);
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {note.attendees.map((attendee) => (
-          <Badge key={attendee.name} variant="sage">
-            {attendee.name}
-          </Badge>
-        ))}
+      <div className="flex items-center -space-x-1.5">
+        {note.attendees.map((attendee) =>
+          attendee.avatarUrl ? (
+            <img
+              key={attendee.name}
+              src={attendee.avatarUrl}
+              alt={attendee.name}
+              title={attendee.name}
+              className="h-7 w-7 rounded-full border-2 border-surface-card object-cover"
+            />
+          ) : (
+            <span
+              key={attendee.name}
+              title={attendee.name}
+              className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface-card bg-sage-200 text-[12px] font-medium text-sage-700"
+            >
+              {attendee.name.charAt(0).toUpperCase()}
+            </span>
+          ),
+        )}
       </div>
       <ul className="flex flex-col gap-1 text-[13px] text-text-secondary">
         {agenda.map((item, index) => (

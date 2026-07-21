@@ -1,0 +1,13 @@
+:root{
+--sage-100:#EEF1EA;--sage-200:#D3DAA7;--sage-300:#B4C09C;--sage-400:#8FA987;--sage-500:#748C5A;--sage-600:#6B8C6D;--sage-700:#557057;--sage-900:#2F4635;
+--blush-100:#FBF0F0;--blush-200:#EFC7CF;--blush-300:#DAB0BC;--blush-400:#D8A5A1;--blush-600:#BF6968;
+--cream-50:#FBFAF8;--cream-100:#F2F2F2;--cream-200:#EEEAE6;--warm-300:#CAC9C7;--warm-500:#9A9793;--ink-700:#4A4B45;--ink-900:#242621;
+--surface-page:var(--cream-50);--surface-canvas:var(--cream-200);--surface-card:#FFFFFF;--surface-card-tint:var(--cream-100);--surface-sunken:var(--warm-300);
+--surface-dark:var(--sage-900);--surface-dark-card:#33463A;
+--text-primary:var(--ink-900);--text-secondary:var(--ink-700);--text-tertiary:var(--warm-500);--text-on-dark:var(--cream-50);--text-on-accent:#FFFFFF;
+--border-subtle:color-mix(in oklch, var(--warm-300) 60%, transparent);--border-default:var(--warm-300);--border-strong:var(--ink-700);
+--brand-primary:var(--sage-600);--brand-primary-hover:var(--sage-700);--brand-secondary:var(--blush-400);--accent-coral:var(--blush-600);
+--state-success:var(--sage-500);--state-warning:#C99A56;--state-danger:var(--blush-600);--state-info:var(--sage-400);
+--focus-ring:color-mix(in oklch, var(--sage-600) 55%, transparent);
+--shadow-color:30 25% 20%;
+}

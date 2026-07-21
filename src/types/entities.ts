@@ -24,7 +24,7 @@ export interface ExternalLink {
 /* Projects                                                                    */
 /* -------------------------------------------------------------------------- */
 
-export type ProjectStatus = "planning" | "in-progress" | "review" | "done" | "on-hold";
+export type ProjectStatus = "in-progress" | "review" | "done";
 
 export interface Project extends BaseEntity {
   title: string;
@@ -175,6 +175,7 @@ interface ResourceBase extends BaseEntity {
 
 export interface LinkResource extends ResourceBase {
   kind: "link";
+  readingMinutes: number | null;
 }
 
 export interface RepoResource extends ResourceBase {
@@ -194,6 +195,7 @@ export interface VideoResource extends ResourceBase {
 export interface PdfResource extends ResourceBase {
   kind: "pdf";
   filename: string;
+  pageCount: number | null;
 }
 
 export interface PreviewResource extends ResourceBase {

@@ -12,11 +12,9 @@ import type { Project, ProjectStatus } from "@/types/entities";
 export type ProjectFormValues = ProjectInput;
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
-  planning: "Planning",
   "in-progress": "In progress",
-  review: "In review",
-  done: "Done",
-  "on-hold": "On hold",
+  review: "Review",
+  done: "Completed",
 };
 
 const STATUS_OPTIONS = PROJECT_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] }));
@@ -36,7 +34,7 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
       title: defaultValues?.title ?? "",
       coverImageUrl: defaultValues?.coverImageUrl ?? "",
       description: defaultValues?.description ?? "",
-      status: defaultValues?.status ?? "planning",
+      status: defaultValues?.status ?? "in-progress",
       deadline: defaultValues?.deadline ?? null,
       tags: defaultValues?.tags ?? [],
       externalLinks: defaultValues?.externalLinks ?? [],

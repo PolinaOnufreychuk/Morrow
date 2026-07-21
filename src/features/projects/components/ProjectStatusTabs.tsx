@@ -3,11 +3,9 @@ import type { ProjectStatusFilter } from "../types";
 
 const OPTIONS: { value: ProjectStatusFilter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "planning", label: "Planning" },
   { value: "in-progress", label: "In progress" },
   { value: "review", label: "Review" },
-  { value: "done", label: "Done" },
-  { value: "on-hold", label: "On hold" },
+  { value: "done", label: "Completed" },
 ];
 
 export interface ProjectStatusTabsProps {

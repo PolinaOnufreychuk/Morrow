@@ -5,3 +5,8 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/** Newest-first by `updatedAt` — shared by every "latest"/"recently updated" list. */
+export function sortByRecency<T extends { updatedAt: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}

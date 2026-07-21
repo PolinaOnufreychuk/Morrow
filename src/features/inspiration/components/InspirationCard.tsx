@@ -3,100 +3,98 @@ import { GlassCard } from "@/components/shared/GlassCard";
 import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useBoardReferences } from "../hooks/useInspiration";
 import type { InspirationBoard } from "@/types/entities";
 
 export type InspirationCardVariant = "compact" | "full";
 
 export interface InspirationCardProps {
   board: InspirationBoard;
-  /** Up to 3 reference images to fan; falls back to the board cover. */
-  previewImages?: string[];
   variant?: InspirationCardVariant;
   onEdit?: (board: InspirationBoard) => void;
   onArchive?: (board: InspirationBoard) => void;
   onDelete?: (board: InspirationBoard) => void;
 }
 
-const FAN_ROTATIONS = ["-rotate-6", "rotate-0", "rotate-6"];
-const FAN_OFFSETS = ["-translate-x-6", "translate-x-0", "translate-x-6"];
-
 /**
- * Inspiration board card. Its signature composition is a fanned/rotated
- * 3-image stack — a board card is never downgraded to a plain list row
- * (docs/DESIGN.md). Compact + full variants.
+ * Inspiration board card. Its signature composition is an asymmetric collage
+ * — one large reference image with up to two smaller ones peeking behind it
+ * — never downgraded to a plain list row (docs/DESIGN.md). Compact + full
+ * variants. Reads its own reference count/images via `useBoardReferences` so
+ * every board card (dashboard, list page, embedded-in-project) stays in sync
+ * with the real data without prop-drilling.
  */
 export function InspirationCard({
   board,
-  previewImages,
   variant = "compact",
   onEdit,
   onArchive,
   onDelete,
 }: InspirationCardProps) {
-  const images = (previewImages && previewImages.length > 0
-    ? previewImages
-    : board.coverImageUrl
-      ? [board.coverImageUrl]
-      : []
+  const { data: references = [] } = useBoardReferences(board.id);
+  const images = (
+    references.length > 0
+      ? references.map((reference) => reference.imageUrl)
+      : board.coverImageUrl
+        ? [board.coverImageUrl]
+        : []
   ).slice(0, 3);
+  const [primary, ...peeking] = images;
 
   const isFull = variant === "full";
 
   return (
-    <GlassCard interactive className="group relative flex flex-col">
-      <div className="absolute right-3 top-3 z-20 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
+    <GlassCard interactive className="group flex flex-col">
+      <Link to={`/inspiration/${board.id}`} className="flex flex-col">
+        {/* Asymmetric collage: one large image + up to two peeking behind it */}
+        <div className={cn("relative overflow-hidden", isFull ? "h-56" : "h-44")}>
+          {primary ? (
+            <img
+              src={primary}
+              alt=""
+              className="absolute bottom-3 left-3 top-3 w-[64%] rounded-card-image object-cover shadow-resting transition-transform duration-medium ease-out group-hover:scale-[1.02]"
+            />
+          ) : (
+            <div className="absolute bottom-3 left-3 top-3 w-[64%] rounded-card-image bg-sage-100" />
+          )}
+          {peeking[0] && (
+            <img
+              src={peeking[0]}
+              alt=""
+              className="absolute right-3 top-3 h-[46%] w-[34%] rotate-3 rounded-card-image object-cover shadow-resting"
+            />
+          )}
+          {peeking[1] && (
+            <img
+              src={peeking[1]}
+              alt=""
+              className="absolute bottom-3 right-3 h-[46%] w-[34%] -rotate-2 rounded-card-image object-cover shadow-resting"
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5 p-4 pb-0 pt-1">
+          <h3 className="text-[16px] font-medium leading-snug text-text-primary">{board.title}</h3>
+          {isFull && board.notes && (
+            <p className="line-clamp-2 text-[13px] text-text-secondary">{board.notes}</p>
+          )}
+        </div>
+      </Link>
+
+      {/* Outside the Link — an overflow menu button must never nest inside an anchor. */}
+      <div className="flex items-center justify-between gap-2 p-4 pt-1.5">
+        <div className="flex items-center gap-2">
+          {board.tags[0] && <Badge variant="neutral">{board.tags[0]}</Badge>}
+          <span className="text-[12.5px] text-text-tertiary">{references.length} saved</span>
+        </div>
         <EntityOverflowMenu
           entityType="collection"
           onEdit={onEdit ? () => onEdit(board) : undefined}
           onArchive={onArchive ? () => onArchive(board) : undefined}
           onDelete={onDelete ? () => onDelete(board) : undefined}
-          triggerClassName="bg-surface-card/70 backdrop-blur-sm"
+          triggerClassName="opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100"
         />
       </div>
-
-      <Link to={`/inspiration/${board.id}`} className="flex flex-col">
-        {/* Fanned image stack */}
-        <div
-          className={cn(
-            "relative flex items-center justify-center overflow-hidden px-6",
-            isFull ? "h-56" : "h-44",
-          )}
-        >
-          {images.map((src, index) => (
-            <img
-              key={src}
-              src={src}
-              alt=""
-              className={cn(
-                "absolute h-[78%] w-[58%] rounded-card-image object-cover shadow-resting transition-transform duration-medium ease-out",
-                FAN_ROTATIONS[index] ?? "rotate-0",
-                FAN_OFFSETS[index] ?? "translate-x-0",
-                "group-hover:scale-[1.02]",
-              )}
-              style={{ zIndex: index === 1 ? 10 : 5 }}
-            />
-          ))}
-          {images.length === 0 && (
-            <div className="h-[78%] w-[58%] rounded-card-image bg-sage-100" />
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2 p-4">
-          <h3 className="text-[16px] font-medium leading-snug text-text-primary">{board.title}</h3>
-          {isFull && board.notes && (
-            <p className="line-clamp-2 text-[13px] text-text-secondary">{board.notes}</p>
-          )}
-          {board.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {board.tags.slice(0, isFull ? 6 : 3).map((tag) => (
-                <Badge key={tag} variant="neutral">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </Link>
     </GlassCard>
   );
 }

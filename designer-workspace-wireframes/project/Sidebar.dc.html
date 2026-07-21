@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/morrow-design-system-ba8ef2a2-ce09-4c87-88de-c05a4e43b774/tokens/colors.css">
+<link rel="stylesheet" href="_ds/morrow-design-system-ba8ef2a2-ce09-4c87-88de-c05a4e43b774/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/morrow-design-system-ba8ef2a2-ce09-4c87-88de-c05a4e43b774/tokens/typography.css">
+<link rel="stylesheet" href="_ds/morrow-design-system-ba8ef2a2-ce09-4c87-88de-c05a4e43b774/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/morrow-design-system-ba8ef2a2-ce09-4c87-88de-c05a4e43b774/styles.css">
+<script src="_ds/morrow-design-system-ba8ef2a2-ce09-4c87-88de-c05a4e43b774/_ds_bundle.js"></script>
+</helmet>
+
+<div style="width:{{ sidebarWidth }};flex-shrink:0;background:var(--surface-canvas);border-right:1px solid var(--border-default);display:flex;flex-direction:column;padding:28px 14px 18px;gap:26px;height:100%;transition:width .28s var(--ease-breath,ease);overflow:hidden;">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 6px;">
+<div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
+<div style="width:24px;height:24px;border-radius:50%;background:var(--brand-primary);flex-shrink:0;"></div>
+<sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-family:var(--font-display);font-weight:300;font-size:19px;color:var(--text-primary);white-space:nowrap;">Morrow</span></sc-if>
+</div>
+<button onClick="{{ toggleCollapse }}" style="width:26px;height:26px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text-tertiary);font-size:12px;padding:0;">{{ toggleGlyph }}</button>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:2px;">
+<sc-for list="{{ navItems }}" as="item" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:13px;padding:10px 12px;border-radius:12px;color:{{ item.color }};font-weight:{{ item.weight }};font-size:14px;background:{{ item.bg }};cursor:pointer;white-space:nowrap;">
+<div style="width:17px;height:17px;border-radius:5px;background:currentColor;opacity:.3;flex-shrink:0;"></div>
+<sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span>{{ item.label }}</span></sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--border-subtle);">
+<sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);padding:0 6px;">Pinned</span></sc-if>
+
+<sc-if value="{{ hasPinned }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:var(--surface-card);border:1px solid var(--border-subtle);cursor:pointer;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+<span style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-tertiary);">{{ pinnedType }}</span>
+</div>
+<sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
+<span style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;">{{ pinnedTitle }}</span>
+<span style="font-size:11px;color:var(--text-tertiary);">{{ pinnedMeta }}</span>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ showEmptyPinned }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:4px;padding:14px 12px;border-radius:14px;border:1px dashed var(--border-default);">
+<span style="font-size:12.5px;color:var(--text-tertiary);line-height:1.5;">Nothing pinned yet</span>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{ showAvatar }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 6px 0;border-top:1px solid var(--border-subtle);">
+<x-import component-from-global-scope="MorrowDesignSystem_ba8ef2.Avatar" name="Jordan Lee" size="34" hint-size="34px,34px" style="width:34px;height:34px;flex-shrink:0"></x-import>
+<sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;overflow:hidden;"><span style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;">Jordan Lee</span><span style="font-size:11.5px;color:var(--text-tertiary);white-space:nowrap;">Product designer</span></div></sc-if>
+</div>
+</sc-if>
+
+<div style="display:flex;align-items:center;gap:13px;padding:9px 12px;margin-top:{{ archiveMarginTop }};border-radius:12px;color:{{ archiveColor }};background:{{ archiveBg }};cursor:pointer;white-space:nowrap;flex-shrink:0;">
+<div style="width:15px;height:15px;border-radius:5px;background:currentColor;opacity:.3;flex-shrink:0;"></div>
+<sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;">Archive</span></sc-if>
+</div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:236,&quot;height&quot;:600},&quot;activePage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;projects&quot;,&quot;inspiration&quot;,&quot;notes&quot;,&quot;resources&quot;,&quot;archive&quot;]},&quot;collapsed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showAvatar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;pinnedType&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;project&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;project&quot;,&quot;inspiration&quot;,&quot;note&quot;,&quot;resource&quot;]},&quot;pinnedTitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Fintech onboarding redesign&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pinnedMeta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Updated 2d ago&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { collapsed: !!this.props.collapsed };
+
+  renderVals() {
+    const collapsed = this.state.collapsed;
+    const showLabels = !collapsed;
+    const active = this.props.activePage || 'dashboard';
+    const labels = [
+      { key: 'dashboard', label: 'Dashboard' },
+      { key: 'projects', label: 'Projects' },
+      { key: 'inspiration', label: 'Inspiration' },
+      { key: 'notes', label: 'Notes' },
+      { key: 'resources', label: 'Resources' },
+    ];
+    const navItems = labels.map(l => ({
+      label: l.label,
+      color: l.key === active ? 'var(--text-primary)' : 'var(--text-tertiary)',
+      weight: l.key === active ? 600 : 500,
+      bg: l.key === active ? 'var(--surface-card)' : 'transparent',
+    }));
+
+    const pinnedType = this.props.pinnedType ?? 'project';
+    const hasPinned = pinnedType !== 'none';
+    const showEmptyPinned = !hasPinned;
+    const pinnedTitle = this.props.pinnedTitle ?? 'Fintech onboarding redesign';
+    const pinnedMeta = this.props.pinnedMeta ?? 'Updated 2d ago';
+
+    const isArchiveActive = active === 'archive';
+    return {
+      sidebarWidth: collapsed ? '76px' : '236px',
+      showLabels,
+      toggleGlyph: collapsed ? '›' : '‹',
+      toggleCollapse: () => this.setState(s => ({ collapsed: !s.collapsed })),
+      navItems,
+      hasPinned, showEmptyPinned, pinnedType, pinnedTitle, pinnedMeta,
+      showAvatar: this.props.showAvatar ?? true,
+      archiveMarginTop: this.props.showAvatar ?? true ? '0' : 'auto',
+      archiveColor: isArchiveActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+      archiveBg: isArchiveActive ? 'var(--surface-card)' : 'transparent',
+    };
+  }
+}
+</script>
+</body>
+</html>

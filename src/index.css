@@ -99,6 +99,9 @@
     opacity: 1;
   }
 }
+.animate-ref-fade-in {
+  animation: refFadeIn var(--duration-medium) var(--ease-out);
+}
 @keyframes refScaleIn {
   from {
     opacity: 0;

@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useSidebar } from "@/context/SidebarContext";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import logoLockup from "@/assets/morrow-logo-horizontal-black.svg";
 import logoIcon from "@/assets/morrow-icon-black.svg";
 import pinnedCover from "@/assets/petal-macro-1.png";
@@ -77,6 +78,25 @@ const PRIMARY_NAV = [
   { to: "/resources", label: "Resources", icon: NAV_GLYPH.resources },
 ] as const;
 
+/** Wraps a collapsed-sidebar nav item with its label as a tooltip; passes through untouched when expanded. */
+function CollapsedTooltip({
+  collapsed,
+  label,
+  children,
+}: {
+  collapsed: boolean;
+  label: string;
+  children: ReactNode;
+}) {
+  if (!collapsed) return <>{children}</>;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
 
@@ -91,6 +111,7 @@ export function Sidebar() {
           background: "rgba(247,246,243,.52)",
           backdropFilter: "blur(28px) saturate(1.25)",
           WebkitBackdropFilter: "blur(28px) saturate(1.25)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,.58)",
         }}
       >
         {/* Brand — lockup / icon crossfade */}
@@ -113,30 +134,31 @@ export function Sidebar() {
         <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-[22px] overflow-y-auto overflow-x-hidden px-1">
           <nav className="flex flex-col gap-[3px]">
             {PRIMARY_NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={"end" in item ? item.end : undefined}
-                className={({ isActive }) =>
-                  cn(
-                    "group flex items-center gap-[13px] whitespace-nowrap rounded-[13px] px-3 py-[10px] transition-colors duration-[160ms]",
-                    collapsed && "justify-center",
-                    isActive
-                      ? "bg-white/80 text-sage-900 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.28)]"
-                      : "text-text-tertiary hover:bg-white/45 hover:text-text-primary",
-                  )
-                }
-              >
-                <span className="flex flex-shrink-0">{item.icon}</span>
-                {!collapsed && (
-                  <span className="flex-1 text-[13.5px] font-medium leading-none">{item.label}</span>
-                )}
-                {!collapsed && "count" in item && item.count ? (
-                  <span className="rounded-[7px] bg-ink-900/[.06] px-2 py-0.5 text-[11.5px] font-medium leading-none text-text-tertiary">
-                    {item.count}
-                  </span>
-                ) : null}
-              </NavLink>
+              <CollapsedTooltip key={item.to} collapsed={collapsed} label={item.label}>
+                <NavLink
+                  to={item.to}
+                  end={"end" in item ? item.end : undefined}
+                  className={({ isActive }) =>
+                    cn(
+                      "group flex items-center gap-[13px] whitespace-nowrap rounded-[13px] px-3 py-[10px] transition-colors duration-[160ms]",
+                      collapsed && "justify-center",
+                      isActive
+                        ? "bg-white/80 text-sage-900 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.28)]"
+                        : "text-text-tertiary hover:bg-white/45 hover:text-text-primary",
+                    )
+                  }
+                >
+                  <span className="flex flex-shrink-0">{item.icon}</span>
+                  {!collapsed && (
+                    <span className="flex-1 text-[13.5px] font-medium leading-none">{item.label}</span>
+                  )}
+                  {!collapsed && "count" in item && item.count ? (
+                    <span className="rounded-[7px] bg-ink-900/[.06] px-2 py-0.5 text-[11.5px] font-medium leading-none text-text-tertiary">
+                      {item.count}
+                    </span>
+                  ) : null}
+                </NavLink>
+              </CollapsedTooltip>
             ))}
           </nav>
 
@@ -175,35 +197,37 @@ export function Sidebar() {
 
         {/* Archive — pinned to bottom, separated by hairline */}
         <div className="flex-shrink-0 border-t border-border-subtle pt-[14px]">
-          <NavLink
-            to="/archive"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-[13px] whitespace-nowrap rounded-[12px] px-3 py-[9px] opacity-[.88] transition-[background,color,opacity] duration-[160ms] hover:bg-white/45 hover:text-text-secondary hover:opacity-100",
-                collapsed && "justify-center",
-                isActive ? "bg-white/70 text-sage-900 opacity-100" : "text-text-tertiary",
-              )
-            }
-          >
-            <span className="flex flex-shrink-0">
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3.6" y="5.2" width="16.8" height="4.4" rx="1.8" />
-                <path d="M5 9.8v7c0 1.3 1.1 2.4 2.4 2.4h9.2c1.3 0 2.4-1.1 2.4-2.4v-7" />
-                <path d="M10.2 13.2h3.6" />
-              </svg>
-            </span>
-            {!collapsed && <span className="flex-1 text-[13px] leading-none">Archive</span>}
-          </NavLink>
+          <CollapsedTooltip collapsed={collapsed} label="Archive">
+            <NavLink
+              to="/archive"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-[13px] whitespace-nowrap rounded-[12px] px-3 py-[9px] opacity-[.88] transition-[background,color,opacity] duration-[160ms] hover:bg-white/45 hover:text-text-secondary hover:opacity-100",
+                  collapsed && "justify-center",
+                  isActive ? "bg-white/70 text-sage-900 opacity-100" : "text-text-tertiary",
+                )
+              }
+            >
+              <span className="flex flex-shrink-0">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3.6" y="5.2" width="16.8" height="4.4" rx="1.8" />
+                  <path d="M5 9.8v7c0 1.3 1.1 2.4 2.4 2.4h9.2c1.3 0 2.4-1.1 2.4-2.4v-7" />
+                  <path d="M10.2 13.2h3.6" />
+                </svg>
+              </span>
+              {!collapsed && <span className="flex-1 text-[13px] leading-none">Archive</span>}
+            </NavLink>
+          </CollapsedTooltip>
         </div>
       </aside>
 

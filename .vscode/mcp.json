@@ -1,0 +1,26 @@
+{
+	"servers": {
+		"mcp-server": {
+			"type": "stdio",
+			"sandboxEnabled": false,
+			"command": "npx",
+			"cwd": "${input:cwd}",
+			"args": [
+				"@playwright/mcp@0.0.78"
+			],
+			"dev": {
+				"watch": [],
+				"debug": {
+					"type": "node"
+				}
+			}
+		}
+	},
+	"inputs": [
+		{
+			"id": "cwd",
+			"type": "promptString",
+			"description": "Current Working Directory"
+		}
+	]
+}

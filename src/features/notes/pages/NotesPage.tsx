@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export function NotesPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageShell>
       <PageHeader
         eyebrow="Thinking space"
         title="Notes"
@@ -121,6 +122,6 @@ export function NotesPage() {
           // TODO: wire to useDeleteNote()
         }}
       />
-    </div>
+    </PageShell>
   );
 }

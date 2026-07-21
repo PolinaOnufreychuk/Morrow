@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export function InspirationPage() {
   }, [boards, query, sort]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageShell>
       <PageHeader
         eyebrow="Visual library"
         title="Inspiration"
@@ -111,6 +112,6 @@ export function InspirationPage() {
           // TODO: wire to a delete-board mutation (not yet in useInspiration.ts)
         }}
       />
-    </div>
+    </PageShell>
   );
 }

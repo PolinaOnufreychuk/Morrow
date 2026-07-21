@@ -10,13 +10,7 @@ import { z } from "zod";
  * Keeping exactly one schema means the form and the service can never drift.
  */
 
-export const PROJECT_STATUSES = [
-  "planning",
-  "in-progress",
-  "review",
-  "done",
-  "on-hold",
-] as const;
+export const PROJECT_STATUSES = ["in-progress", "review", "done"] as const;
 
 export const projectStatusSchema = z.enum(PROJECT_STATUSES);
 

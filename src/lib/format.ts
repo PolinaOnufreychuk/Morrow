@@ -11,13 +11,12 @@ export function formatDate(iso: string | null): string {
   });
 }
 
-export function formatRelativeDeadline(iso: string | null): string {
-  if (!iso) return "No deadline";
+/** "Today" / "Yesterday" / "Nd ago" — for surfaces showing recency, not deadlines. */
+export function formatRelativeUpdated(iso: string): string {
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "No deadline";
-  const days = Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (days < 0) return `${Math.abs(days)}d overdue`;
-  if (days === 0) return "Due today";
-  if (days === 1) return "Due tomorrow";
-  return `${days}d left`;
+  if (Number.isNaN(date.getTime())) return "";
+  const days = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  return `${days}d ago`;
 }

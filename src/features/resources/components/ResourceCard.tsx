@@ -1,10 +1,11 @@
 import { GlassCard } from "@/components/shared/GlassCard";
 import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { Badge } from "@/components/ui/badge";
+import { GithubMark } from "@/design-system/icons/GithubMark";
+import { FigmaMark } from "@/design-system/icons/FigmaMark";
 import { cn } from "@/lib/utils";
 import type {
   ImageResource,
-  LinkResource,
   PdfResource,
   PreviewResource,
   RepoResource,
@@ -22,11 +23,34 @@ export interface ResourceCardProps {
   onDelete?: (resource: Resource) => void;
 }
 
+/** Hostname without "www." — the shared "secondary meta" fallback for any kind with a URL. */
+function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+/** One consistent secondary-meta string per kind: reading time, page count, or domain. */
+function secondaryMeta(resource: Resource): string {
+  switch (resource.kind) {
+    case "link":
+      return resource.readingMinutes ? `${resource.readingMinutes} min read` : hostnameOf(resource.url);
+    case "pdf":
+      return resource.pageCount ? `${resource.pageCount} pages` : resource.filename;
+    default:
+      return hostnameOf(resource.url);
+  }
+}
+
 /**
  * ONE polymorphic resource card. `kind` drives the layout via an exhaustive
  * `switch` with a `never` default — adding a ResourceKind fails the type
  * check here until a branch is added. `kind` only affects the visual media
- * treatment, never filtering (docs/FEATURES.md).
+ * treatment, never filtering (docs/FEATURES.md). Every kind shares one
+ * footer shape: a single tag chip, a secondary-meta string (domain/reading
+ * time/page count), and the overflow menu.
  */
 export function ResourceCard({
   resource,
@@ -36,17 +60,7 @@ export function ResourceCard({
   onDelete,
 }: ResourceCardProps) {
   return (
-    <GlassCard className="group relative flex flex-col gap-3 p-4">
-      <div className="absolute right-3 top-3 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
-        <EntityOverflowMenu
-          entityType="resource"
-          onEdit={onEdit ? () => onEdit(resource) : undefined}
-          onArchive={onArchive ? () => onArchive(resource) : undefined}
-          onDelete={onDelete ? () => onDelete(resource) : undefined}
-          triggerClassName="bg-surface-card/70 backdrop-blur-sm"
-        />
-      </div>
-
+    <GlassCard className="group flex flex-col gap-3 p-4">
       <ResourceMedia resource={resource} variant={variant} />
 
       <div className="flex flex-col gap-2">
@@ -61,16 +75,22 @@ export function ResourceCard({
         {resource.description && (
           <p className="line-clamp-2 text-[13px] text-text-secondary">{resource.description}</p>
         )}
-        {resource.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {resource.tags.map((tag) => (
-              <Badge key={tag} variant="neutral">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
       </div>
+
+      <footer className="mt-auto flex items-center justify-between gap-2 pt-1">
+        <div className="flex items-center gap-2">
+          {resource.tags[0] && <Badge variant="neutral">{resource.tags[0]}</Badge>}
+          <span className="text-[12px] text-text-tertiary">{secondaryMeta(resource)}</span>
+        </div>
+        <div className="opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
+          <EntityOverflowMenu
+            entityType="resource"
+            onEdit={onEdit ? () => onEdit(resource) : undefined}
+            onArchive={onArchive ? () => onArchive(resource) : undefined}
+            onDelete={onDelete ? () => onDelete(resource) : undefined}
+          />
+        </div>
+      </footer>
     </GlassCard>
   );
 }
@@ -78,7 +98,8 @@ export function ResourceCard({
 function ResourceMedia({ resource, variant }: { resource: Resource; variant: ResourceCardVariant }) {
   switch (resource.kind) {
     case "link":
-      return <LinkMedia resource={resource} />;
+      // Link resources have no thumbnail — title/description/footer carry the card.
+      return null;
     case "repo":
       return <RepoMedia resource={resource} />;
     case "video":
@@ -97,31 +118,15 @@ function ResourceMedia({ resource, variant }: { resource: Resource; variant: Res
   }
 }
 
-function LinkMedia({ resource }: { resource: LinkResource }) {
-  let host = resource.url;
-  try {
-    host = new URL(resource.url).hostname.replace(/^www\./, "");
-  } catch {
-    /* keep raw url */
-  }
-  return <span className="eyebrow text-text-tertiary">{host}</span>;
-}
-
 function RepoMedia({ resource }: { resource: RepoResource }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-card-image border border-border-subtle bg-surface-card/60 p-3">
-      <span className="text-[13px] font-medium text-text-primary">
+    <div className="flex items-center gap-3 rounded-card-image border border-border-subtle bg-surface-card/60 p-3">
+      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-chip bg-ink-900 text-white">
+        <GithubMark size={20} />
+      </span>
+      <span className="truncate text-[13px] font-medium text-text-primary">
         {resource.owner}/{resource.repoName}
       </span>
-      <div className="flex items-center gap-3 text-[12px] text-text-tertiary">
-        {resource.language && (
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-sage-500" />
-            {resource.language}
-          </span>
-        )}
-        {resource.stars !== null && <span>★ {resource.stars.toLocaleString()}</span>}
-      </div>
     </div>
   );
 }
@@ -166,13 +171,17 @@ function PreviewMedia({
   resource: PreviewResource;
   variant: ResourceCardVariant;
 }) {
+  const height = variant === "full" ? "h-48" : "h-36";
+  if (!resource.previewImageUrl) {
+    return (
+      <div className={cn("flex items-center justify-center rounded-card-image bg-cream-100", height)}>
+        {resource.isFigma ? <FigmaMark size={40} /> : <div className="h-10 w-10 rounded-chip bg-sage-200" />}
+      </div>
+    );
+  }
   return (
-    <div className={cn("relative overflow-hidden rounded-card-image", variant === "full" ? "h-48" : "h-36")}>
-      {resource.previewImageUrl ? (
-        <img src={resource.previewImageUrl} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <div className="h-full w-full bg-sage-100" />
-      )}
+    <div className={cn("relative overflow-hidden rounded-card-image", height)}>
+      <img src={resource.previewImageUrl} alt="" className="h-full w-full object-cover" />
       {resource.isFigma && (
         <span className="absolute left-2 top-2 rounded-chip bg-surface-card/85 px-2 py-0.5 text-[11px] font-medium text-text-primary backdrop-blur-sm">
           Figma

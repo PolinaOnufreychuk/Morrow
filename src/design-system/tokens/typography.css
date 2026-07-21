@@ -1,15 +1,46 @@
 /**
  * Typography tokens + @font-face declarations.
  *
- * Display font: Canela (Thin 200 / Light 300 + italics only, per DESIGN.md).
- * Canela is not available as font files in this repo, so --font-display
- * falls back to a serif system stack until real Canela files are added.
+ * Display font: Canela (Thin 200 / Light 300 + italics only, per DESIGN.md),
+ * loaded from the 4 .otf files copied into src/design-system/fonts/.
  *
  * UI/body font: Helvetica Neue Cyr, loaded from the 8 .woff2 files copied
  * into src/design-system/fonts/ (Light/Roman/Medium/Bold + italics).
  * NOT Satoshi — Satoshi was superseded by explicit decision during the
  * hi-fi design pass and no Satoshi files exist in this repo.
  */
+
+@font-face {
+  font-family: "Canela";
+  src: url("../fonts/Canela-Thin-Trial.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canela";
+  src: url("../fonts/Canela-ThinItalic-Trial.otf") format("opentype");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canela";
+  src: url("../fonts/Canela-Light-Trial.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canela";
+  src: url("../fonts/Canela-LightItalic-Trial.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
 
 @font-face {
   font-family: "HelveticaNeueCyr";
@@ -79,7 +110,6 @@
   /* UI weights are 400/500 only; 700 is reserved for tiny uppercase eyebrow labels */
   --font-body: "HelveticaNeueCyr", "Helvetica Neue", Helvetica, sans-serif;
 
-  /* Canela not available as files — serif fallback stack until real files land */
   --font-display: "Canela", Georgia, "Iowan Old Style", "Times New Roman", serif;
 
   --font-weight-regular: 400;

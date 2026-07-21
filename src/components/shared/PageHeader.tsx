@@ -8,15 +8,29 @@ export interface PageHeaderProps {
   /** Primary action(s) for the screen — every screen has one clear primary action. */
   actions?: ReactNode;
   className?: string;
+  /** Override the title's size/weight for a screen whose reference calls for it (e.g. Projects). Every other page keeps the default. */
+  titleClassName?: string;
 }
 
 /** Consistent page header used across every module page. */
-export function PageHeader({ title, eyebrow, description, actions, className }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  eyebrow,
+  description,
+  actions,
+  className,
+  titleClassName,
+}: PageHeaderProps) {
   return (
     <header className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
       <div className="flex flex-col gap-1">
         {eyebrow && <span className="eyebrow text-text-tertiary">{eyebrow}</span>}
-        <h1 className="font-display text-[32px] font-light leading-tight text-text-primary [text-wrap:balance]">
+        <h1
+          className={cn(
+            "font-display text-[32px] font-light leading-tight text-text-primary [text-wrap:balance]",
+            titleClassName,
+          )}
+        >
           {title}
         </h1>
         {description && <p className="text-[14px] text-text-secondary">{description}</p>}

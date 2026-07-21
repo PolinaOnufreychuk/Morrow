@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageShell } from "@/components/shared/PageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -37,7 +38,7 @@ export function ArchivePage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageShell narrow>
       <PageHeader
         eyebrow="Storage"
         title="Archive"
@@ -97,6 +98,6 @@ export function ArchivePage() {
           notify.success(`"${pendingDelete.title}" deleted permanently`);
         }}
       />
-    </div>
+    </PageShell>
   );
 }

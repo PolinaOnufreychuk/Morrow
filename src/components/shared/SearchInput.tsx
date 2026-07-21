@@ -5,17 +5,20 @@ import { cn } from "@/lib/utils";
 export interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
   /** Optional ⌘K hint rendered on the right of the field. */
   showShortcutHint?: boolean;
+  /** "glass" (default, every existing screen) or "flat" — a borderless warm-gray fill for screens whose reference calls for it (e.g. Projects). */
+  variant?: "glass" | "flat";
 }
 
 /**
- * Glass search control — radius-search (16px), never a base Input.
+ * Search control — radius-search (16px), never a base Input.
  * Every module list uses this (docs/CLAUDE.md: every list supports search).
  */
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ className, showShortcutHint = false, placeholder = "Search…", ...props }, ref) => (
+  ({ className, showShortcutHint = false, variant = "glass", placeholder = "Search…", ...props }, ref) => (
     <div
       className={cn(
-        "glass-control group flex h-11 items-center gap-2 rounded-search px-3",
+        "group flex items-center gap-2 rounded-search px-3",
+        variant === "glass" ? "glass-control h-11" : "h-12 bg-cream-100 px-4",
         className,
       )}
     >
