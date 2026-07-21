@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
@@ -12,12 +13,19 @@ import { ProjectCard } from "../components/ProjectCard";
 import { ProjectStatusTabs } from "../components/ProjectStatusTabs";
 import { ProjectCreateModal } from "../components/ProjectCreateModal";
 import { ProjectBulkEditBar } from "../components/ProjectBulkEditBar";
-import type { Project, ProjectStatusFilter } from "../types";
+import type { Project, ProjectSort, ProjectStatusFilter } from "../types";
+
+const SORT_OPTIONS: { value: ProjectSort; label: string }[] = [
+  { value: "recent", label: "Recently updated" },
+  { value: "deadline", label: "Deadline" },
+  { value: "title", label: "Title" },
+];
 
 export function ProjectsPage() {
   const { data: projects = [] } = useProjects();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatusFilter>("all");
+  const [sort, setSort] = useState<ProjectSort>("recent");
   const [createOpen, setCreateOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
@@ -25,7 +33,7 @@ export function ProjectsPage() {
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return projects.filter((project) => {
+    const matches = projects.filter((project) => {
       const matchesStatus = statusFilter === "all" || project.status === statusFilter;
       const matchesQuery =
         normalized === "" ||
@@ -35,7 +43,17 @@ export function ProjectsPage() {
         project.tags.some((tag) => tag.toLowerCase().includes(normalized));
       return matchesStatus && matchesQuery;
     });
-  }, [projects, query, statusFilter]);
+
+    return [...matches].sort((a, b) => {
+      if (sort === "title") return a.title.localeCompare(b.title);
+      if (sort === "deadline") {
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return a.deadline.localeCompare(b.deadline);
+      }
+      return b.updatedAt.localeCompare(a.updatedAt);
+    });
+  }, [projects, query, statusFilter, sort]);
 
   const toggleEditMode = () => {
     setEditMode((mode) => !mode);
@@ -62,12 +80,15 @@ export function ProjectsPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ProjectStatusTabs value={statusFilter} onValueChange={setStatusFilter} />
-        <SearchInput
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search projects…"
-          className="w-full max-w-xs"
-        />
+        <div className="flex items-center gap-2">
+          <SearchInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search projects…"
+            className="w-full max-w-xs"
+          />
+          <SortSelect options={SORT_OPTIONS} value={sort} onValueChange={setSort} className="h-11 w-[168px]" />
+        </div>
       </div>
 
       {projects.length === 0 ? (

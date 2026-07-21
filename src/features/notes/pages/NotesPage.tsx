@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
@@ -11,10 +12,17 @@ import { useNotes } from "../hooks/useNotes";
 import { NoteCard } from "../components/NoteCard";
 import { NoteTypePickerModal } from "../components/NoteTypePickerModal";
 import { NoteEditorModal } from "../components/NoteEditorModal";
+import type { NoteSort } from "../types";
+
+const SORT_OPTIONS: { value: NoteSort; label: string }[] = [
+  { value: "recent", label: "Recently updated" },
+  { value: "title", label: "Title" },
+];
 
 export function NotesPage() {
   const { data: notes = [] } = useNotes();
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<NoteSort>("recent");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editorType, setEditorType] = useState<NoteType | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -22,9 +30,13 @@ export function NotesPage() {
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (normalized === "") return notes;
-    return notes.filter((note) => note.title.toLowerCase().includes(normalized));
-  }, [notes, query]);
+    const matches = notes.filter(
+      (note) => normalized === "" || note.title.toLowerCase().includes(normalized),
+    );
+    return [...matches].sort((a, b) =>
+      sort === "title" ? a.title.localeCompare(b.title) : b.updatedAt.localeCompare(a.updatedAt),
+    );
+  }, [notes, query, sort]);
 
   const openEditorFor = (type: NoteType) => {
     setPickerOpen(false);
@@ -50,12 +62,15 @@ export function NotesPage() {
         }
       />
 
-      <SearchInput
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search notes…"
-        className="w-full max-w-xs"
-      />
+      <div className="flex items-center gap-2">
+        <SearchInput
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search notes…"
+          className="w-full max-w-xs"
+        />
+        <SortSelect options={SORT_OPTIONS} value={sort} onValueChange={setSort} className="h-11 w-[168px]" />
+      </div>
 
       {notes.length === 0 ? (
         <EmptyState

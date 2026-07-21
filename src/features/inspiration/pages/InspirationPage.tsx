@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
@@ -11,24 +12,34 @@ import { InspirationCard } from "../components/InspirationCard";
 import { BoardCreateModal } from "../components/BoardCreateModal";
 import { BoardEditModal } from "../components/BoardEditModal";
 import type { InspirationBoard } from "@/types/entities";
+import type { InspirationSort } from "../types";
+
+const SORT_OPTIONS: { value: InspirationSort; label: string }[] = [
+  { value: "recent", label: "Recently updated" },
+  { value: "title", label: "Title" },
+];
 
 export function InspirationPage() {
   const { data: boards = [] } = useBoards();
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<InspirationSort>("recent");
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<InspirationBoard | null>(null);
   const [pendingDelete, setPendingDelete] = useState<InspirationBoard | null>(null);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (normalized === "") return boards;
-    return boards.filter(
+    const matches = boards.filter(
       (board) =>
+        normalized === "" ||
         board.title.toLowerCase().includes(normalized) ||
         board.notes?.toLowerCase().includes(normalized) ||
         board.tags.some((tag) => tag.toLowerCase().includes(normalized)),
     );
-  }, [boards, query]);
+    return [...matches].sort((a, b) =>
+      sort === "title" ? a.title.localeCompare(b.title) : b.updatedAt.localeCompare(a.updatedAt),
+    );
+  }, [boards, query, sort]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,12 +54,15 @@ export function InspirationPage() {
         }
       />
 
-      <SearchInput
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search boards…"
-        className="w-full max-w-xs"
-      />
+      <div className="flex items-center gap-2">
+        <SearchInput
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search boards…"
+          className="w-full max-w-xs"
+        />
+        <SortSelect options={SORT_OPTIONS} value={sort} onValueChange={setSort} className="h-11 w-[168px]" />
+      </div>
 
       {boards.length === 0 ? (
         <EmptyState

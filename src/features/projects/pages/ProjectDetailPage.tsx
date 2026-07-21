@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Icon } from "@/design-system/icons/Icon";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Skeleton } from "@/components/shared/Skeleton";
 import { useProject } from "../hooks/useProjects";
 import { useBoards } from "@/features/inspiration/hooks/useInspiration";
 import { useNotes } from "@/features/notes/hooks/useNotes";
@@ -20,7 +21,20 @@ export function ProjectDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
-    return <p className="text-text-secondary">Loading…</p>;
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-[300px] w-full" />
+        <Skeleton className="h-9 w-2/3" />
+        <div className="grid grid-cols-1 gap-8 board:grid-cols-[1fr_300px]">
+          <div className="order-2 flex flex-col gap-4 board:order-1">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+          <Skeleton className="order-1 h-72 w-full board:order-2" />
+        </div>
+      </div>
+    );
   }
 
   if (!project) {

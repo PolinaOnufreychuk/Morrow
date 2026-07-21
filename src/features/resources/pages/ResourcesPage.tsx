@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
@@ -12,24 +13,34 @@ import { useResources } from "../hooks/useResources";
 import { ResourceCard } from "../components/ResourceCard";
 import { ResourceCreateModal } from "../components/ResourceCreateModal";
 import { ResourceEditModal } from "../components/ResourceEditModal";
+import type { ResourceSort } from "../types";
+
+const SORT_OPTIONS: { value: ResourceSort; label: string }[] = [
+  { value: "recent", label: "Recently updated" },
+  { value: "title", label: "Title" },
+];
 
 export function ResourcesPage() {
   const { data: resources = [] } = useResources();
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<ResourceSort>("recent");
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Resource | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Resource | null>(null);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (normalized === "") return resources;
-    return resources.filter(
+    const matches = resources.filter(
       (resource) =>
+        normalized === "" ||
         resource.title.toLowerCase().includes(normalized) ||
         resource.description?.toLowerCase().includes(normalized) ||
         resource.tags.some((tag) => tag.toLowerCase().includes(normalized)),
     );
-  }, [resources, query]);
+    return [...matches].sort((a, b) =>
+      sort === "title" ? a.title.localeCompare(b.title) : b.updatedAt.localeCompare(a.updatedAt),
+    );
+  }, [resources, query, sort]);
 
   const confirmDelete = () => {
     // TODO: wire to useDeleteResource() — undo would re-insert via cache restore.
@@ -49,12 +60,15 @@ export function ResourcesPage() {
         }
       />
 
-      <SearchInput
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search resources…"
-        className="w-full max-w-xs"
-      />
+      <div className="flex items-center gap-2">
+        <SearchInput
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search resources…"
+          className="w-full max-w-xs"
+        />
+        <SortSelect options={SORT_OPTIONS} value={sort} onValueChange={setSort} className="h-11 w-[168px]" />
+      </div>
 
       {resources.length === 0 ? (
         <EmptyState

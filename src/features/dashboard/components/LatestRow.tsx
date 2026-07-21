@@ -57,8 +57,11 @@ export function LatestRow() {
   const navigate = useNavigate();
 
   return (
-    <div className="mt-10 grid grid-cols-1 items-start gap-4 board:grid-cols-2 [@media(min-width:1200px)]:grid-cols-4">
-      {/* Project */}
+    // Per the hi-fi source: exactly 4 cards, one row, never wraps/crushes —
+    // horizontal scroll below the 960px floor rather than collapsing columns.
+    <div className="mt-10 overflow-x-auto">
+      <div className="grid min-w-[960px] grid-cols-4 items-start gap-4">
+        {/* Project */}
       <PreviewShell onClick={() => navigate("/projects")} className="gap-2 p-4">
         <div className="flex items-center justify-between px-px">
           <TypeChip label="Project" bg="#FEFFFEE6" />
@@ -167,6 +170,7 @@ export function LatestRow() {
           </span>
         </div>
       </PreviewShell>
+      </div>
     </div>
   );
 }
