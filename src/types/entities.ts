@@ -26,6 +26,12 @@ export interface ExternalLink {
 
 export type ProjectStatus = "in-progress" | "review" | "done";
 
+export interface ProjectAttachment {
+  id: string;
+  name: string;
+  sizeBytes: number;
+}
+
 export interface Project extends BaseEntity {
   title: string;
   coverImageUrl: string | null;
@@ -34,6 +40,7 @@ export interface Project extends BaseEntity {
   deadline: ISODateString | null;
   tags: string[];
   externalLinks: ExternalLink[];
+  attachments: ProjectAttachment[];
   notes: string | null;
 }
 

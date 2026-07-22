@@ -11,6 +11,14 @@ export function formatDate(iso: string | null): string {
   });
 }
 
+/** "860 KB" / "2.4 MB" — for attachment rows. */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
 /** "Today" / "Yesterday" / "Nd ago" — for surfaces showing recency, not deadlines. */
 export function formatRelativeUpdated(iso: string): string {
   const date = new Date(iso);

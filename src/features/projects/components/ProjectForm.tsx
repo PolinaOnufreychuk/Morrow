@@ -38,6 +38,7 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
       deadline: defaultValues?.deadline ?? null,
       tags: defaultValues?.tags ?? [],
       externalLinks: defaultValues?.externalLinks ?? [],
+      attachments: defaultValues?.attachments ?? [],
       notes: defaultValues?.notes ?? "",
     },
   });

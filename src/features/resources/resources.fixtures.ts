@@ -14,6 +14,7 @@ export const resourceFixtures: Resource[] = [
   {
     ...base,
     id: "res-nielsen-norman-onboarding-ux",
+    projectId: "prj-fintech-onboarding",
     kind: "link",
     title: "Nielsen Norman — Onboarding UX",
     url: "https://www.nngroup.com/articles/onboarding-ux",
@@ -39,6 +40,7 @@ export const resourceFixtures: Resource[] = [
   {
     ...base,
     id: "res-client-brief-fintech",
+    projectId: "prj-fintech-onboarding",
     kind: "link",
     title: "Client brief — Fintech app",
     url: "https://notion.so/client-brief-fintech",

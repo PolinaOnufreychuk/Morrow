@@ -1,73 +1,165 @@
-import { type ReactNode } from "react";
+import { useState } from "react";
 import { InspirationCard } from "@/features/inspiration/components/InspirationCard";
 import { NoteCard } from "@/features/notes/components/NoteCard";
 import { ResourceCard } from "@/features/resources/components/ResourceCard";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { useUpdateBoard } from "@/features/inspiration/hooks/useInspiration";
+import { useUpdateNote } from "@/features/notes/hooks/useNotes";
+import { useUpdateResource } from "@/features/resources/hooks/useResources";
+import { BoardQuickCreateForm } from "@/features/inspiration/components/BoardQuickCreateForm";
+import { NoteQuickCreateForm } from "@/features/notes/components/NoteQuickCreateForm";
+import { ResourceQuickCreateForm } from "@/features/resources/components/ResourceQuickCreateForm";
+import { Badge } from "@/components/ui/badge";
+import { NOTE_TYPE_META } from "@/features/notes/noteTypeMeta";
+import { ProjectSection } from "./ProjectSection";
+import { AddTile } from "./AddTile";
+import { RemovableCardOverlay } from "./RemovableCardOverlay";
+import { LinkOrCreateModal } from "./LinkOrCreateModal";
 import type { InspirationBoard, Note, Resource } from "@/types/entities";
 
 export interface ProjectEmbeddedContentProps {
+  projectId: string;
   boards: InspirationBoard[];
   notes: Note[];
   resources: Resource[];
+  allBoards: InspirationBoard[];
+  allNotes: Note[];
+  allResources: Resource[];
+  editMode: boolean;
 }
+
+const CARD_GRID = "grid grid-cols-1 gap-4 board:grid-cols-3";
 
 /**
  * Project-scoped content, rendered with each module's NATIVE card component
- * (never simplified white placeholders — docs/DESIGN.md: Cards). Divided
- * into clear sections per the flagship Project Details spec.
+ * (never simplified white placeholders — docs/DESIGN.md: Cards). Each of the
+ * three sections always renders its shell + an Add tile, even when empty.
  */
-export function ProjectEmbeddedContent({ boards, notes, resources }: ProjectEmbeddedContentProps) {
-  const isEmpty = boards.length === 0 && notes.length === 0 && resources.length === 0;
+export function ProjectEmbeddedContent({
+  projectId,
+  boards,
+  notes,
+  resources,
+  allBoards,
+  allNotes,
+  allResources,
+  editMode,
+}: ProjectEmbeddedContentProps) {
+  const [boardModalOpen, setBoardModalOpen] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [resourceModalOpen, setResourceModalOpen] = useState(false);
 
-  if (isEmpty) {
-    return (
-      <EmptyState
-        title="Nothing linked yet"
-        description="Inspiration boards, notes, and resources scoped to this project will appear here."
+  const updateBoard = useUpdateBoard();
+  const updateNote = useUpdateNote();
+  const updateResource = useUpdateResource();
+
+  return (
+    <div className="flex flex-col gap-6">
+      <ProjectSection eyebrow="Linked inspiration">
+        <div className={CARD_GRID}>
+          {boards.map((board) => (
+            <RemovableCardOverlay
+              key={board.id}
+              show={editMode}
+              onRemove={() => updateBoard.mutate({ id: board.id, projectId: null })}
+            >
+              <InspirationCard board={board} />
+            </RemovableCardOverlay>
+          ))}
+          <AddTile label="Create board" onClick={() => setBoardModalOpen(true)} />
+        </div>
+      </ProjectSection>
+
+      <ProjectSection eyebrow="Linked notes">
+        <div className={CARD_GRID}>
+          {notes.map((note) => (
+            <RemovableCardOverlay
+              key={note.id}
+              show={editMode}
+              onRemove={() => updateNote.mutate({ id: note.id, projectId: null })}
+            >
+              <NoteCard note={note} />
+            </RemovableCardOverlay>
+          ))}
+          <AddTile label="Add note" onClick={() => setNoteModalOpen(true)} />
+        </div>
+      </ProjectSection>
+
+      <ProjectSection eyebrow="Linked resources">
+        <div className={CARD_GRID}>
+          {resources.map((resource) => (
+            <RemovableCardOverlay
+              key={resource.id}
+              show={editMode}
+              onRemove={() => updateResource.mutate({ id: resource.id, projectId: null })}
+            >
+              <ResourceCard resource={resource} />
+            </RemovableCardOverlay>
+          ))}
+          <AddTile label="Link resource" onClick={() => setResourceModalOpen(true)} />
+        </div>
+      </ProjectSection>
+
+      <LinkOrCreateModal
+        open={boardModalOpen}
+        onOpenChange={setBoardModalOpen}
+        title="Add inspiration board"
+        entityLabel="board"
+        items={allBoards}
+        projectId={projectId}
+        onLinkExisting={(board) =>
+          updateBoard.mutate({ id: board.id, projectId }, { onSuccess: () => setBoardModalOpen(false) })
+        }
+        isLinking={updateBoard.isPending}
+        renderItemMeta={(board) => (
+          <span className="flex items-center gap-2">
+            {board.tags[0] && <Badge variant="outline">{board.tags[0]}</Badge>}
+          </span>
+        )}
+        renderCreateForm={({ onCreated }) => (
+          <BoardQuickCreateForm projectId={projectId} onCreated={onCreated} />
+        )}
       />
-    );
-  }
 
-  return (
-    <div className="flex flex-col gap-10">
-      {boards.length > 0 && (
-        <Section title="Inspiration">
-          <div className="grid grid-cols-1 gap-4 board:grid-cols-2">
-            {boards.map((board) => (
-              <InspirationCard key={board.id} board={board} />
-            ))}
-          </div>
-        </Section>
-      )}
+      <LinkOrCreateModal
+        open={noteModalOpen}
+        onOpenChange={setNoteModalOpen}
+        title="Add note"
+        entityLabel="note"
+        items={allNotes}
+        projectId={projectId}
+        onLinkExisting={(note) =>
+          updateNote.mutate({ id: note.id, projectId }, { onSuccess: () => setNoteModalOpen(false) })
+        }
+        isLinking={updateNote.isPending}
+        renderItemMeta={(note) => <Badge variant="neutral">{NOTE_TYPE_META[note.type].label}</Badge>}
+        renderCreateForm={({ onCreated }) => (
+          <NoteQuickCreateForm projectId={projectId} onCreated={onCreated} />
+        )}
+      />
 
-      {notes.length > 0 && (
-        <Section title="Notes">
-          <div className="grid grid-cols-1 gap-4 board:grid-cols-2">
-            {notes.map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {resources.length > 0 && (
-        <Section title="Resources">
-          <div className="grid grid-cols-1 gap-4 board:grid-cols-2">
-            {resources.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))}
-          </div>
-        </Section>
-      )}
+      <LinkOrCreateModal
+        open={resourceModalOpen}
+        onOpenChange={setResourceModalOpen}
+        title="Link resource"
+        entityLabel="resource"
+        items={allResources}
+        projectId={projectId}
+        onLinkExisting={(resource) =>
+          updateResource.mutate(
+            { id: resource.id, projectId },
+            { onSuccess: () => setResourceModalOpen(false) },
+          )
+        }
+        isLinking={updateResource.isPending}
+        renderItemMeta={(resource) => (
+          <span className="flex items-center gap-2">
+            {resource.tags[0] && <Badge variant="neutral">{resource.tags[0]}</Badge>}
+          </span>
+        )}
+        renderCreateForm={({ onCreated }) => (
+          <ResourceQuickCreateForm projectId={projectId} onCreated={onCreated} />
+        )}
+      />
     </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-[18px] font-medium text-text-primary">{title}</h2>
-      {children}
-    </section>
   );
 }

@@ -12,6 +12,7 @@ const base = {
 export const noteFixtures: Note[] = [
   {
     ...base,
+    projectId: "prj-fintech-onboarding",
     id: "note-client-kickoff",
     type: "meeting",
     title: "Client kickoff — Fintech app",
@@ -58,6 +59,7 @@ export const noteFixtures: Note[] = [
   },
   {
     ...base,
+    projectId: "prj-fintech-onboarding",
     id: "note-before-next-review",
     type: "checklist",
     title: "Before next review",

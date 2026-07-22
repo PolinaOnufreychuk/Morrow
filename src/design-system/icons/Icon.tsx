@@ -21,7 +21,9 @@ export type IconName =
   | "image"
   | "bookmark"
   | "file-text"
-  | "restore";
+  | "restore"
+  | "link"
+  | "external-link";
 
 const paths: Record<IconName, ReactNode> = {
   search: (
@@ -100,6 +102,19 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <path d="M2 8.5c0-3.6 2.9-6.5 6.5-6.5 2.4 0 4.5 1.3 5.6 3.2" />
       <path d="M7 3.5 10 2v4" />
+    </>
+  ),
+  link: (
+    <>
+      <path d="M8 11.5a3.6 3.6 0 0 0 5 0l2-2a3.6 3.6 0 0 0-5-5.1l-1 1" strokeLinejoin="round" />
+      <path d="M11 7.5a3.6 3.6 0 0 0-5 0l-2 2a3.6 3.6 0 0 0 5 5.1l1-1" strokeLinejoin="round" />
+    </>
+  ),
+  "external-link": (
+    <>
+      <path d="M8 3.5H3.5V15.5H15.5V11" strokeLinejoin="round" />
+      <path d="M9.5 9.5 16 3" />
+      <path d="M11.5 3H16v4.5" strokeLinejoin="round" />
     </>
   ),
 };

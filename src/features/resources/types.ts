@@ -1,19 +1,23 @@
 import type { Resource, ResourceKind } from "@/types/entities";
+import { CATEGORY_OPTIONS } from "@/lib/categories";
 
 export type { Resource, ResourceKind };
 
 export type ResourceSort = "recent" | "title";
 
 /** Fixed category list for the Resources filter popover — matched against `resource.tags`. */
-export const RESOURCE_CATEGORY_OPTIONS = [
-  "UX Research",
-  "AI",
-  "Accessibility",
-  "Motion",
-  "Development",
-  "Branding",
-  "Fintech",
-  "Typography",
-] as const;
+export const RESOURCE_CATEGORY_OPTIONS = CATEGORY_OPTIONS;
 
 export type ResourceCategoryFilter = "all" | (typeof RESOURCE_CATEGORY_OPTIONS)[number];
+
+/** Plain `Omit` collapses a discriminated union to its shared keys — this
+ * distributes over each member so kind-specific fields (readingMinutes/
+ * owner/etc.) survive. */
+type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
+
+export type CreateResourceInput = DistributiveOmit<
+  Resource,
+  "id" | "isArchived" | "createdAt" | "updatedAt"
+>;
+
+export type UpdateResourceInput = Partial<Resource> & { id: string };
