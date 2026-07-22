@@ -1,5 +1,4 @@
 import { GlassCard } from "@/components/shared/GlassCard";
-import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { Badge } from "@/components/ui/badge";
 import { GithubMark } from "@/design-system/icons/GithubMark";
 import { FigmaMark } from "@/design-system/icons/FigmaMark";
@@ -18,9 +17,9 @@ export type ResourceCardVariant = "compact" | "full";
 export interface ResourceCardProps {
   resource: Resource;
   variant?: ResourceCardVariant;
-  onEdit?: (resource: Resource) => void;
-  onArchive?: (resource: Resource) => void;
-  onDelete?: (resource: Resource) => void;
+  /** Edit Mode: card becomes a selectable surface instead of a navigating link. */
+  editMode?: boolean;
+  onSelectToggle?: (resource: Resource) => void;
 }
 
 /** Hostname without "www." — the shared "secondary meta" fallback for any kind with a URL. */
@@ -49,29 +48,20 @@ function secondaryMeta(resource: Resource): string {
  * `switch` with a `never` default — adding a ResourceKind fails the type
  * check here until a branch is added. `kind` only affects the visual media
  * treatment, never filtering (docs/FEATURES.md). Every kind shares one
- * footer shape: a single tag chip, a secondary-meta string (domain/reading
- * time/page count), and the overflow menu.
+ * footer shape: a single tag chip and a secondary-meta string (domain/
+ * reading time/page count).
+ *
+ * Normal mode: the whole card is a link — clicking it opens `resource.url`
+ * in a new tab. Edit Mode: the card becomes purely selectable (no
+ * navigation); the caller renders the selection checkbox as a sibling.
  */
-export function ResourceCard({
-  resource,
-  variant = "compact",
-  onEdit,
-  onArchive,
-  onDelete,
-}: ResourceCardProps) {
-  return (
-    <GlassCard className="group flex flex-col gap-3 p-4">
+export function ResourceCard({ resource, variant = "compact", editMode = false, onSelectToggle }: ResourceCardProps) {
+  const content = (
+    <>
       <ResourceMedia resource={resource} variant={variant} />
 
       <div className="flex flex-col gap-2">
-        <a
-          href={resource.url}
-          target="_blank"
-          rel="noreferrer"
-          className="text-[15px] font-medium leading-snug text-text-primary underline-offset-2 hover:underline"
-        >
-          {resource.title}
-        </a>
+        <p className="text-[15px] font-medium leading-snug text-text-primary">{resource.title}</p>
         {resource.description && (
           <p className="line-clamp-2 text-[13px] text-text-secondary">{resource.description}</p>
         )}
@@ -82,16 +72,41 @@ export function ResourceCard({
           {resource.tags[0] && <Badge variant="neutral">{resource.tags[0]}</Badge>}
           <span className="text-[12px] text-text-tertiary">{secondaryMeta(resource)}</span>
         </div>
-        <div className="opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
-          <EntityOverflowMenu
-            entityType="resource"
-            onEdit={onEdit ? () => onEdit(resource) : undefined}
-            onArchive={onArchive ? () => onArchive(resource) : undefined}
-            onDelete={onDelete ? () => onDelete(resource) : undefined}
-          />
-        </div>
       </footer>
-    </GlassCard>
+    </>
+  );
+
+  const cardClassName = "group flex flex-col gap-3 p-4";
+
+  if (editMode) {
+    return (
+      <GlassCard
+        interactive
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelectToggle?.(resource)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelectToggle?.(resource);
+          }
+        }}
+        className={cardClassName}
+      >
+        {content}
+      </GlassCard>
+    );
+  }
+
+  return (
+    <a
+      href={resource.url}
+      target="_blank"
+      rel="noreferrer"
+      className={cn("glass-card block cursor-pointer rounded-card", cardClassName)}
+    >
+      {content}
+    </a>
   );
 }
 

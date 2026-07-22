@@ -2,7 +2,7 @@ import type { InspirationBoard, InspirationReference } from "@/types/entities";
 
 export type { InspirationBoard, InspirationReference };
 
-export type InspirationSort = "recent" | "title";
+export type InspirationSort = "recent" | "created" | "title";
 
 export type CreateBoardInput = Omit<
   InspirationBoard,

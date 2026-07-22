@@ -2,8 +2,7 @@ import { forwardRef, type ReactNode, type SVGProps } from "react";
 
 /**
  * Minimal hand-rolled icon set — NOT a finalized icon library.
- * Only the icons actually needed to render the static Step-5 layouts exist
- * here (search, close, chevron, plus, overflow-dots, arrow-left).
+ * Only the icons actually needed by shipped screens exist here.
  * Spec (docs brief): 19px viewport, stroke width 1.6, rounded line caps,
  * corner radius 2.3–3.4 where rectangles are used.
  */
@@ -15,7 +14,14 @@ export type IconName =
   | "plus"
   | "overflow-dots"
   | "arrow-left"
-  | "alert";
+  | "alert"
+  | "sliders"
+  | "check"
+  | "folder"
+  | "image"
+  | "bookmark"
+  | "file-text"
+  | "restore";
 
 const paths: Record<IconName, ReactNode> = {
   search: (
@@ -56,6 +62,44 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M9.5 3.5 17 16.5H2z" strokeLinejoin="round" />
       <path d="M9.5 8v3.5" />
       <circle cx="9.5" cy="14" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  sliders: (
+    <>
+      <path d="M3 6h16" />
+      <circle cx="11" cy="6" r="2.1" fill="currentColor" stroke="none" />
+      <path d="M3 13h16" />
+      <circle cx="7" cy="13" r="2.1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  check: <path d="M3.5 9.5 7.5 13.5 15.5 4.5" />,
+  folder: (
+    <>
+      <path d="M2 4h5l2 2h10c1 0 1.5.5 1.5 1.5v9c0 1-.5 1.5-1.5 1.5H2c-1 0-1.5-.5-1.5-1.5v-11C.5 4.5 1 4 2 4z" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="2.5" y="2.5" width="14" height="14" rx="1" />
+      <circle cx="6.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+      <path d="M2.5 13.5 8 8 16.5 16.5" />
+    </>
+  ),
+  bookmark: (
+    <>
+      <path d="M4 2v14l5.5-3.5L15 16V2" />
+    </>
+  ),
+  "file-text": (
+    <>
+      <path d="M4 2v15h11V2z" />
+      <path d="M7 6h5M7 9h5M7 12h3" />
+    </>
+  ),
+  restore: (
+    <>
+      <path d="M2 8.5c0-3.6 2.9-6.5 6.5-6.5 2.4 0 4.5 1.3 5.6 3.2" />
+      <path d="M7 3.5 10 2v4" />
     </>
   ),
 };

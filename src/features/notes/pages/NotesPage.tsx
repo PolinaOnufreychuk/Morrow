@@ -2,27 +2,37 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
-import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { notify } from "@/components/shared/Toast";
 import { Icon } from "@/design-system/icons/Icon";
 import type { Note, NoteType } from "@/types/entities";
-import { useNotes } from "../hooks/useNotes";
+import { useArchiveNote, useNotes } from "../hooks/useNotes";
 import { NoteCard } from "../components/NoteCard";
 import { NoteTypePickerModal } from "../components/NoteTypePickerModal";
 import { NoteEditorModal } from "../components/NoteEditorModal";
+import { NotesFilterPopover } from "../components/NotesFilterPopover";
+import { NOTE_TYPE_META, NOTE_TYPE_ORDER } from "../noteTypeMeta";
 import type { NoteSort } from "../types";
+
+const TYPE_OPTIONS: { value: NoteType | "all"; label: string }[] = [
+  { value: "all", label: "All" },
+  ...NOTE_TYPE_ORDER.map((type) => ({ value: type, label: NOTE_TYPE_META[type].label })),
+];
 
 const SORT_OPTIONS: { value: NoteSort; label: string }[] = [
   { value: "recent", label: "Recently updated" },
-  { value: "title", label: "Title" },
+  { value: "created", label: "Recently added" },
+  { value: "title", label: "Alphabetical" },
 ];
 
 export function NotesPage() {
   const { data: notes = [] } = useNotes();
+  const archiveNote = useArchiveNote();
   const [query, setQuery] = useState("");
+  const [type, setType] = useState<NoteType | "all">("all");
   const [sort, setSort] = useState<NoteSort>("recent");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editorType, setEditorType] = useState<NoteType | null>(null);
@@ -32,12 +42,16 @@ export function NotesPage() {
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     const matches = notes.filter(
-      (note) => normalized === "" || note.title.toLowerCase().includes(normalized),
+      (note) =>
+        (normalized === "" || note.title.toLowerCase().includes(normalized)) &&
+        (type === "all" || note.type === type),
     );
-    return [...matches].sort((a, b) =>
-      sort === "title" ? a.title.localeCompare(b.title) : b.updatedAt.localeCompare(a.updatedAt),
-    );
-  }, [notes, query, sort]);
+    return [...matches].sort((a, b) => {
+      if (sort === "title") return a.title.localeCompare(b.title);
+      if (sort === "created") return b.createdAt.localeCompare(a.createdAt);
+      return b.updatedAt.localeCompare(a.updatedAt);
+    });
+  }, [notes, query, type, sort]);
 
   const openEditorFor = (type: NoteType) => {
     setPickerOpen(false);
@@ -53,8 +67,8 @@ export function NotesPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Thinking space"
         title="Notes"
+        titleClassName="text-[44px]"
         actions={
           <Button onClick={() => setPickerOpen(true)}>
             <Icon name="plus" size={17} />
@@ -68,9 +82,21 @@ export function NotesPage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search notes…"
-          className="w-full max-w-xs"
+          variant="flat"
+          className="flex-1"
         />
-        <SortSelect options={SORT_OPTIONS} value={sort} onValueChange={setSort} className="h-11 w-[168px]" />
+        <NotesFilterPopover
+          categories={TYPE_OPTIONS}
+          category={type}
+          onCategoryChange={setType}
+          sortOptions={SORT_OPTIONS}
+          sort={sort}
+          onSortChange={setSort}
+          onClear={() => {
+            setType("all");
+            setSort("recent");
+          }}
+        />
       </div>
 
       {notes.length === 0 ? (
@@ -82,10 +108,20 @@ export function NotesPage() {
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query} />
       ) : (
-        <div className="masonry3">
+        <div className="masonry4">
           {filtered.map((note) => (
             <div key={note.id} className="masonry-item">
-              <NoteCard note={note} onEdit={editNote} onDelete={setPendingDelete} />
+              <NoteCard
+                note={note}
+                onEdit={editNote}
+                onArchive={(target) =>
+                  archiveNote.mutate(target.id, {
+                    onSuccess: () => notify.success(`"${target.title}" archived`),
+                    onError: () => notify.error("Couldn't archive this note."),
+                  })
+                }
+                onDelete={setPendingDelete}
+              />
             </div>
           ))}
         </div>

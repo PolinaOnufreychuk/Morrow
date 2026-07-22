@@ -20,6 +20,7 @@ import { NOTE_TYPE_META } from "../noteTypeMeta";
 import { NoteTypeIcon } from "./NoteTypeIcon";
 
 export type NoteCardVariant = "compact" | "full";
+type NoteType = Note["type"];
 
 export interface NoteCardProps {
   note: Note;
@@ -29,6 +30,9 @@ export interface NoteCardProps {
   onDelete?: (note: Note) => void;
 }
 
+/** Note types whose body is a media/preview block — title renders below it, matching Inspiration cards. */
+const MEDIA_TYPES: NoteType[] = ["image", "moodboard", "code", "bookmark", "pdf"];
+
 /**
  * ONE polymorphic note card. The body is chosen by an exhaustive
  * `switch (note.type)` with a `never` default, so adding a note type to the
@@ -36,22 +40,33 @@ export interface NoteCardProps {
  */
 export function NoteCard({ note, variant = "compact", onEdit, onArchive, onDelete }: NoteCardProps) {
   const meta = NOTE_TYPE_META[note.type];
+  const isMedia = MEDIA_TYPES.includes(note.type);
+  const showTitle = note.type !== "quote";
+
+  const overflowMenu = (
+    <EntityOverflowMenu
+      entityType="note"
+      onEdit={onEdit ? () => onEdit(note) : undefined}
+      onArchive={onArchive ? () => onArchive(note) : undefined}
+      onDelete={onDelete ? () => onDelete(note) : undefined}
+    />
+  );
+
   return (
-    <GlassCard className="group relative flex flex-col gap-3 p-4">
-      <h3 className="text-[15px] font-medium leading-snug text-text-primary">{note.title}</h3>
+    <GlassCard className="flex flex-col gap-3 p-4">
+      {!isMedia && showTitle && (
+        <h3 className="text-[15px] font-medium leading-snug text-text-primary">{note.title}</h3>
+      )}
 
       <NoteBody note={note} variant={variant} />
 
+      {isMedia && showTitle && (
+        <h3 className="text-[15px] font-medium leading-snug text-text-primary">{note.title}</h3>
+      )}
+
       <footer className="mt-auto flex items-center justify-between gap-2 pt-1">
         <Badge variant="neutral">{meta.label}</Badge>
-        <div className="opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
-          <EntityOverflowMenu
-            entityType="note"
-            onEdit={onEdit ? () => onEdit(note) : undefined}
-            onArchive={onArchive ? () => onArchive(note) : undefined}
-            onDelete={onDelete ? () => onDelete(note) : undefined}
-          />
-        </div>
+        {overflowMenu}
       </footer>
     </GlassCard>
   );
@@ -163,12 +178,9 @@ function MoodboardBody({ note }: { note: MoodboardNote }) {
 function CodeBody({ note, isFull }: { note: CodeNote; isFull: boolean }) {
   return (
     <div className="overflow-hidden rounded-card-image bg-sage-900">
-      <div className="flex items-center justify-between px-3 py-1.5">
-        <span className="text-[11px] font-medium text-cream-100">{note.language}</span>
-      </div>
       <pre
         className={cn(
-          "overflow-x-auto px-3 pb-3 text-[12px] leading-relaxed text-cream-50",
+          "overflow-x-auto p-3 text-[12px] leading-relaxed text-cream-50",
           !isFull && "max-h-32",
         )}
       >

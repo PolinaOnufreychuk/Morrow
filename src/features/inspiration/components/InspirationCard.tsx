@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { GlassCard } from "@/components/shared/GlassCard";
 import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -17,12 +16,12 @@ export interface InspirationCardProps {
 }
 
 /**
- * Inspiration board card. Its signature composition is an asymmetric collage
- * — one large reference image with up to two smaller ones peeking behind it
- * — never downgraded to a plain list row (docs/DESIGN.md). Compact + full
- * variants. Reads its own reference count/images via `useBoardReferences` so
- * every board card (dashboard, list page, embedded-in-project) stays in sync
- * with the real data without prop-drilling.
+ * Inspiration board card. Reads like a stack of photos: a single faint
+ * sliver layer peeks out behind a top collage of up to three images, and the
+ * title/tag/count sit directly on the page background below — never inside
+ * a white card block (docs/DESIGN.md). Reads its own reference count/images
+ * via `useBoardReferences` so every board card (dashboard, list page,
+ * embedded-in-project) stays in sync with the real data without prop-drilling.
  */
 export function InspirationCard({
   board,
@@ -39,62 +38,61 @@ export function InspirationCard({
         ? [board.coverImageUrl]
         : []
   ).slice(0, 3);
-  const [primary, ...peeking] = images;
+  const [primary, topRight, bottomRight] = images;
 
   const isFull = variant === "full";
 
   return (
-    <GlassCard interactive className="group flex flex-col">
-      <Link to={`/inspiration/${board.id}`} className="flex flex-col">
-        {/* Asymmetric collage: one large image + up to two peeking behind it */}
-        <div className={cn("relative overflow-hidden", isFull ? "h-56" : "h-44")}>
-          {primary ? (
-            <img
-              src={primary}
-              alt=""
-              className="absolute bottom-3 left-3 top-3 w-[64%] rounded-card-image object-cover shadow-resting transition-transform duration-medium ease-out group-hover:scale-[1.02]"
-            />
-          ) : (
-            <div className="absolute bottom-3 left-3 top-3 w-[64%] rounded-card-image bg-sage-100" />
-          )}
-          {peeking[0] && (
-            <img
-              src={peeking[0]}
-              alt=""
-              className="absolute right-3 top-3 h-[46%] w-[34%] rotate-3 rounded-card-image object-cover shadow-resting"
-            />
-          )}
-          {peeking[1] && (
-            <img
-              src={peeking[1]}
-              alt=""
-              className="absolute bottom-3 right-3 h-[46%] w-[34%] -rotate-2 rounded-card-image object-cover shadow-resting"
-            />
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1.5 p-4 pb-0 pt-1">
-          <h3 className="text-[16px] font-medium leading-snug text-text-primary">{board.title}</h3>
-          {isFull && board.notes && (
-            <p className="line-clamp-2 text-[13px] text-text-secondary">{board.notes}</p>
-          )}
-        </div>
-      </Link>
-
-      {/* Outside the Link — an overflow menu button must never nest inside an anchor. */}
-      <div className="flex items-center justify-between gap-2 p-4 pt-1.5">
-        <div className="flex items-center gap-2">
-          {board.tags[0] && <Badge variant="neutral">{board.tags[0]}</Badge>}
-          <span className="text-[12.5px] text-text-tertiary">{references.length} saved</span>
-        </div>
+    <div className="group relative flex flex-col">
+      <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
         <EntityOverflowMenu
           entityType="collection"
           onEdit={onEdit ? () => onEdit(board) : undefined}
           onArchive={onArchive ? () => onArchive(board) : undefined}
           onDelete={onDelete ? () => onDelete(board) : undefined}
-          triggerClassName="opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100"
+          triggerClassName="bg-surface-card/70 backdrop-blur-sm"
         />
       </div>
-    </GlassCard>
+
+      <Link to={`/inspiration/${board.id}`} className="flex flex-col">
+        <div className="grid">
+          {/* Stack sliver — same grid cell as the collage, nudged down-left so its edge peeks out */}
+          <div className="col-start-1 row-start-1 -translate-x-2 translate-y-2 rounded-card border border-white/70 bg-cream-50 shadow-resting" />
+
+          {/* Top collage card */}
+          <div
+            className={cn(
+              "relative col-start-1 row-start-1 grid grid-cols-[1.6fr_1fr] grid-rows-2 gap-1.5 overflow-hidden rounded-card bg-surface-card p-2 shadow-resting transition-transform duration-medium ease-out group-hover:-translate-y-0.5",
+              isFull ? "aspect-[16/10]" : "aspect-[4/3]",
+            )}
+          >
+            {primary ? (
+              <img src={primary} alt="" className="col-span-1 row-span-2 h-full w-full rounded-card-image object-cover" />
+            ) : (
+              <div className="col-span-1 row-span-2 rounded-card-image bg-sage-100" />
+            )}
+            {topRight ? (
+              <img src={topRight} alt="" className="h-full w-full rounded-card-image object-cover" />
+            ) : (
+              <div className="rounded-card-image bg-sage-100" />
+            )}
+            {bottomRight ? (
+              <img src={bottomRight} alt="" className="h-full w-full rounded-card-image object-cover" />
+            ) : (
+              <div className="rounded-card-image bg-sage-100" />
+            )}
+          </div>
+        </div>
+
+        {/* Directly on the page background — no card behind this text */}
+        <div className="flex flex-col gap-1.5 pt-3">
+          <h3 className="text-[16px] font-medium leading-snug text-text-primary">{board.title}</h3>
+          <div className="flex items-center gap-2">
+            {board.tags[0] && <Badge variant="outline">{board.tags[0]}</Badge>}
+            <span className="text-[12.5px] text-text-tertiary">{references.length} saved</span>
+          </div>
+        </div>
+      </Link>
+    </div>
   );
 }

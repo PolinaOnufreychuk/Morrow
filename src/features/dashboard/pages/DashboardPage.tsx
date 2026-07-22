@@ -21,9 +21,8 @@ import { NoteEditorModal } from "@/features/notes/components/NoteEditorModal";
 import { useArchiveNote, useDeleteNote, useNotes } from "@/features/notes/hooks/useNotes";
 import { ResourceCard } from "@/features/resources/components/ResourceCard";
 import { ResourceCreateModal } from "@/features/resources/components/ResourceCreateModal";
-import { ResourceEditModal } from "@/features/resources/components/ResourceEditModal";
-import { useArchiveResource, useDeleteResource, useResources } from "@/features/resources/hooks/useResources";
-import type { InspirationBoard, Note, NoteType, Project, Resource } from "@/types/entities";
+import { useResources } from "@/features/resources/hooks/useResources";
+import type { InspirationBoard, Note, NoteType, Project } from "@/types/entities";
 
 const TABS = ["Latest", "Projects", "Inspiration", "Notes", "Resources"] as const;
 type Tab = (typeof TABS)[number];
@@ -76,8 +75,6 @@ export function DashboardPage() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editorNoteType, setEditorNoteType] = useState<NoteType | null>(null);
   const [pendingDeleteNote, setPendingDeleteNote] = useState<Note | null>(null);
-  const [editingResource, setEditingResource] = useState<Resource | null>(null);
-  const [pendingDeleteResource, setPendingDeleteResource] = useState<Resource | null>(null);
 
   const { data: projects = [] } = useProjects();
   const { data: boards = [] } = useBoards();
@@ -89,8 +86,6 @@ export function DashboardPage() {
   const archiveBoard = useArchiveBoard();
   const archiveNote = useArchiveNote();
   const deleteNote = useDeleteNote();
-  const archiveResource = useArchiveResource();
-  const deleteResource = useDeleteResource();
 
   const sortedProjects = useMemo(() => byRecentOrTitle(projects, sort), [projects, sort]);
   const sortedBoards = useMemo(() => byRecentOrTitle(boards, sort), [boards, sort]);
@@ -241,18 +236,7 @@ export function DashboardPage() {
             {tab === "Resources" &&
               sortedResources.map((resource) => (
                 <MasonryItem key={resource.id}>
-                  <ResourceCard
-                    resource={resource}
-                    variant="full"
-                    onEdit={setEditingResource}
-                    onArchive={(target) =>
-                      archiveResource.mutate(target.id, {
-                        onSuccess: () => notify.success(`"${target.title}" archived`),
-                        onError: () => notify.error("Couldn't archive this resource."),
-                      })
-                    }
-                    onDelete={setPendingDeleteResource}
-                  />
+                  <ResourceCard resource={resource} variant="full" />
                 </MasonryItem>
               ))}
           </div>
@@ -297,14 +281,6 @@ export function DashboardPage() {
           type={editorNoteType}
         />
       )}
-      {editingResource && (
-        <ResourceEditModal
-          open={editingResource !== null}
-          onOpenChange={(open) => !open && setEditingResource(null)}
-          resource={editingResource}
-        />
-      )}
-
       {/* Delete confirmations */}
       <ConfirmDialog
         open={pendingDeleteProject !== null}
@@ -336,22 +312,6 @@ export function DashboardPage() {
           if (!pendingDeleteNote) return;
           await deleteNote.mutateAsync(pendingDeleteNote.id);
           notify.success(`"${pendingDeleteNote.title}" deleted`);
-        }}
-      />
-      <ConfirmDialog
-        open={pendingDeleteResource !== null}
-        onOpenChange={(open) => !open && setPendingDeleteResource(null)}
-        title="Delete resource?"
-        description={
-          pendingDeleteResource ? `"${pendingDeleteResource.title}" will be removed from Resources.` : undefined
-        }
-        confirmLabel="Delete resource"
-        pendingLabel="Deleting…"
-        destructive
-        onConfirm={async () => {
-          if (!pendingDeleteResource) return;
-          await deleteResource.mutateAsync(pendingDeleteResource.id);
-          notify.success(`"${pendingDeleteResource.title}" deleted`);
         }}
       />
     </div>

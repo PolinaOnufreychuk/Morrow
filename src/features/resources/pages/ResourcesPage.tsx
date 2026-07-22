@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
-import { SortSelect } from "@/components/shared/SortSelect";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -13,10 +13,16 @@ import type { Resource } from "@/types/entities";
 import { useResources } from "../hooks/useResources";
 import { ResourceCard } from "../components/ResourceCard";
 import { ResourceCreateModal } from "../components/ResourceCreateModal";
-import { ResourceEditModal } from "../components/ResourceEditModal";
-import type { ResourceSort } from "../types";
+import { ResourcesFilterPopover, type FilterOption } from "../components/ResourcesFilterPopover";
+import { ResourceBulkEditBar } from "../components/ResourceBulkEditBar";
+import { RESOURCE_CATEGORY_OPTIONS, type ResourceCategoryFilter, type ResourceSort } from "../types";
 
-const SORT_OPTIONS: { value: ResourceSort; label: string }[] = [
+const CATEGORY_OPTIONS: FilterOption<ResourceCategoryFilter>[] = [
+  { value: "all", label: "All" },
+  ...RESOURCE_CATEGORY_OPTIONS.map((option) => ({ value: option, label: option })),
+];
+
+const SORT_OPTIONS: FilterOption<ResourceSort>[] = [
   { value: "recent", label: "Recently updated" },
   { value: "title", label: "Title" },
 ];
@@ -24,40 +30,68 @@ const SORT_OPTIONS: { value: ResourceSort; label: string }[] = [
 export function ResourcesPage() {
   const { data: resources = [] } = useResources();
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<ResourceCategoryFilter>("all");
   const [sort, setSort] = useState<ResourceSort>("recent");
   const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState<Resource | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Resource | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    const matches = resources.filter(
-      (resource) =>
+    const matches = resources.filter((resource) => {
+      const matchesCategory = category === "all" || resource.tags.includes(category);
+      const matchesQuery =
         normalized === "" ||
         resource.title.toLowerCase().includes(normalized) ||
         resource.description?.toLowerCase().includes(normalized) ||
-        resource.tags.some((tag) => tag.toLowerCase().includes(normalized)),
-    );
+        resource.tags.some((tag) => tag.toLowerCase().includes(normalized));
+      return matchesCategory && matchesQuery;
+    });
     return [...matches].sort((a, b) =>
       sort === "title" ? a.title.localeCompare(b.title) : b.updatedAt.localeCompare(a.updatedAt),
     );
-  }, [resources, query, sort]);
+  }, [resources, query, category, sort]);
 
-  const confirmDelete = () => {
-    // TODO: wire to useDeleteResource() — undo would re-insert via cache restore.
-    notify.info(`"${pendingDelete?.title}" deleted`, "Undo isn't wired yet in this static build.");
+  const toggleEditMode = () => {
+    setEditMode((mode) => !mode);
+    setSelected([]);
+  };
+
+  const toggleSelect = (resource: Resource) => {
+    setSelected((current) =>
+      current.includes(resource.id)
+        ? current.filter((id) => id !== resource.id)
+        : [...current, resource.id],
+    );
+  };
+
+  const handleBulkDelete = () => {
+    // TODO: wire to a real bulk-delete mutation — resourcesApi.deleteResource is not implemented yet.
+    notify.info(
+      `${selected.length} resource${selected.length === 1 ? "" : "s"} deleted`,
+      "Undo isn't wired yet in this static build.",
+    );
+    setSelected([]);
+    setEditMode(false);
+    setBulkDeleteOpen(false);
   };
 
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Toolbox"
         title="Resources"
+        titleClassName="mt-2 text-[44px]"
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Icon name="plus" size={17} />
-            New resource
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={toggleEditMode} disabled={resources.length === 0}>
+              {editMode ? "Done" : "Edit"}
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Icon name="plus" size={17} />
+              New resource
+            </Button>
+          </div>
         }
       />
 
@@ -66,9 +100,21 @@ export function ResourcesPage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search resources…"
-          className="w-full max-w-xs"
+          variant="flat"
+          className="flex-1"
         />
-        <SortSelect options={SORT_OPTIONS} value={sort} onValueChange={setSort} className="h-11 w-[168px]" />
+        <ResourcesFilterPopover
+          categories={CATEGORY_OPTIONS}
+          category={category}
+          onCategoryChange={setCategory}
+          sortOptions={SORT_OPTIONS}
+          sort={sort}
+          onSortChange={setSort}
+          onClear={() => {
+            setCategory("all");
+            setSort("recent");
+          }}
+        />
       </div>
 
       {resources.length === 0 ? (
@@ -78,34 +124,43 @@ export function ResourcesPage() {
           action={<Button onClick={() => setCreateOpen(true)}>New resource</Button>}
         />
       ) : filtered.length === 0 ? (
-        <NoSearchResultsState query={query} />
+        <NoSearchResultsState query={query || category} />
       ) : (
-        <div className="masonry3">
+        <div className="masonry4">
           {filtered.map((resource) => (
-            <div key={resource.id} className="masonry-item">
-              <ResourceCard resource={resource} onEdit={setEditing} onDelete={setPendingDelete} />
+            <div key={resource.id} className="masonry-item relative">
+              {editMode && (
+                <div className="absolute left-3 top-3 z-20" onClick={(event) => event.stopPropagation()}>
+                  <Checkbox
+                    checked={selected.includes(resource.id)}
+                    onCheckedChange={() => toggleSelect(resource)}
+                    aria-label={`Select ${resource.title}`}
+                    className="bg-surface-card/90 shadow-resting"
+                  />
+                </div>
+              )}
+              <ResourceCard resource={resource} editMode={editMode} onSelectToggle={toggleSelect} />
             </div>
           ))}
         </div>
       )}
 
+      <ResourceBulkEditBar
+        selectedCount={selected.length}
+        onDeleteSelected={() => setBulkDeleteOpen(true)}
+        onClearSelection={() => setSelected([])}
+      />
+
       <ResourceCreateModal open={createOpen} onOpenChange={setCreateOpen} />
-      {editing && (
-        <ResourceEditModal
-          open={editing !== null}
-          onOpenChange={(open) => !open && setEditing(null)}
-          resource={editing}
-        />
-      )}
 
       <ConfirmDialog
-        open={pendingDelete !== null}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
-        title="Delete resource?"
-        description={pendingDelete ? `"${pendingDelete.title}" will be removed from Resources.` : undefined}
-        confirmLabel="Delete resource"
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selected.length} resource${selected.length === 1 ? "" : "s"}?`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
         destructive
-        onConfirm={confirmDelete}
+        onConfirm={handleBulkDelete}
       />
     </PageShell>
   );
