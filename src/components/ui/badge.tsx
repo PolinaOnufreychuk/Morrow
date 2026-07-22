@@ -11,7 +11,7 @@ const badgeVariants = cva(
         sage: "bg-sage-100 text-sage-900",
         blush: "bg-blush-100 text-blush-600",
         dark: "bg-sage-900 text-cream-50",
-        outline: "border border-border-default bg-transparent text-text-secondary",
+        outline: "border border-border-subtle bg-transparent text-text-secondary",
       },
     },
     defaultVariants: { variant: "neutral" },

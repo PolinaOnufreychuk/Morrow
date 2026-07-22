@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Icon } from "@/design-system/icons/Icon";
+import { PinnableItem } from "@/components/shared/PinnableItem";
+import { usePinned } from "@/context/PinnedContext";
 import { useBoards } from "../hooks/useInspiration";
 import { InspirationCard } from "../components/InspirationCard";
 import { InspirationFilterPopover } from "../components/InspirationFilterPopover";
@@ -32,6 +34,7 @@ const SORT_OPTIONS: { value: InspirationSort; label: string }[] = [
 
 export function InspirationPage() {
   const { data: boards = [] } = useBoards();
+  const { pin } = usePinned();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<InspirationSort>("recent");
@@ -104,12 +107,15 @@ export function InspirationPage() {
         <div className="masonry3">
           {filtered.map((board) => (
             <div key={board.id} className="masonry-item">
-              <InspirationCard
-                board={board}
-                variant="full"
-                onEdit={setEditing}
-                onDelete={setPendingDelete}
-              />
+              <PinnableItem entityType="collection" id={board.id}>
+                <InspirationCard
+                  board={board}
+                  variant="full"
+                  onEdit={setEditing}
+                  onPin={(target) => pin({ entityType: "collection", id: target.id })}
+                  onDelete={setPendingDelete}
+                />
+              </PinnableItem>
             </div>
           ))}
         </div>

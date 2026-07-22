@@ -14,16 +14,18 @@ Brand assets (logo in black/color/white, 3D illustrations, photography) live in 
 - **Projects** have a manual deadline field (date only — no calendar UI) and are the platform's flagship screen (see [docs/DESIGN.md](docs/DESIGN.md)).
 - **Archive** replaces the sidebar's old account-section slot (a lightweight lower-nav item) — Projects/Boards/Notes/Resources can be archived and appear there in one unified card style, disambiguated by badge.
 - **Files**: link-first. External links are the primary way of storing resources/inspiration. Optional lightweight attachments (PNG, JPG, WEBP, SVG, small PDF) for extra context on Projects and Inspiration boards only — this is not a file storage service.
-- **Search**: local search inside each module only (matches title/description/notes/tags). No global cross-module search.
+- **Search**: local search inside each module (matches title/description/notes/tags), plus a global search reachable from the Dashboard's search bar — pressing Enter navigates to a dedicated Search Results page (`/search`) matching across all modules at once, grouped by module with tab filters and result counts, reusing each module's existing card component.
 - **Tags**: supported only on Projects, Inspiration, Resources, for organization; search automatically includes tags; no dedicated tag-filter UI.
 - **Approved stack**: React + TypeScript + Vite, Tailwind CSS, shadcn/ui, React Router, TanStack Query, React Hook Form + Zod, Supabase — **Postgres + Storage only, no Supabase Auth** (see [docs/DATABASE.md](docs/DATABASE.md)).
 - **Code style priority**: clarity, readability, and maintainability over cleverness or premature optimization. Keep every feature as simple as possible; do not introduce unnecessary complexity. Codebase should be educational, well-structured, easy to understand.
 
 ## Current Product Scope — do NOT introduce
 
-User profiles, team collaboration, notifications, permissions, workspace switching, account settings, keyboard shortcuts, help center, sign out flow, onboarding flows for multiple users. Also excluded: payments/subscriptions, global search, favorites, advanced filtering, light theme, calendar UI, CRM features, time tracking, analytics, drag & drop, full file storage service, real-time collaboration.
+User profiles, team collaboration, notifications, permissions, workspace switching, account settings, keyboard shortcuts, help center, sign out flow, onboarding flows for multiple users. Also excluded: payments/subscriptions, favorites, advanced filtering, light theme, calendar UI, CRM features, time tracking, analytics, full file storage service, real-time collaboration.
 
 These may be introduced later but must not influence current design or implementation.
+
+**Approved exception**: drag & drop is otherwise out of scope, except for the sidebar's single pin-by-dragging interaction (drag a card from a Projects/Inspiration/Notes/Resources listing page onto the sidebar's Pinned slot) — see [docs/FEATURES.md](docs/FEATURES.md). This does not extend to reordering, multi-select drag, or file-management drag & drop.
 
 ## Project Docs
 

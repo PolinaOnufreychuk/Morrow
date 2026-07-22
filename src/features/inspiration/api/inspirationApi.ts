@@ -20,6 +20,11 @@ function nowIso(): string {
 }
 
 let store: InspirationBoard[] = boardFixtures.map((board) => ({ ...board }));
+let referenceStore: InspirationReference[] = referenceFixtures.map((reference) => ({ ...reference }));
+
+function generateReferenceId(): string {
+  return `reference-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export async function fetchBoards(): Promise<InspirationBoard[]> {
   await delay();
@@ -33,8 +38,37 @@ export async function fetchBoardById(id: string): Promise<InspirationBoard | nul
 }
 
 export async function fetchBoardReferences(boardId: string): Promise<InspirationReference[]> {
-  // TODO: implement — supabase.from("inspiration_references").select().eq("board_id", boardId)
-  return referenceFixtures.filter((reference) => reference.boardId === boardId);
+  await delay();
+  return referenceStore.filter((reference) => reference.boardId === boardId);
+}
+
+export interface AddReferenceInput {
+  imageUrl: string;
+  sourceUrl: string | null;
+}
+
+export async function addReferences(
+  boardId: string,
+  inputs: AddReferenceInput[],
+): Promise<InspirationReference[]> {
+  await delay();
+  const existingCount = referenceStore.filter((reference) => reference.boardId === boardId).length;
+  const created = inputs.map((input, index) => ({
+    id: generateReferenceId(),
+    boardId,
+    imageUrl: input.imageUrl,
+    sourceUrl: input.sourceUrl,
+    position: existingCount + index,
+    createdAt: nowIso(),
+  }));
+  referenceStore = [...referenceStore, ...created];
+  return created;
+}
+
+export async function removeReferences(ids: string[]): Promise<void> {
+  await delay();
+  const idSet = new Set(ids);
+  referenceStore = referenceStore.filter((reference) => !idSet.has(reference.id));
 }
 
 export async function createBoard(input: CreateBoardInput): Promise<InspirationBoard> {

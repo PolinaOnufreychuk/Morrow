@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/shared/TagInput";
 import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
+import { ImageDropzone } from "@/components/shared/ImageDropzone";
 import { ProjectDeadlineField } from "./ProjectDeadlineField";
 import { ExternalLinksField } from "./ExternalLinksField";
-import { PROJECT_STATUSES, projectInputSchema, type ProjectInput } from "../schema";
+import { PROJECT_CATEGORY_OPTIONS, PROJECT_STATUSES, projectInputSchema, type ProjectInput } from "../schema";
 import type { Project, ProjectStatus } from "@/types/entities";
 
 export type ProjectFormValues = ProjectInput;
@@ -18,6 +19,7 @@ const STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 const STATUS_OPTIONS = PROJECT_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] }));
+const CATEGORY_OPTIONS = PROJECT_CATEGORY_OPTIONS.map((value) => ({ value, label: value }));
 
 export interface ProjectFormProps {
   formId: string;
@@ -36,6 +38,7 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
       description: defaultValues?.description ?? "",
       status: defaultValues?.status ?? "in-progress",
       deadline: defaultValues?.deadline ?? null,
+      category: (defaultValues?.category ?? null) as ProjectFormValues["category"],
       tags: defaultValues?.tags ?? [],
       externalLinks: defaultValues?.externalLinks ?? [],
       attachments: defaultValues?.attachments ?? [],
@@ -45,11 +48,12 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
 
   const status = watch("status");
   const deadline = watch("deadline");
+  const category = watch("category");
   const tags = watch("tags");
   const externalLinks = watch("externalLinks");
 
   return (
-    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
       {submitError && (
         <p role="alert" className="rounded-chip bg-blush-100 px-3 py-2 text-[13px] text-blush-600">
           {submitError}
@@ -76,31 +80,12 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${formId}-cover`} className="eyebrow text-text-tertiary">
-          Cover image URL
-        </label>
-        <Input
-          id={`${formId}-cover`}
-          type="url"
-          placeholder="https://…"
-          aria-invalid={Boolean(formState.errors.coverImageUrl)}
-          aria-describedby={formState.errors.coverImageUrl ? `${formId}-cover-error` : undefined}
-          {...register("coverImageUrl")}
-        />
-        {formState.errors.coverImageUrl && (
-          <p id={`${formId}-cover-error`} className="text-[12px] text-blush-600">
-            {formState.errors.coverImageUrl.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
         <label htmlFor={`${formId}-description`} className="eyebrow text-text-tertiary">
           Description
         </label>
         <Textarea
           id={`${formId}-description`}
-          placeholder="What is this project about?"
+          placeholder="What's this project about?"
           {...register("description")}
         />
       </div>
@@ -111,10 +96,14 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
           options={STATUS_OPTIONS}
           value={status}
           onValueChange={(value) => setValue("status", value, { shouldDirty: true })}
+          triggerClassName="h-10"
         />
-        <ProjectDeadlineField
-          value={deadline}
-          onChange={(value) => setValue("deadline", value, { shouldDirty: true })}
+        <PropertyDropdown
+          label="Category"
+          options={CATEGORY_OPTIONS}
+          value={category ?? CATEGORY_OPTIONS[0].value}
+          onValueChange={(value) => setValue("category", value, { shouldDirty: true })}
+          triggerClassName="h-10"
         />
       </div>
 
@@ -128,6 +117,22 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
           onChange={(value) => setValue("tags", value, { shouldDirty: true })}
         />
       </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="eyebrow text-text-tertiary">Cover image</span>
+        <ImageDropzone
+          value={watch("coverImageUrl") || null}
+          onChange={(url) => setValue("coverImageUrl", url ?? "", { shouldDirty: true })}
+        />
+        {formState.errors.coverImageUrl && (
+          <p className="text-[12px] text-blush-600">{formState.errors.coverImageUrl.message}</p>
+        )}
+      </div>
+
+      <ProjectDeadlineField
+        value={deadline}
+        onChange={(value) => setValue("deadline", value, { shouldDirty: true })}
+      />
 
       <div className="flex flex-col gap-1.5">
         <span className="eyebrow text-text-tertiary">External links</span>

@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Icon } from "@/design-system/icons/Icon";
+import { PinnableItem } from "@/components/shared/PinnableItem";
+import { usePinned } from "@/context/PinnedContext";
 import { notify } from "@/components/shared/Toast";
 import type { Resource } from "@/types/entities";
 import { useResources } from "../hooks/useResources";
@@ -29,6 +31,7 @@ const SORT_OPTIONS: FilterOption<ResourceSort>[] = [
 
 export function ResourcesPage() {
   const { data: resources = [] } = useResources();
+  const { pin } = usePinned();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ResourceCategoryFilter>("all");
   const [sort, setSort] = useState<ResourceSort>("recent");
@@ -139,7 +142,14 @@ export function ResourcesPage() {
                   />
                 </div>
               )}
-              <ResourceCard resource={resource} editMode={editMode} onSelectToggle={toggleSelect} />
+              <PinnableItem entityType="resource" id={resource.id} disabled={editMode}>
+                <ResourceCard
+                  resource={resource}
+                  editMode={editMode}
+                  onSelectToggle={toggleSelect}
+                  onPin={editMode ? undefined : (target) => pin({ entityType: "resource", id: target.id })}
+                />
+              </PinnableItem>
             </div>
           ))}
         </div>

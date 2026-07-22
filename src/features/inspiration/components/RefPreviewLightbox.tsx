@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { Icon } from "@/design-system/icons/Icon";
+import { hostnameOf } from "@/lib/format";
 import type { InspirationReference } from "@/types/entities";
 
 export interface RefPreviewLightboxProps {
@@ -76,11 +77,17 @@ export function RefPreviewLightbox({
         className="flex max-h-[85vh] max-w-[85vw] flex-col items-center gap-3"
         onClick={(event) => event.stopPropagation()}
       >
-        <img
-          src={reference.imageUrl}
-          alt=""
-          className="max-h-[78vh] max-w-full rounded-card object-contain shadow-hover"
-        />
+        {reference.imageUrl ? (
+          <img
+            src={reference.imageUrl}
+            alt=""
+            className="max-h-[78vh] max-w-full rounded-card object-contain shadow-hover"
+          />
+        ) : (
+          <div className="flex h-[50vh] w-[60vw] max-w-full items-center justify-center rounded-card bg-surface-card/15 text-[14px] text-cream-50/80">
+            {reference.sourceUrl ? hostnameOf(reference.sourceUrl) : "No preview available"}
+          </div>
+        )}
         <figcaption className="flex items-center gap-3 text-[13px] text-cream-50/90">
           <span>
             {activeIndex + 1} / {references.length}

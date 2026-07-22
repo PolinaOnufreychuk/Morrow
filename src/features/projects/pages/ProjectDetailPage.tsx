@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@/design-system/icons/Icon";
+import { PageShell } from "@/components/shared/PageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -16,6 +17,7 @@ import { useNotes } from "@/features/notes/hooks/useNotes";
 import { useResources } from "@/features/resources/hooks/useResources";
 import { ProjectHero } from "../components/ProjectHero";
 import { ProjectInfoSidebar } from "../components/ProjectInfoSidebar";
+import { ProjectSection } from "../components/ProjectSection";
 import { ProjectEmbeddedContent } from "../components/ProjectEmbeddedContent";
 import { ProjectExternalLinksSection } from "../components/ProjectExternalLinksSection";
 import { ProjectAttachmentsSection } from "../components/ProjectAttachmentsSection";
@@ -41,6 +43,7 @@ export function ProjectDetailPage() {
       description: null,
       status: "in-progress",
       deadline: null,
+      category: null,
       tags: [],
       externalLinks: [],
       attachments: [],
@@ -53,42 +56,48 @@ export function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6" aria-busy="true" aria-label="Loading project">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-[300px] w-full" />
-        <Skeleton className="h-9 w-2/3" />
-        <div className="grid grid-cols-1 gap-8 board:grid-cols-[1fr_300px]">
-          <div className="order-2 flex flex-col gap-4 board:order-1">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
+      <PageShell>
+        <div aria-busy="true" aria-label="Loading project" className="flex flex-col gap-6">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-[200px] w-full" />
+          <Skeleton className="h-9 w-2/3" />
+          <div className="grid grid-cols-1 gap-8 board:grid-cols-[1fr_300px]">
+            <div className="order-2 flex flex-col gap-4 board:order-1">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+            <Skeleton className="order-1 h-72 w-full board:order-2" />
           </div>
-          <Skeleton className="order-1 h-72 w-full board:order-2" />
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (isError) {
     return (
-      <ErrorState
-        title="Couldn't load this project"
-        description={error instanceof Error ? error.message : undefined}
-        onRetry={() => refetch()}
-      />
+      <PageShell>
+        <ErrorState
+          title="Couldn't load this project"
+          description={error instanceof Error ? error.message : undefined}
+          onRetry={() => refetch()}
+        />
+      </PageShell>
     );
   }
 
   if (!project) {
     return (
-      <EmptyState
-        title="Project not found"
-        description="This project may have been deleted or archived."
-        action={
-          <Link to="/projects" className="text-sage-700 underline underline-offset-2">
-            Back to projects
-          </Link>
-        }
-      />
+      <PageShell>
+        <EmptyState
+          title="Project not found"
+          description="This project may have been deleted or archived."
+          action={
+            <Link to="/projects" className="text-sage-700 underline underline-offset-2">
+              Back to projects
+            </Link>
+          }
+        />
+      </PageShell>
     );
   }
 
@@ -116,7 +125,7 @@ export function ProjectDetailPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageShell>
       <Link
         to="/projects"
         className="inline-flex items-center gap-1.5 text-[13px] text-text-secondary hover:text-text-primary"
@@ -135,48 +144,45 @@ export function ProjectDetailPage() {
         onChangeCover={(url) => editState.patch({ coverImageUrl: url || null })}
       />
 
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-4">
-          {editState.isEditing ? (
-            <Input
-              value={editState.draft.title}
-              onChange={(event) => editState.patch({ title: event.target.value })}
-              className="font-display text-[28px] font-light"
-              aria-label="Project title"
-            />
-          ) : (
-            <h1 className="font-display text-[34px] font-light leading-tight text-text-primary [text-wrap:balance]">
-              {project.title}
-            </h1>
-          )}
-
-          {editState.isEditing && (
-            <div className="flex shrink-0 gap-2">
-              <Button type="button" variant="secondary" onClick={editState.cancel}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={handleSave} disabled={editState.isSaving}>
-                Save changes
-              </Button>
-            </div>
-          )}
-        </div>
-
+      <div className="flex items-start justify-between gap-4">
         {editState.isEditing ? (
-          <Textarea
-            value={editState.draft.description ?? ""}
-            onChange={(event) => editState.patch({ description: event.target.value })}
-            placeholder="What is this project about?"
-            className="max-w-2xl"
+          <Input
+            value={editState.draft.title}
+            onChange={(event) => editState.patch({ title: event.target.value })}
+            className="font-display text-[34px] font-light"
+            aria-label="Project title"
           />
         ) : (
-          project.description && (
-            <p className="max-w-2xl text-[15px] leading-relaxed text-text-secondary">
-              {project.description}
-            </p>
-          )
+          <h1 className="font-display text-[34px] font-light leading-tight text-text-primary [text-wrap:balance]">
+            {project.title}
+          </h1>
+        )}
+
+        {editState.isEditing && (
+          <div className="flex shrink-0 gap-2">
+            <Button type="button" variant="secondary" onClick={editState.cancel}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={editState.isSaving}>
+              Save changes
+            </Button>
+          </div>
         )}
       </div>
+
+      {(editState.isEditing || project.description) && (
+        <ProjectSection eyebrow="Description" tone="solid">
+          {editState.isEditing ? (
+            <Textarea
+              value={editState.draft.description ?? ""}
+              onChange={(event) => editState.patch({ description: event.target.value })}
+              placeholder="What is this project about?"
+            />
+          ) : (
+            <p className="text-[15px] leading-relaxed text-text-secondary">{project.description}</p>
+          )}
+        </ProjectSection>
+      )}
 
       <div className="grid grid-cols-1 gap-8 board:grid-cols-[1fr_300px]">
         <div className="order-2 flex flex-col gap-6 board:order-1">
@@ -210,12 +216,7 @@ export function ProjectDetailPage() {
           />
         </div>
         <div className="order-1 board:order-2">
-          <ProjectInfoSidebar
-            project={project}
-            editMode={editState.isEditing}
-            draft={editState.draft}
-            onPatch={editState.patch}
-          />
+          <ProjectInfoSidebar project={project} />
         </div>
       </div>
 
@@ -233,6 +234,6 @@ export function ProjectDetailPage() {
           navigate("/projects");
         }}
       />
-    </div>
+    </PageShell>
   );
 }

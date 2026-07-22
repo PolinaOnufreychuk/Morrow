@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { sortByRecency } from "@/lib/utils";
 import { formatRelativeUpdated } from "@/lib/format";
+import { TypeChip } from "@/components/shared/TypeChip";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { GithubMark } from "@/design-system/icons/GithubMark";
 import { useBoardReferences, useBoards } from "@/features/inspiration/hooks/useInspiration";
@@ -52,18 +53,12 @@ function PreviewShell({
   );
 }
 
-function TypeChip({ label, bg }: { label: string; bg: string }) {
-  return (
-    <span
-      className="inline-flex items-center rounded-chip px-[10px] py-[5px] text-[11px] font-medium leading-none tracking-[.01em] text-text-secondary"
-      style={{ background: bg, border: "1px solid transparent" }}
-    >
-      {label}
-    </span>
-  );
+export interface LatestRowProps {
+  onPreviewNote: (note: ChecklistNote) => void;
+  onPreviewResource: (resource: Resource) => void;
 }
 
-export function LatestRow() {
+export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) {
   const navigate = useNavigate();
 
   const { data: projects = [] } = useProjects();
@@ -87,14 +82,14 @@ export function LatestRow() {
       <div className="grid min-w-[960px] grid-cols-4 items-start gap-4">
         {/* Project */}
         {latestProject && (
-          <PreviewShell onClick={() => navigate("/projects")} className="gap-2 p-4">
+          <PreviewShell onClick={() => navigate(`/projects/${latestProject.id}`)} className="gap-2 p-4">
             <div className="flex items-center justify-between px-px">
               <TypeChip label="Project" bg="#FEFFFEE6" />
               <span className="text-[11.5px] text-text-tertiary">
                 {formatRelativeUpdated(latestProject.updatedAt)}
               </span>
             </div>
-            <div className="flex flex-col gap-1 px-px">
+            <div className="mt-1.5 flex flex-col gap-1 px-px">
               <span className="text-[16px] font-medium leading-[1.3] text-text-primary">
                 {latestProject.title}
               </span>
@@ -114,7 +109,7 @@ export function LatestRow() {
         {/* Note — latest checklist */}
         {latestChecklistNote && (
           <PreviewShell
-            onClick={() => navigate("/notes")}
+            onClick={() => onPreviewNote(latestChecklistNote)}
             className="gap-[9px] px-[18px] py-4"
             style={{
               background: "linear-gradient(168deg,rgba(255,252,243,.78),rgba(255,255,255,.5))",
@@ -126,7 +121,7 @@ export function LatestRow() {
                 {formatRelativeUpdated(latestChecklistNote.updatedAt)}
               </span>
             </div>
-            <span className="font-display text-[22px] font-light italic leading-[1.1] text-text-primary">
+            <span className="mt-1 font-display text-[22px] font-light italic leading-[1.1] text-text-primary">
               Today&rsquo;s focus
             </span>
             <div className="border-b border-dashed border-ink-900/[.14]" />
@@ -146,12 +141,12 @@ export function LatestRow() {
 
         {/* Inspiration — fanned stack */}
         {latestBoard && (
-          <PreviewShell onClick={() => navigate("/inspiration")} className="p-4">
+          <PreviewShell onClick={() => navigate(`/inspiration/${latestBoard.id}`)} className="p-4">
             <div className="flex items-center justify-between">
               <TypeChip label="Inspiration" bg="#F3F6F0FA" />
               <span className="text-[11.5px] text-text-tertiary">{boardReferences.length} items</span>
             </div>
-            <div className="relative mb-[13px] mt-2 flex-1">
+            <div className="relative mb-[13px] mt-3 flex-1">
               <div className="absolute inset-x-[10px] bottom-1 top-[14px] rotate-[3.5deg] rounded-[14px] bg-white/80 shadow-[0_8px_20px_-12px_hsl(30_25%_20%_/_.25)]" />
               <div className="absolute inset-x-[5px] bottom-px top-2 -rotate-2 rounded-[14px] bg-white/95 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.2)]" />
               <div
@@ -173,7 +168,7 @@ export function LatestRow() {
         {/* Resource — GitHub repo preview, or a generic fallback for other kinds */}
         {latestResource && (
           <PreviewShell
-            onClick={() => navigate("/resources")}
+            onClick={() => onPreviewResource(latestResource)}
             className="gap-[11px] px-4 py-[14px]"
           >
             <div className="flex items-center justify-between">
@@ -182,11 +177,13 @@ export function LatestRow() {
                 Saved {formatRelativeUpdated(latestResource.updatedAt).toLowerCase()}
               </span>
             </div>
-            {latestResource.kind === "repo" ? (
-              <RepoMedia resource={latestResource} />
-            ) : (
-              <GenericResourceMedia resource={latestResource} />
-            )}
+            <div className="mt-1 shrink-0">
+              {latestResource.kind === "repo" ? (
+                <RepoMedia resource={latestResource} />
+              ) : (
+                <GenericResourceMedia resource={latestResource} />
+              )}
+            </div>
             <div className="flex flex-col gap-1">
               <span className="text-[15.5px] font-medium leading-[1.3] text-text-primary">
                 {latestResource.title}

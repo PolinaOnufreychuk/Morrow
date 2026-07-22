@@ -1,8 +1,10 @@
 import { GlassCard } from "@/components/shared/GlassCard";
+import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { Badge } from "@/components/ui/badge";
 import { GithubMark } from "@/design-system/icons/GithubMark";
 import { FigmaMark } from "@/design-system/icons/FigmaMark";
 import { cn } from "@/lib/utils";
+import { hostnameOf } from "@/lib/format";
 import type {
   ImageResource,
   PdfResource,
@@ -12,7 +14,7 @@ import type {
   VideoResource,
 } from "@/types/entities";
 
-export type ResourceCardVariant = "compact" | "full";
+export type ResourceCardVariant = "compact" | "full" | "pinned";
 
 export interface ResourceCardProps {
   resource: Resource;
@@ -20,15 +22,10 @@ export interface ResourceCardProps {
   /** Edit Mode: card becomes a selectable surface instead of a navigating link. */
   editMode?: boolean;
   onSelectToggle?: (resource: Resource) => void;
-}
-
-/** Hostname without "www." — the shared "secondary meta" fallback for any kind with a URL. */
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
+  /** Not used when variant="pinned" — pins it to the sidebar. */
+  onPin?: (resource: Resource) => void;
+  /** Only used when variant="pinned" — removes it from the sidebar. */
+  onUnpin?: () => void;
 }
 
 /** One consistent secondary-meta string per kind: reading time, page count, or domain. */
@@ -55,28 +52,43 @@ function secondaryMeta(resource: Resource): string {
  * in a new tab. Edit Mode: the card becomes purely selectable (no
  * navigation); the caller renders the selection checkbox as a sibling.
  */
-export function ResourceCard({ resource, variant = "compact", editMode = false, onSelectToggle }: ResourceCardProps) {
+export function ResourceCard({
+  resource,
+  variant = "compact",
+  editMode = false,
+  onSelectToggle,
+  onPin,
+  onUnpin,
+}: ResourceCardProps) {
+  const isPinned = variant === "pinned";
   const content = (
     <>
       <ResourceMedia resource={resource} variant={variant} />
 
-      <div className="flex flex-col gap-2">
-        <p className="text-[15px] font-medium leading-snug text-text-primary">{resource.title}</p>
-        {resource.description && (
+      <div className={cn("flex flex-col gap-2", isPinned && "gap-1")}>
+        <p
+          className={cn(
+            "font-medium leading-snug text-text-primary",
+            isPinned ? "text-[12.5px] leading-[1.35]" : "text-[15px]",
+          )}
+        >
+          {resource.title}
+        </p>
+        {!isPinned && resource.description && (
           <p className="line-clamp-2 text-[13px] text-text-secondary">{resource.description}</p>
         )}
       </div>
 
-      <footer className="mt-auto flex items-center justify-between gap-2 pt-1">
+      <footer className={cn("mt-auto flex items-center justify-between gap-2 pt-1", isPinned && "pt-0")}>
         <div className="flex items-center gap-2">
-          {resource.tags[0] && <Badge variant="neutral">{resource.tags[0]}</Badge>}
+          {!isPinned && resource.tags[0] && <Badge variant="outline">{resource.tags[0]}</Badge>}
           <span className="text-[12px] text-text-tertiary">{secondaryMeta(resource)}</span>
         </div>
       </footer>
     </>
   );
 
-  const cardClassName = "group flex flex-col gap-3 p-4";
+  const cardClassName = cn("flex flex-col gap-3 p-4", isPinned && "gap-2 p-[9px]");
 
   if (editMode) {
     return (
@@ -91,22 +103,55 @@ export function ResourceCard({ resource, variant = "compact", editMode = false, 
             onSelectToggle?.(resource);
           }
         }}
-        className={cardClassName}
+        className={cn("group", cardClassName)}
       >
         {content}
       </GlassCard>
     );
   }
 
+  if (isPinned) {
+    return (
+      <div className="group relative">
+        <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
+          <EntityOverflowMenu
+            entityType="resource"
+            actions={[{ label: "Unpin", onSelect: () => onUnpin?.() }]}
+            triggerClassName="h-6 w-6 bg-surface-card/70 backdrop-blur-sm"
+          />
+        </div>
+        <a
+          href={resource.url}
+          target="_blank"
+          rel="noreferrer"
+          className={cn("glass-card block cursor-pointer rounded-card", cardClassName)}
+        >
+          {content}
+        </a>
+      </div>
+    );
+  }
+
   return (
-    <a
-      href={resource.url}
-      target="_blank"
-      rel="noreferrer"
-      className={cn("glass-card block cursor-pointer rounded-card", cardClassName)}
-    >
-      {content}
-    </a>
+    <div className="group relative">
+      {onPin && (
+        <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
+          <EntityOverflowMenu
+            entityType="resource"
+            onPin={() => onPin(resource)}
+            triggerClassName="bg-surface-card/70 backdrop-blur-sm"
+          />
+        </div>
+      )}
+      <a
+        href={resource.url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn("glass-card block cursor-pointer rounded-card", cardClassName)}
+      >
+        {content}
+      </a>
+    </div>
   );
 }
 
@@ -116,11 +161,11 @@ function ResourceMedia({ resource, variant }: { resource: Resource; variant: Res
       // Link resources have no thumbnail — title/description/footer carry the card.
       return null;
     case "repo":
-      return <RepoMedia resource={resource} />;
+      return <RepoMedia resource={resource} variant={variant} />;
     case "video":
       return <VideoMedia resource={resource} variant={variant} />;
     case "pdf":
-      return <PdfMedia resource={resource} />;
+      return <PdfMedia resource={resource} variant={variant} />;
     case "preview":
       return <PreviewMedia resource={resource} variant={variant} />;
     case "image":
@@ -133,9 +178,19 @@ function ResourceMedia({ resource, variant }: { resource: Resource; variant: Res
   }
 }
 
-function RepoMedia({ resource }: { resource: RepoResource }) {
+/** Sidebar-pinned media shrinks its inner-image radius to 10px per docs/DESIGN.md. */
+function mediaRadiusFor(variant: ResourceCardVariant) {
+  return variant === "pinned" ? "rounded-card-image-sidebar" : "rounded-card-image";
+}
+
+/** Media height per variant — pinned caps at 86px so every pinned card scales alike. */
+function mediaHeightFor(variant: ResourceCardVariant) {
+  return variant === "pinned" ? "h-[86px]" : variant === "full" ? "h-48" : "h-36";
+}
+
+function RepoMedia({ resource, variant }: { resource: RepoResource; variant: ResourceCardVariant }) {
   return (
-    <div className="flex items-center gap-3 rounded-card-image border border-border-subtle bg-surface-card/60 p-3">
+    <div className={cn("flex items-center gap-3 border border-border-subtle bg-surface-card/60 p-3", mediaRadiusFor(variant))}>
       <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-chip bg-ink-900 text-white">
         <GithubMark size={20} />
       </span>
@@ -148,9 +203,9 @@ function RepoMedia({ resource }: { resource: RepoResource }) {
 
 function VideoMedia({ resource, variant }: { resource: VideoResource; variant: ResourceCardVariant }) {
   return (
-    <div className={cn("relative overflow-hidden rounded-card-image", variant === "full" ? "h-48" : "h-36")}>
+    <div className={cn("relative overflow-hidden", mediaRadiusFor(variant), mediaHeightFor(variant))}>
       {resource.thumbnailUrl ? (
-        <img src={resource.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+        <img src={resource.thumbnailUrl} alt="" draggable={false} className="h-full w-full object-cover" />
       ) : (
         <div className="h-full w-full bg-sage-100" />
       )}
@@ -168,9 +223,9 @@ function VideoMedia({ resource, variant }: { resource: VideoResource; variant: R
   );
 }
 
-function PdfMedia({ resource }: { resource: PdfResource }) {
+function PdfMedia({ resource, variant }: { resource: PdfResource; variant: ResourceCardVariant }) {
   return (
-    <div className="flex items-center gap-3 rounded-card-image border border-border-subtle bg-surface-card/60 p-3">
+    <div className={cn("flex items-center gap-3 border border-border-subtle bg-surface-card/60 p-3", mediaRadiusFor(variant))}>
       <span className="flex h-9 w-9 items-center justify-center rounded-chip bg-blush-100 text-[11px] font-bold text-blush-600">
         PDF
       </span>
@@ -186,17 +241,18 @@ function PreviewMedia({
   resource: PreviewResource;
   variant: ResourceCardVariant;
 }) {
-  const height = variant === "full" ? "h-48" : "h-36";
+  const radius = mediaRadiusFor(variant);
+  const height = mediaHeightFor(variant);
   if (!resource.previewImageUrl) {
     return (
-      <div className={cn("flex items-center justify-center rounded-card-image bg-cream-100", height)}>
+      <div className={cn("flex items-center justify-center bg-cream-100", radius, height)}>
         {resource.isFigma ? <FigmaMark size={40} /> : <div className="h-10 w-10 rounded-chip bg-sage-200" />}
       </div>
     );
   }
   return (
-    <div className={cn("relative overflow-hidden rounded-card-image", height)}>
-      <img src={resource.previewImageUrl} alt="" className="h-full w-full object-cover" />
+    <div className={cn("relative overflow-hidden", radius, height)}>
+      <img src={resource.previewImageUrl} alt="" draggable={false} className="h-full w-full object-cover" />
       {resource.isFigma && (
         <span className="absolute left-2 top-2 rounded-chip bg-surface-card/85 px-2 py-0.5 text-[11px] font-medium text-text-primary backdrop-blur-sm">
           Figma
@@ -208,8 +264,8 @@ function PreviewMedia({
 
 function ImageMedia({ resource, variant }: { resource: ImageResource; variant: ResourceCardVariant }) {
   return (
-    <div className={cn("overflow-hidden rounded-card-image", variant === "full" ? "h-48" : "h-36")}>
-      <img src={resource.coverImageUrl} alt="" className="h-full w-full object-cover" />
+    <div className={cn("overflow-hidden", mediaRadiusFor(variant), mediaHeightFor(variant))}>
+      <img src={resource.coverImageUrl} alt="" draggable={false} className="h-full w-full object-cover" />
     </div>
   );
 }

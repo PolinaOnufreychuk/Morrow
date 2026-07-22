@@ -19,6 +19,7 @@ export interface EntityOverflowAction {
 export interface EntityOverflowMenuProps {
   entityType: EntityType;
   onEdit?: () => void;
+  onPin?: () => void;
   onArchive?: () => void;
   onRestore?: () => void;
   onDelete?: () => void;
@@ -36,6 +37,7 @@ export interface EntityOverflowMenuProps {
 export function EntityOverflowMenu({
   entityType,
   onEdit,
+  onPin,
   onArchive,
   onRestore,
   onDelete,
@@ -45,6 +47,7 @@ export function EntityOverflowMenu({
 }: EntityOverflowMenuProps) {
   const items: EntityOverflowAction[] = actions ?? buildDefaultActions(entityType, {
     onEdit,
+    onPin,
     onArchive,
     onRestore,
     onDelete,
@@ -82,6 +85,7 @@ export function EntityOverflowMenu({
 
 interface DefaultActionHandlers {
   onEdit?: () => void;
+  onPin?: () => void;
   onArchive?: () => void;
   onRestore?: () => void;
   onDelete?: () => void;
@@ -92,8 +96,12 @@ function buildDefaultActions(
   entityType: EntityType,
   handlers: DefaultActionHandlers,
 ): EntityOverflowAction[] {
-  const { onEdit, onArchive, onRestore, onDelete, onDuplicate } = handlers;
+  const { onEdit, onPin, onArchive, onRestore, onDelete, onDuplicate } = handlers;
   const result: EntityOverflowAction[] = [];
+
+  // Pin first — it's the quick-access action and the only way keyboard/touch
+  // users can pin an item, since dragging is mouse-only.
+  if (onPin) result.push({ label: "Pin to sidebar", onSelect: onPin });
 
   if (onEdit) result.push({ label: "Edit", onSelect: onEdit });
 

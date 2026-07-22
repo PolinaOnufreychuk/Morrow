@@ -23,7 +23,8 @@ export type IconName =
   | "file-text"
   | "restore"
   | "link"
-  | "external-link";
+  | "external-link"
+  | "upload";
 
 const paths: Record<IconName, ReactNode> = {
   search: (
@@ -115,6 +116,13 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M8 3.5H3.5V15.5H15.5V11" strokeLinejoin="round" />
       <path d="M9.5 9.5 16 3" />
       <path d="M11.5 3H16v4.5" strokeLinejoin="round" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M9.5 12.5V3" />
+      <path d="M5.5 7 9.5 3l4 4" />
+      <path d="M3 13v2.5h13V13" />
     </>
   ),
 };

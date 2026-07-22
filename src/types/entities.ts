@@ -38,6 +38,7 @@ export interface Project extends BaseEntity {
   description: string | null;
   status: ProjectStatus;
   deadline: ISODateString | null;
+  category: string | null;
   tags: string[];
   externalLinks: ExternalLink[];
   attachments: ProjectAttachment[];

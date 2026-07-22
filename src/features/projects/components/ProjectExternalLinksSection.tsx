@@ -34,6 +34,7 @@ export function ProjectExternalLinksSection({
   return (
     <ProjectSection
       eyebrow="External links"
+      tone="solid"
       headerAction={
         editMode &&
         !adding && (

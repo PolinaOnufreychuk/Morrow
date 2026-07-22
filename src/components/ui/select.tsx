@@ -22,9 +22,9 @@ export const SelectTrigger = forwardRef<
     )}
     {...props}
   >
-    {children}
+    <span className="min-w-0 flex-1 truncate text-left">{children}</span>
     <SelectPrimitive.Icon asChild>
-      <Icon name="chevron-down" size={16} className="text-text-tertiary" />
+      <Icon name="chevron-down" size={16} className="shrink-0 text-text-tertiary" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));

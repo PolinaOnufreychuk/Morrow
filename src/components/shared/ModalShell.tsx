@@ -11,6 +11,8 @@ export interface ModalShellProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** Override the title's size/weight for a modal whose reference calls for it. Every other modal keeps the default. */
+  titleClassName?: string;
   description?: string;
   children: ReactNode;
   /** Footer actions — never include a redundant Cancel; the X closes the modal. */
@@ -27,6 +29,7 @@ export function ModalShell({
   open,
   onOpenChange,
   title,
+  titleClassName,
   description,
   children,
   footer,
@@ -36,11 +39,11 @@ export function ModalShell({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={className}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className={titleClassName}>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
-        {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
+        <div className="-mr-1 max-h-[60vh] overflow-y-auto pr-1">{children}</div>
+        {footer && <div className="mt-5 flex justify-end gap-2">{footer}</div>}
       </DialogContent>
     </Dialog>
   );

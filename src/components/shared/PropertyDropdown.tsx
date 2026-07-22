@@ -21,6 +21,8 @@ export interface PropertyDropdownProps<T extends string> {
   onValueChange: (value: T) => void;
   placeholder?: string;
   className?: string;
+  /** Overrides the trigger's own classes (e.g. height) independent of the wrapper `className`. */
+  triggerClassName?: string;
 }
 
 /**
@@ -35,12 +37,13 @@ export function PropertyDropdown<T extends string>({
   onValueChange,
   placeholder,
   className,
+  triggerClassName,
 }: PropertyDropdownProps<T>) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && <span className="eyebrow text-text-tertiary">{label}</span>}
       <Select value={value} onValueChange={(v) => onValueChange(v as T)}>
-        <SelectTrigger className="h-9 bg-transparent">
+        <SelectTrigger className={cn("h-9 bg-transparent", triggerClassName)}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

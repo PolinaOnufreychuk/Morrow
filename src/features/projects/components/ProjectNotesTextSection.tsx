@@ -14,7 +14,7 @@ export interface ProjectNotesTextSectionProps {
  */
 export function ProjectNotesTextSection({ notes, editMode, onChange }: ProjectNotesTextSectionProps) {
   return (
-    <ProjectSection eyebrow="Project notes">
+    <ProjectSection eyebrow="Project notes" tone="solid">
       {editMode ? (
         <Textarea
           value={notes ?? ""}

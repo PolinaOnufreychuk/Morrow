@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { hostnameOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { InspirationReference } from "@/types/entities";
 
@@ -10,8 +11,6 @@ export interface ReferenceGridItemProps {
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: (id: string) => void;
-  /** Static drag-handle affordance only — no functional DnD (per brief). */
-  showDragHandle?: boolean;
 }
 
 export function ReferenceGridItem({
@@ -21,7 +20,6 @@ export function ReferenceGridItem({
   selectable = false,
   selected = false,
   onToggleSelect,
-  showDragHandle = false,
 }: ReferenceGridItemProps) {
   return (
     <div
@@ -33,13 +31,19 @@ export function ReferenceGridItem({
       <button
         type="button"
         onClick={() => onOpen(index)}
-        className="block h-full w-full focus:outline-none"
+        className="block w-full focus:outline-none"
       >
-        <img
-          src={reference.imageUrl}
-          alt=""
-          className="aspect-square w-full object-cover transition-transform duration-slow ease-out group-hover:scale-[1.03]"
-        />
+        {reference.imageUrl ? (
+          <img
+            src={reference.imageUrl}
+            alt=""
+            className="h-auto w-full transition-transform duration-slow ease-out group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="flex aspect-square w-full items-center justify-center bg-sage-100 px-2 text-center text-[11px] text-text-tertiary">
+            {reference.sourceUrl ? hostnameOf(reference.sourceUrl) : "No preview"}
+          </div>
+        )}
       </button>
 
       {selectable && (
@@ -48,21 +52,8 @@ export function ReferenceGridItem({
             checked={selected}
             onCheckedChange={() => onToggleSelect?.(reference.id)}
             aria-label="Select reference"
-            className="bg-surface-card/90"
+            className="border-white/80 bg-white/40 shadow-resting backdrop-blur-[2px]"
           />
-        </div>
-      )}
-
-      {showDragHandle && (
-        <div className="absolute right-2 top-2 z-10 flex h-7 w-7 cursor-grab items-center justify-center rounded-chip bg-surface-card/80 text-text-secondary backdrop-blur-sm">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-            <circle cx="4.5" cy="3" r="1.1" />
-            <circle cx="9.5" cy="3" r="1.1" />
-            <circle cx="4.5" cy="7" r="1.1" />
-            <circle cx="9.5" cy="7" r="1.1" />
-            <circle cx="4.5" cy="11" r="1.1" />
-            <circle cx="9.5" cy="11" r="1.1" />
-          </svg>
         </div>
       )}
     </div>

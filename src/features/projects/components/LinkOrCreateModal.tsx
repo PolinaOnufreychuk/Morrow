@@ -85,10 +85,15 @@ export function LinkOrCreateModal<T extends { id: string; title: string; project
                     key={item.id}
                     className="flex items-center justify-between gap-3 rounded-chip border border-border-subtle px-3 py-2.5"
                   >
-                    <div className="flex min-w-0 flex-col">
+                    <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="truncate text-[14px] font-medium text-text-primary">
                         {item.title}
                       </span>
+                      {item.projectId && (
+                        <span className="text-[12px] text-blush-600">
+                          Currently linked to another project — linking will move it here
+                        </span>
+                      )}
                       {renderItemMeta?.(item)}
                     </div>
                     <Button

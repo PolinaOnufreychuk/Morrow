@@ -10,6 +10,8 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
 import { Icon } from "@/design-system/icons/Icon";
+import { PinnableItem } from "@/components/shared/PinnableItem";
+import { usePinned } from "@/context/PinnedContext";
 import { sortByRecency } from "@/lib/utils";
 import {
   useArchiveProject,
@@ -27,6 +29,7 @@ import type { Project, ProjectStatusFilter } from "../types";
 
 export function ProjectsPage() {
   const { data: projects = [], isLoading, isError, error, refetch } = useProjects();
+  const { pin } = usePinned();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatusFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -160,21 +163,24 @@ export function ProjectsPage() {
                   />
                 </div>
               )}
-              <ProjectCard
-                project={project}
-                variant="full"
-                onEdit={editMode ? undefined : setEditing}
-                onArchive={
-                  editMode
-                    ? undefined
-                    : (target) =>
-                        archiveProject.mutate(target.id, {
-                          onSuccess: () => notify.success(`"${target.title}" archived`),
-                          onError: () => notify.error("Couldn't archive this project."),
-                        })
-                }
-                onDelete={editMode ? undefined : setPendingDelete}
-              />
+              <PinnableItem entityType="project" id={project.id} disabled={editMode}>
+                <ProjectCard
+                  project={project}
+                  variant="full"
+                  onEdit={editMode ? undefined : setEditing}
+                  onPin={editMode ? undefined : (target) => pin({ entityType: "project", id: target.id })}
+                  onArchive={
+                    editMode
+                      ? undefined
+                      : (target) =>
+                          archiveProject.mutate(target.id, {
+                            onSuccess: () => notify.success(`"${target.title}" archived`),
+                            onError: () => notify.error("Couldn't archive this project."),
+                          })
+                  }
+                  onDelete={editMode ? undefined : setPendingDelete}
+                />
+              </PinnableItem>
             </div>
           ))}
         </div>

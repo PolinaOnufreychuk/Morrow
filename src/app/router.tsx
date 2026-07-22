@@ -8,6 +8,7 @@ import { BoardDetailPage } from "@/features/inspiration/pages/BoardDetailPage";
 import { NotesPage } from "@/features/notes/pages/NotesPage";
 import { ResourcesPage } from "@/features/resources/pages/ResourcesPage";
 import { ArchivePage } from "@/features/archive/pages/ArchivePage";
+import { SearchResultsPage } from "@/features/search/pages/SearchResultsPage";
 import { NotFoundPage } from "./NotFoundPage";
 
 /** All routes nest under one AppLayout so the sidebar persists. */
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: "notes", element: <NotesPage /> },
       { path: "resources", element: <ResourcesPage /> },
       { path: "archive", element: <ArchivePage /> },
+      { path: "search", element: <SearchResultsPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

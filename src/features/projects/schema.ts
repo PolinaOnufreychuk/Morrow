@@ -14,6 +14,21 @@ export const PROJECT_STATUSES = ["in-progress", "review", "done"] as const;
 
 export const projectStatusSchema = z.enum(PROJECT_STATUSES);
 
+/** Fixed vocabulary for `Project.category` — a single classification value
+ * per project, distinct from the free-form `tags` field. */
+export const PROJECT_CATEGORY_OPTIONS = [
+  "Mobile",
+  "Web",
+  "Fintech",
+  "Branding",
+  "Design system",
+  "UX Research",
+  "Motion",
+  "Physical",
+] as const;
+
+export const projectCategorySchema = z.enum(PROJECT_CATEGORY_OPTIONS).nullable();
+
 export const externalLinkSchema = z.object({
   label: z.string().trim().min(1, "Link label is required"),
   url: z.string().trim().url("Enter a valid URL"),
@@ -63,6 +78,7 @@ export const projectInputSchema = z.object({
   ),
   status: projectStatusSchema,
   deadline: isoDateSchema,
+  category: projectCategorySchema,
   tags: z.array(projectTagSchema).max(20, "Too many tags"),
   externalLinks: z.array(externalLinkSchema).max(20, "Too many links"),
   attachments: z.array(projectAttachmentSchema).max(20, "Too many attachments"),

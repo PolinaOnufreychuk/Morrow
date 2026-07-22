@@ -3,8 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
-import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { useCreateBoard } from "../hooks/useInspiration";
+import { INSPIRATION_CATEGORY_OPTIONS as CATEGORY_OPTIONS } from "../types";
 
 const CATEGORY_SELECT_OPTIONS = CATEGORY_OPTIONS.map((value) => ({ value, label: value }));
 

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
@@ -8,6 +9,8 @@ import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
 import { Icon } from "@/design-system/icons/Icon";
+import { PinnableItem } from "@/components/shared/PinnableItem";
+import { usePinned } from "@/context/PinnedContext";
 import type { Note, NoteType } from "@/types/entities";
 import { useArchiveNote, useNotes } from "../hooks/useNotes";
 import { NoteCard } from "../components/NoteCard";
@@ -31,6 +34,8 @@ const SORT_OPTIONS: { value: NoteSort; label: string }[] = [
 export function NotesPage() {
   const { data: notes = [] } = useNotes();
   const archiveNote = useArchiveNote();
+  const { pin } = usePinned();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<NoteType | "all">("all");
   const [sort, setSort] = useState<NoteSort>("recent");
@@ -63,6 +68,23 @@ export function NotesPage() {
     setEditingNote(note);
     setEditorType(note.type);
   };
+
+  // Lets the sidebar's pinned Note deep-link into this page's editor modal
+  // (the modal's open/closed state is otherwise page-local).
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (!openId) return;
+    const note = notes.find((candidate) => candidate.id === openId);
+    if (note) editNote(note);
+    setSearchParams(
+      (params) => {
+        params.delete("open");
+        return params;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, notes]);
 
   return (
     <PageShell>
@@ -111,17 +133,20 @@ export function NotesPage() {
         <div className="masonry4">
           {filtered.map((note) => (
             <div key={note.id} className="masonry-item">
-              <NoteCard
-                note={note}
-                onEdit={editNote}
-                onArchive={(target) =>
-                  archiveNote.mutate(target.id, {
-                    onSuccess: () => notify.success(`"${target.title}" archived`),
-                    onError: () => notify.error("Couldn't archive this note."),
-                  })
-                }
-                onDelete={setPendingDelete}
-              />
+              <PinnableItem entityType="note" id={note.id}>
+                <NoteCard
+                  note={note}
+                  onEdit={editNote}
+                  onPin={(target) => pin({ entityType: "note", id: target.id })}
+                  onArchive={(target) =>
+                    archiveNote.mutate(target.id, {
+                      onSuccess: () => notify.success(`"${target.title}" archived`),
+                      onError: () => notify.error("Couldn't archive this note."),
+                    })
+                  }
+                  onDelete={setPendingDelete}
+                />
+              </PinnableItem>
             </div>
           ))}
         </div>

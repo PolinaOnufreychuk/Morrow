@@ -9,8 +9,10 @@ export interface AddDashedTileProps extends ButtonHTMLAttributes<HTMLButtonEleme
 /**
  * Dashed "add new" tile used inside card grids (add reference, add link,
  * new item). Matches the card radius so it sits flush in a masonry grid.
+ * Omit `label` for an icon-only tile (e.g. the inline "+" slot in a
+ * reference grid, where the top-right button already carries the copy).
  */
-export function AddDashedTile({ label = "Add", className, ...props }: AddDashedTileProps) {
+export function AddDashedTile({ label, className, ...props }: AddDashedTileProps) {
   return (
     <button
       type="button"
@@ -21,7 +23,7 @@ export function AddDashedTile({ label = "Add", className, ...props }: AddDashedT
       {...props}
     >
       <Icon name="plus" size={20} />
-      <span className="text-[13px] font-medium">{label}</span>
+      {label && <span className="text-[13px] font-medium">{label}</span>}
     </button>
   );
 }

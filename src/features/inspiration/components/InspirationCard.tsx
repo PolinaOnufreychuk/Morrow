@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useBoardReferences } from "../hooks/useInspiration";
 import type { InspirationBoard } from "@/types/entities";
 
-export type InspirationCardVariant = "compact" | "full";
+export type InspirationCardVariant = "compact" | "full" | "pinned";
 
 export interface InspirationCardProps {
   board: InspirationBoard;
@@ -13,6 +13,10 @@ export interface InspirationCardProps {
   onEdit?: (board: InspirationBoard) => void;
   onArchive?: (board: InspirationBoard) => void;
   onDelete?: (board: InspirationBoard) => void;
+  /** Not used when variant="pinned" — pins it to the sidebar. */
+  onPin?: (board: InspirationBoard) => void;
+  /** Only used when variant="pinned" — removes it from the sidebar. */
+  onUnpin?: () => void;
 }
 
 /**
@@ -29,6 +33,8 @@ export function InspirationCard({
   onEdit,
   onArchive,
   onDelete,
+  onPin,
+  onUnpin,
 }: InspirationCardProps) {
   const { data: references = [] } = useBoardReferences(board.id);
   const images = (
@@ -41,54 +47,76 @@ export function InspirationCard({
   const [primary, topRight, bottomRight] = images;
 
   const isFull = variant === "full";
+  const isPinned = variant === "pinned";
+  const imageRadius = isPinned ? "rounded-card-image-sidebar" : "rounded-card-image";
 
   return (
     <div className="group relative flex flex-col">
-      <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
+      <div
+        className={cn(
+          "absolute right-2 top-2 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100",
+          isPinned && "right-1.5 top-1.5",
+        )}
+      >
         <EntityOverflowMenu
           entityType="collection"
-          onEdit={onEdit ? () => onEdit(board) : undefined}
-          onArchive={onArchive ? () => onArchive(board) : undefined}
-          onDelete={onDelete ? () => onDelete(board) : undefined}
-          triggerClassName="bg-surface-card/70 backdrop-blur-sm"
+          onEdit={!isPinned && onEdit ? () => onEdit(board) : undefined}
+          onPin={!isPinned && onPin ? () => onPin(board) : undefined}
+          onArchive={!isPinned && onArchive ? () => onArchive(board) : undefined}
+          onDelete={!isPinned && onDelete ? () => onDelete(board) : undefined}
+          actions={isPinned ? [{ label: "Unpin", onSelect: () => onUnpin?.() }] : undefined}
+          triggerClassName={cn("bg-surface-card/70 backdrop-blur-sm", isPinned && "h-6 w-6")}
         />
       </div>
 
       <Link to={`/inspiration/${board.id}`} className="flex flex-col">
         <div className="grid">
           {/* Stack sliver — same grid cell as the collage, nudged down-left so its edge peeks out */}
-          <div className="col-start-1 row-start-1 -translate-x-2 translate-y-2 rounded-card border border-white/70 bg-cream-50 shadow-resting" />
+          <div
+            className={cn(
+              "col-start-1 row-start-1 -translate-x-2 translate-y-2 rotate-[-2deg] border border-white/70 bg-cream-50 shadow-resting",
+              isPinned ? "rounded-card-image-sidebar" : "rounded-card",
+            )}
+          />
 
           {/* Top collage card */}
           <div
             className={cn(
-              "relative col-start-1 row-start-1 grid grid-cols-[1.6fr_1fr] grid-rows-2 gap-1.5 overflow-hidden rounded-card bg-surface-card p-2 shadow-resting transition-transform duration-medium ease-out group-hover:-translate-y-0.5",
+              "relative col-start-1 row-start-1 grid grid-cols-[1.6fr_1fr] grid-rows-2 gap-1.5 overflow-hidden bg-surface-card p-2 shadow-resting transition-transform duration-medium ease-out group-hover:-translate-y-0.5",
+              isPinned ? "rounded-[10px]" : "rounded-card",
               isFull ? "aspect-[16/10]" : "aspect-[4/3]",
             )}
           >
             {primary ? (
-              <img src={primary} alt="" className="col-span-1 row-span-2 h-full w-full rounded-card-image object-cover" />
+              <img src={primary} alt="" draggable={false} className={cn("col-span-1 row-span-2 h-full w-full object-cover", imageRadius)} />
             ) : (
-              <div className="col-span-1 row-span-2 rounded-card-image bg-sage-100" />
+              <div className={cn("col-span-1 row-span-2 bg-sage-100", imageRadius)} />
             )}
             {topRight ? (
-              <img src={topRight} alt="" className="h-full w-full rounded-card-image object-cover" />
+              <img src={topRight} alt="" draggable={false} className={cn("h-full w-full object-cover", imageRadius)} />
             ) : (
-              <div className="rounded-card-image bg-sage-100" />
+              <div className={cn("bg-sage-100", imageRadius)} />
             )}
             {bottomRight ? (
-              <img src={bottomRight} alt="" className="h-full w-full rounded-card-image object-cover" />
+              <img src={bottomRight} alt="" draggable={false} className={cn("h-full w-full object-cover", imageRadius)} />
             ) : (
-              <div className="rounded-card-image bg-sage-100" />
+              <div className={cn("bg-sage-100", imageRadius)} />
             )}
           </div>
         </div>
 
         {/* Directly on the page background — no card behind this text */}
-        <div className="flex flex-col gap-1.5 pt-3">
-          <h3 className="text-[16px] font-medium leading-snug text-text-primary">{board.title}</h3>
+        <div className={cn("flex flex-col gap-1.5 pt-5", isPinned && "gap-1 pt-2")}>
+          <h3
+            className={cn(
+              "font-medium leading-snug text-text-primary",
+              isPinned ? "text-[12.5px] leading-[1.35]" : "text-[16px]",
+            )}
+          >
+            {board.title}
+          </h3>
           <div className="flex items-center gap-2">
-            {board.tags[0] && <Badge variant="outline">{board.tags[0]}</Badge>}
+            {!isPinned && board.tags[0] && <Badge variant="outline">{board.tags[0]}</Badge>}
             <span className="text-[12.5px] text-text-tertiary">{references.length} saved</span>
           </div>
         </div>

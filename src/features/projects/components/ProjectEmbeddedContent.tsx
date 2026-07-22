@@ -11,7 +11,7 @@ import { ResourceQuickCreateForm } from "@/features/resources/components/Resourc
 import { Badge } from "@/components/ui/badge";
 import { NOTE_TYPE_META } from "@/features/notes/noteTypeMeta";
 import { ProjectSection } from "./ProjectSection";
-import { AddTile } from "./AddTile";
+import { AddDashedTile } from "@/components/shared/AddDashedTile";
 import { RemovableCardOverlay } from "./RemovableCardOverlay";
 import { LinkOrCreateModal } from "./LinkOrCreateModal";
 import type { InspirationBoard, Note, Resource } from "@/types/entities";
@@ -27,7 +27,7 @@ export interface ProjectEmbeddedContentProps {
   editMode: boolean;
 }
 
-const CARD_GRID = "grid grid-cols-1 gap-4 board:grid-cols-3";
+const CARD_GRID = "grid grid-cols-2 gap-4 board:grid-cols-3";
 
 /**
  * Project-scoped content, rendered with each module's NATIVE card component
@@ -65,7 +65,7 @@ export function ProjectEmbeddedContent({
               <InspirationCard board={board} />
             </RemovableCardOverlay>
           ))}
-          <AddTile label="Create board" onClick={() => setBoardModalOpen(true)} />
+          <AddDashedTile label="Create board" onClick={() => setBoardModalOpen(true)} />
         </div>
       </ProjectSection>
 
@@ -80,7 +80,7 @@ export function ProjectEmbeddedContent({
               <NoteCard note={note} />
             </RemovableCardOverlay>
           ))}
-          <AddTile label="Add note" onClick={() => setNoteModalOpen(true)} />
+          <AddDashedTile label="Add note" onClick={() => setNoteModalOpen(true)} />
         </div>
       </ProjectSection>
 
@@ -95,7 +95,7 @@ export function ProjectEmbeddedContent({
               <ResourceCard resource={resource} />
             </RemovableCardOverlay>
           ))}
-          <AddTile label="Link resource" onClick={() => setResourceModalOpen(true)} />
+          <AddDashedTile label="Link resource" onClick={() => setResourceModalOpen(true)} />
         </div>
       </ProjectSection>
 
@@ -131,7 +131,7 @@ export function ProjectEmbeddedContent({
           updateNote.mutate({ id: note.id, projectId }, { onSuccess: () => setNoteModalOpen(false) })
         }
         isLinking={updateNote.isPending}
-        renderItemMeta={(note) => <Badge variant="neutral">{NOTE_TYPE_META[note.type].label}</Badge>}
+        renderItemMeta={(note) => <Badge variant="outline">{NOTE_TYPE_META[note.type].label}</Badge>}
         renderCreateForm={({ onCreated }) => (
           <NoteQuickCreateForm projectId={projectId} onCreated={onCreated} />
         )}
@@ -153,7 +153,7 @@ export function ProjectEmbeddedContent({
         isLinking={updateResource.isPending}
         renderItemMeta={(resource) => (
           <span className="flex items-center gap-2">
-            {resource.tags[0] && <Badge variant="neutral">{resource.tags[0]}</Badge>}
+            {resource.tags[0] && <Badge variant="outline">{resource.tags[0]}</Badge>}
           </span>
         )}
         renderCreateForm={({ onCreated }) => (

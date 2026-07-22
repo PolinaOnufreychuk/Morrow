@@ -19,11 +19,10 @@ export function BoardCreateModal({ open, onOpenChange }: BoardCreateModalProps) 
     <ModalShell
       open={open}
       onOpenChange={onOpenChange}
-      title="New board"
-      description="Start a new inspiration board."
+      title="New collection"
       footer={
         <Button type="submit" form={FORM_ID}>
-          Create board
+          Save collection
         </Button>
       }
     >

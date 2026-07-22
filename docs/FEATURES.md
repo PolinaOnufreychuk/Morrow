@@ -71,6 +71,16 @@ Features: Create, Edit, Delete, Search (matches title, description, tags).
 
 No fixed categories — tags are used for organization instead; `kind` only drives card layout, not filtering.
 
+## Sidebar Pinning
+
+The sidebar holds a single pinned item — any one Project, Inspiration board, Note, or Resource — rendered with that module's own card component at a smaller size, so it always stays visually consistent with the rest of the app.
+
+- Pin by dragging a card from the Projects, Inspiration, Notes, or Resources listing page onto the sidebar's Pinned slot; dropping a new card replaces whatever was pinned before (only one pinned item at a time).
+- The sidebar reveals an empty dashed drop placeholder only while a card from one of those four listing pages is being dragged — not from the Dashboard.
+- Clicking the pinned card navigates to (or opens) the same destination its full-size card would.
+- Unpin via the pinned card's three-dot menu ("Unpin") — the same overflow-menu pattern used everywhere else.
+- Pinning is in-memory only (like the rest of the app's demo data) — it resets on reload.
+
 ## Archive
 
 Replaces the old (never-built) account section in the sidebar — appears as a lightweight nav item in the lower sidebar.
@@ -81,7 +91,7 @@ Replaces the old (never-built) account section in the sidebar — appears as a l
 
 ## Search
 
-Local search inside each module only. No global search.
+Each module supports its own local search (matches the fields listed above). In addition, the Dashboard's search bar is a global search: pressing Enter navigates to a dedicated Search Results page (`/search?q=...`) that matches across Projects, Inspiration, Notes, and Resources at once, grouped by module with a tab-based filter (All / Projects / Inspiration / Notes / Resources, each showing a result count) and no separate filter icon. Results reuse each module's existing card component — no separate search-result card design.
 
 ## Tags
 
@@ -97,6 +107,6 @@ None. Single-user application, no login.
 
 ## Current Product Scope — Excluded from MVP
 
-User profiles, team collaboration, notifications, permissions, workspace switching, account settings, keyboard shortcuts, help center, sign out flow, onboarding flows for multiple users, payments or subscriptions, global search, favorites, advanced filtering, light theme, calendar UI, CRM features, time tracking, analytics, drag & drop, full file storage, real-time collaboration.
+User profiles, team collaboration, notifications, permissions, workspace switching, account settings, keyboard shortcuts, help center, sign out flow, onboarding flows for multiple users, payments or subscriptions, favorites, advanced filtering, light theme, calendar UI, CRM features, time tracking, analytics, full file storage, real-time collaboration. Drag & drop is out of scope beyond the sidebar pin-by-dragging interaction described under Sidebar Pinning above.
 
 These may be introduced later but should not influence current design or implementation.

@@ -38,6 +38,7 @@ export function ProjectAttachmentsSection({
   return (
     <ProjectSection
       eyebrow="Attachments"
+      tone="solid"
       headerAction={
         editMode && (
           <>

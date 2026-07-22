@@ -10,8 +10,8 @@ export interface PageShellProps {
 
 /**
  * Padded, centered container shared by every non-dashboard page (Projects,
- * Inspiration, Notes, Resources, Archive). Dashboard and detail pages build
- * their own bespoke layout and don't use this.
+ * Inspiration, Notes, Resources, Archive, and their detail pages). Only the
+ * Dashboard builds its own bespoke layout and skips this.
  */
 export function PageShell({ children, narrow = false, className }: PageShellProps) {
   return (

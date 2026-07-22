@@ -6,6 +6,10 @@ export interface ProjectSectionProps {
   headerAction?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** "tinted" (default): warm translucent background for Linked
+   * Inspiration/Notes/Resources. "solid": opaque white, used by Description/
+   * External Links/Attachments/Project Notes. */
+  tone?: "tinted" | "solid";
 }
 
 /**
@@ -14,11 +18,18 @@ export interface ProjectSectionProps {
  * one wrapper guarantees consistent header/spacing treatment across all of
  * them instead of five near-duplicate section components.
  */
-export function ProjectSection({ eyebrow, headerAction, children, className }: ProjectSectionProps) {
+export function ProjectSection({
+  eyebrow,
+  headerAction,
+  children,
+  className,
+  tone = "tinted",
+}: ProjectSectionProps) {
   return (
     <section
       className={cn(
-        "flex flex-col gap-4 rounded-card border border-border-subtle bg-surface-card/40 p-5",
+        "flex flex-col gap-4 rounded-card border border-border-subtle p-5",
+        tone === "solid" ? "bg-surface-card" : "bg-surface-card/40",
         className,
       )}
     >

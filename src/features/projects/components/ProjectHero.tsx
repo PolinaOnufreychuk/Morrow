@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,8 +37,15 @@ export function ProjectHero({
   const [draftCover, setDraftCover] = useState("");
   const resolvedCover = coverImageUrl ?? project.coverImageUrl;
 
+  // Reset the inline "change cover" affordance whenever edit mode ends (e.g.
+  // via the page-level Cancel button) so re-entering edit mode never
+  // resurfaces a stale, half-filled input.
+  useEffect(() => {
+    if (!editMode) setChangingCover(false);
+  }, [editMode]);
+
   return (
-    <div className="relative h-[240px] w-full overflow-hidden rounded-card board:h-[300px]">
+    <div className="relative h-[160px] w-full overflow-hidden rounded-card board:h-[200px]">
       {resolvedCover ? (
         <img src={resolvedCover} alt="" className="h-full w-full object-cover" />
       ) : (
@@ -99,14 +106,14 @@ export function ProjectHero({
             />
           </div>
 
-          {/* Status + tags — overlaid ON the image, bottom-left. */}
-          <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-1.5">
+          {/* Status + category — overlaid ON the image, bottom-left. */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
             <StatusPill status={project.status} />
-            {project.tags.map((tag) => (
-              <Badge key={tag} variant="dark" className="bg-ink-900/55 backdrop-blur-sm">
-                {tag}
+            {project.category && (
+              <Badge variant="outline" className="bg-surface-card/80 backdrop-blur-sm">
+                {project.category}
               </Badge>
-            ))}
+            )}
           </div>
         </>
       )}

@@ -28,3 +28,12 @@ export function formatRelativeUpdated(iso: string): string {
   if (days === 1) return "Yesterday";
   return `${days}d ago`;
 }
+
+/** Hostname without "www." — the shared "secondary meta" fallback for any resource kind with a URL. */
+export function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}

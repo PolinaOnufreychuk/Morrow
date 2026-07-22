@@ -42,7 +42,9 @@ export const DialogContent = forwardRef<
         "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2",
         "rounded-card border border-border-subtle bg-surface-card p-6 shadow-hover",
         "data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95",
+        "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95",
+        "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
         className,
       )}
       {...props}
@@ -63,8 +65,19 @@ export const DialogContent = forwardRef<
 ));
 DialogContent.displayName = "DialogContent";
 
-export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("mb-4 flex flex-col gap-1 pr-8", className)} {...props} />;
+export function DialogHeader({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("mb-4 flex flex-col gap-1.5 pr-8", className)} {...props}>
+      {children}
+      <span
+        aria-hidden="true"
+        className="block h-[2px] w-6 rounded-full"
+        style={{
+          background: "linear-gradient(90deg, rgb(var(--color-accent-coral)), rgb(var(--color-sage-500)))",
+        }}
+      />
+    </div>
+  );
 }
 
 export const DialogTitle = forwardRef<
@@ -73,7 +86,7 @@ export const DialogTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-[18px] font-medium font-body text-text-primary", className)}
+    className={cn("font-display text-[22px] font-light text-text-primary", className)}
     {...props}
   />
 ));

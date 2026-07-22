@@ -1,11 +1,22 @@
-import { type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSidebar } from "@/context/SidebarContext";
+import { usePinned } from "@/context/PinnedContext";
+import { queryKeys } from "@/lib/api/queryKeys";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AddDashedTile } from "@/components/shared/AddDashedTile";
+import { ProjectCard } from "@/features/projects/components/ProjectCard";
+import { useProject } from "@/features/projects/hooks/useProjects";
+import { InspirationCard } from "@/features/inspiration/components/InspirationCard";
+import { useBoard } from "@/features/inspiration/hooks/useInspiration";
+import { NoteCard } from "@/features/notes/components/NoteCard";
+import { useNote } from "@/features/notes/hooks/useNotes";
+import { ResourceCard } from "@/features/resources/components/ResourceCard";
+import { useResource } from "@/features/resources/hooks/useResources";
 import logoLockup from "@/assets/morrow-logo-horizontal-black.svg";
 import logoIcon from "@/assets/morrow-icon-black.svg";
-import pinnedCover from "@/assets/petal-macro-1.png";
 
 /**
  * Collapsible primary navigation, recreated from Dashboard.dc.html (lines
@@ -99,19 +110,91 @@ function CollapsedTooltip({
 
 export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
+  const { pinned, pin, unpin, draggedRef } = usePinned();
+  const [isDragOver, setIsDragOver] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const projectQuery = useProject(pinned?.entityType === "project" ? pinned.id : "");
+  const boardQuery = useBoard(pinned?.entityType === "collection" ? pinned.id : "");
+  const noteQuery = useNote(pinned?.entityType === "note" ? pinned.id : "");
+  const resourceQuery = useResource(pinned?.entityType === "resource" ? pinned.id : "");
+
+  // A fresh drag should never inherit the previous drop target's hover state.
+  useEffect(() => {
+    if (!draggedRef) setIsDragOver(false);
+  }, [draggedRef]);
+
+  // The Sidebar never unmounts, so its byId query for the pinned entity won't
+  // otherwise notice an archive/delete performed from a listing page. Treat
+  // navigation as the checkpoint to re-check freshness.
+  useEffect(() => {
+    if (!pinned) return;
+    const key =
+      pinned.entityType === "project"
+        ? queryKeys.projects.byId(pinned.id)
+        : pinned.entityType === "collection"
+          ? queryKeys.inspirationBoards.byId(pinned.id)
+          : pinned.entityType === "note"
+            ? queryKeys.notes.byId(pinned.id)
+            : queryKeys.resources.byId(pinned.id);
+    queryClient.invalidateQueries({ queryKey: key });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  const pinnedQuery =
+    pinned?.entityType === "project"
+      ? projectQuery
+      : pinned?.entityType === "collection"
+        ? boardQuery
+        : pinned?.entityType === "note"
+          ? noteQuery
+          : pinned?.entityType === "resource"
+            ? resourceQuery
+            : null;
+
+  // Auto-unpin once we learn the entity was archived or deleted elsewhere —
+  // never show a stale, dead-ended pinned card.
+  useEffect(() => {
+    if (!pinnedQuery?.isSuccess) return;
+    if (!pinnedQuery.data || pinnedQuery.data.isArchived) unpin();
+  }, [pinnedQuery?.isSuccess, pinnedQuery?.data, unpin]);
+
+  const pinnedCard =
+    pinned?.entityType === "project" && projectQuery.data ? (
+      <ProjectCard project={projectQuery.data} variant="pinned" onUnpin={unpin} />
+    ) : pinned?.entityType === "collection" && boardQuery.data ? (
+      <InspirationCard board={boardQuery.data} variant="pinned" onUnpin={unpin} />
+    ) : pinned?.entityType === "note" && noteQuery.data ? (
+      <NoteCard
+        note={noteQuery.data}
+        variant="pinned"
+        onEdit={(note) => navigate(`/notes?open=${note.id}`)}
+        onUnpin={unpin}
+      />
+    ) : pinned?.entityType === "resource" && resourceQuery.data ? (
+      <ResourceCard resource={resourceQuery.data} variant="pinned" onUnpin={unpin} />
+    ) : null;
+
+  const showPinnedSection = !collapsed && (draggedRef !== null || pinnedCard !== null);
 
   return (
     <div className="relative z-[3] h-full flex-shrink-0">
       <aside
         className={cn(
-          "flex h-full flex-col gap-[22px] border-r border-white/55 px-[14px] pb-[18px] pt-[22px] transition-[width] duration-[340ms] ease-breath",
+          "flex h-full flex-col gap-[22px] px-[14px] pb-[18px] pt-[22px] transition-[width] duration-[340ms] ease-breath",
           collapsed ? "w-[78px]" : "w-[264px]",
         )}
         style={{
           background: "rgba(247,246,243,.52)",
           backdropFilter: "blur(28px) saturate(1.25)",
           WebkitBackdropFilter: "blur(28px) saturate(1.25)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,.58)",
+          // Right edge is a glass highlight (reads on the Dashboard's photo)
+          // layered with a border-subtle hairline + soft shadow (reads on the
+          // flat cream background every other page uses) — visible either way.
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,.58), 1px 0 0 rgba(255,255,255,.55), 2px 0 0 rgba(36,38,33,.09), 8px 0 20px -12px hsl(30 25% 20% / .16)",
         }}
       >
         {/* Brand — lockup / icon crossfade */}
@@ -162,37 +245,32 @@ export function Sidebar() {
             ))}
           </nav>
 
-          {/* Pinned */}
-          <div className="flex flex-col gap-[11px] border-t border-border-subtle pt-[18px]">
-            {!collapsed && (
+          {/* Pinned — hidden entirely when nothing is pinned and no drag is in progress */}
+          {showPinnedSection && (
+            <div className="flex flex-col gap-[11px] border-t border-border-subtle pt-[18px]">
               <span className="eyebrow px-[6px] text-text-tertiary">Pinned</span>
-            )}
-            <NavLink
-              to="/projects"
-              className="flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-white/60 bg-white/55 p-[9px] shadow-[0_10px_26px_-14px_hsl(30_25%_20%_/_.14)] transition-[transform,box-shadow] duration-[340ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-16px_hsl(30_25%_20%_/_.2)]"
-            >
-              {!collapsed && (
-                <div className="flex flex-col gap-[6px] px-[5px] pb-[10px] pt-[4px]">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center rounded-chip border border-border-subtle bg-ink-900/[.05] px-[9px] py-1 text-[10.5px] font-medium leading-none text-text-secondary">
-                      Project
-                    </span>
-                    <span className="text-[10.5px] text-text-tertiary">2d ago</span>
-                  </div>
-                  <span className="text-[12.5px] font-medium leading-[1.35] text-text-primary">
-                    Fintech onboarding redesign
-                  </span>
-                </div>
+              {draggedRef ? (
+                <AddDashedTile
+                  className={cn(
+                    "min-h-[86px] transition-colors duration-fast ease-out",
+                    isDragOver && "border-sage-600 bg-sage-100/50 text-sage-700",
+                  )}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    pin(draggedRef);
+                    setIsDragOver(false);
+                  }}
+                />
+              ) : (
+                pinnedCard
               )}
-              <div
-                className="rounded-[10px] bg-cover bg-center transition-[height] duration-[340ms] ease-breath"
-                style={{
-                  height: collapsed ? 44 : 86,
-                  backgroundImage: `url(${pinnedCover})`,
-                }}
-              />
-            </NavLink>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Archive — pinned to bottom, separated by hairline */}
