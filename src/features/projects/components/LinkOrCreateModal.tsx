@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 type Mode = "link" | "create";
 
-export interface LinkOrCreateModalProps<T extends { id: string; title: string; projectId: string | null }> {
+export interface LinkOrCreateModalProps<T extends { id: string; title: string; projectIds: string[] }> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
@@ -24,9 +24,11 @@ export interface LinkOrCreateModalProps<T extends { id: string; title: string; p
  * One generic "link existing / create new" modal, parametrized by entity
  * type — used for Inspiration boards, Notes, and Resources on the Project
  * Details page. Only the list-item meta and the create-form body differ per
- * caller; the two-path shell is identical.
+ * caller; the two-path shell is identical. An item can be linked to more
+ * than one project, so "link" here only ever adds — it never moves an item
+ * away from a project it's already on.
  */
-export function LinkOrCreateModal<T extends { id: string; title: string; projectId: string | null }>({
+export function LinkOrCreateModal<T extends { id: string; title: string; projectIds: string[] }>({
   open,
   onOpenChange,
   title,
@@ -41,7 +43,7 @@ export function LinkOrCreateModal<T extends { id: string; title: string; project
   const [mode, setMode] = useState<Mode>("link");
   const [query, setQuery] = useState("");
 
-  const linkable = items.filter((item) => item.projectId !== projectId);
+  const linkable = items.filter((item) => !item.projectIds.includes(projectId));
   const filtered =
     query.trim().length === 0
       ? linkable
@@ -89,9 +91,10 @@ export function LinkOrCreateModal<T extends { id: string; title: string; project
                       <span className="truncate text-[14px] font-medium text-text-primary">
                         {item.title}
                       </span>
-                      {item.projectId && (
-                        <span className="text-[12px] text-blush-600">
-                          Currently linked to another project — linking will move it here
+                      {item.projectIds.length > 0 && (
+                        <span className="text-[12px] text-text-tertiary">
+                          Already linked to {item.projectIds.length} other project
+                          {item.projectIds.length === 1 ? "" : "s"}
                         </span>
                       )}
                       {renderItemMeta?.(item)}

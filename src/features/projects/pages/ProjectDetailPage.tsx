@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { Icon } from "@/design-system/icons/Icon";
+import { useNavigate, useParams } from "react-router-dom";
 import { PageShell } from "@/components/shared/PageShell";
+import { BackLink } from "@/components/shared/BackLink";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
+import { useBackContext } from "@/lib/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useArchiveProject, useDeleteProject, useProject } from "../hooks/useProjects";
+import { useArchiveProject, useProject } from "../hooks/useProjects";
 import { useProjectEditState } from "../hooks/useProjectEditState";
+import { ProjectValidationError } from "../types";
 import { useBoards } from "@/features/inspiration/hooks/useInspiration";
 import { useNotes } from "@/features/notes/hooks/useNotes";
 import { useResources } from "@/features/resources/hooks/useResources";
@@ -26,14 +28,16 @@ import { ProjectNotesTextSection } from "../components/ProjectNotesTextSection";
 export function ProjectDetailPage() {
   const { projectId = "" } = useParams();
   const navigate = useNavigate();
+  const back = useBackContext({ path: "/projects", label: "Projects" });
   const { data: project, isLoading, isError, error, refetch } = useProject(projectId);
   const { data: boards = [] } = useBoards();
   const { data: notes = [] } = useNotes();
   const { data: resources = [] } = useResources();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
+  // "Delete" moves the project to Archive (soft-delete); the Archive
+  // screen's own "Delete permanently" is the only real hard-delete path.
   const archiveProject = useArchiveProject();
-  const deleteProject = useDeleteProject();
   // Hooks must run unconditionally — `project` may still be undefined here.
   const editState = useProjectEditState(
     project ?? {
@@ -48,6 +52,7 @@ export function ProjectDetailPage() {
       externalLinks: [],
       notes: null,
       isArchived: false,
+      archivedAt: null,
       createdAt: "",
       updatedAt: "",
     },
@@ -91,53 +96,38 @@ export function ProjectDetailPage() {
           title="Project not found"
           description="This project may have been deleted or archived."
           action={
-            <Link to="/projects" className="text-sage-700 underline underline-offset-2">
-              Back to projects
-            </Link>
+            <BackLink to={back.path} label={back.label} />
           }
         />
       </PageShell>
     );
   }
 
-  const scopedBoards = boards.filter((board) => board.projectId === project.id);
-  const scopedNotes = notes.filter((note) => note.projectId === project.id);
-  const scopedResources = resources.filter((resource) => resource.projectId === project.id);
-
-  const handleArchive = () => {
-    archiveProject.mutate(project.id, {
-      onSuccess: () => {
-        notify.success(`"${project.title}" archived`);
-        navigate("/projects");
-      },
-      onError: () => notify.error("Couldn't archive this project."),
-    });
-  };
+  const scopedBoards = boards.filter((board) => board.projectIds.includes(project.id));
+  const scopedNotes = notes.filter((note) => note.projectIds.includes(project.id));
+  const scopedResources = resources.filter((resource) => resource.projectIds.includes(project.id));
 
   const handleSave = async () => {
     try {
       await editState.save();
       notify.success("Project updated");
-    } catch {
-      notify.error("Couldn't save changes.");
+    } catch (error) {
+      if (error instanceof ProjectValidationError) {
+        notify.error(Object.values(error.fieldErrors).flat().join(" "));
+      } else {
+        notify.error(error instanceof Error ? error.message : "Couldn't save changes.");
+      }
     }
   };
 
   return (
     <PageShell>
-      <Link
-        to="/projects"
-        className="inline-flex items-center gap-1.5 text-[13px] text-text-secondary hover:text-text-primary"
-      >
-        <Icon name="arrow-left" size={16} />
-        Projects
-      </Link>
+      <BackLink to={back.path} label={back.label} />
 
       <div className="mb-2">
         <ProjectHero
           project={project}
           onEdit={editState.startEditing}
-          onArchive={handleArchive}
           onDelete={() => setDeleteOpen(true)}
           editMode={editState.isEditing}
           coverImageUrl={editState.isEditing ? editState.draft.coverImageUrl : undefined}
@@ -189,6 +179,7 @@ export function ProjectDetailPage() {
 
           <ProjectEmbeddedContent
             projectId={project.id}
+            projectTitle={project.title}
             boards={scopedBoards}
             notes={scopedNotes}
             resources={scopedResources}
@@ -225,13 +216,13 @@ export function ProjectDetailPage() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete project?"
-        description={`"${project.title}" and its links to inspiration, notes, and resources will be permanently removed.`}
+        description={`"${project.title}" will be moved to Archive and permanently deleted in 7 days.`}
         confirmLabel="Delete project"
         pendingLabel="Deleting…"
         destructive
         onConfirm={async () => {
-          await deleteProject.mutateAsync(project.id);
-          notify.success(`"${project.title}" deleted`);
+          await archiveProject.mutateAsync(project.id);
+          notify.success(`"${project.title}" moved to Archive`);
           navigate("/projects");
         }}
       />

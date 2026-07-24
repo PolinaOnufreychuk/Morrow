@@ -68,10 +68,6 @@
     -webkit-line-clamp: 3;
   }
 
-  .masonry3 {
-    column-count: 3;
-    column-gap: 32px;
-  }
   .masonry4 {
     column-count: 4;
     column-gap: 16px;
@@ -80,19 +76,31 @@
     .masonry4 {
       column-count: 3;
     }
-    .masonry3 {
-      column-count: 2;
-    }
-  }
-  @media (max-width: 760px) {
-    .masonry3 {
-      column-count: 1;
-    }
   }
   .masonry-item {
     break-inside: avoid;
     display: block;
     margin-bottom: 16px;
+  }
+
+  /* Sequential row-major grid (fills left-to-right, row by row) — used
+     where masonry's column-major fill reads as uneven, e.g. the
+     Inspiration board grid. Mirrors the old .masonry3's breakpoints. */
+  .board-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 32px;
+    row-gap: 16px;
+  }
+  @media (max-width: 1180px) {
+    .board-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 760px) {
+    .board-grid {
+      grid-template-columns: repeat(1, 1fr);
+    }
   }
 }
 

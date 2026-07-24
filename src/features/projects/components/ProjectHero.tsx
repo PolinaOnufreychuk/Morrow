@@ -10,7 +10,6 @@ import type { Project } from "@/types/entities";
 export interface ProjectHeroProps {
   project: Project;
   onEdit?: () => void;
-  onArchive?: () => void;
   onDelete?: () => void;
   editMode?: boolean;
   coverImageUrl?: string | null;
@@ -27,7 +26,6 @@ export interface ProjectHeroProps {
 export function ProjectHero({
   project,
   onEdit,
-  onArchive,
   onDelete,
   editMode = false,
   coverImageUrl,
@@ -100,7 +98,6 @@ export function ProjectHero({
             <EntityOverflowMenu
               entityType="project"
               onEdit={onEdit}
-              onArchive={onArchive}
               onDelete={onDelete}
               triggerClassName="bg-surface-card/80 backdrop-blur-sm text-text-primary"
             />

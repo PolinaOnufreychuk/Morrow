@@ -44,6 +44,14 @@ export async function updateResource(input: unknown): Promise<Resource> {
   return resourcesRepository.update(id, patch);
 }
 
+export async function linkResourceToProject(resourceId: string, projectId: string): Promise<void> {
+  return resourcesRepository.linkToProject(resourceId, projectId);
+}
+
+export async function unlinkResourceFromProject(resourceId: string, projectId: string): Promise<void> {
+  return resourcesRepository.unlinkFromProject(resourceId, projectId);
+}
+
 export async function archiveResource(id: string): Promise<Resource> {
   return resourcesRepository.archive(id);
 }
@@ -54,4 +62,8 @@ export async function unarchiveResource(id: string): Promise<Resource> {
 
 export async function deleteResource(id: string): Promise<void> {
   return resourcesRepository.remove(id);
+}
+
+export async function bulkDeleteResources(ids: string[]): Promise<void> {
+  return resourcesRepository.bulkRemove(ids);
 }

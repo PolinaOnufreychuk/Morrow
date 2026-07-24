@@ -102,7 +102,14 @@ export function LatestRow({
         <div className="grid min-w-[960px] grid-cols-4 items-start gap-4">
         {/* Project */}
         {latestProject ? (
-          <PreviewShell onClick={() => navigate(`/projects/${latestProject.id}`)} className="gap-2 p-4">
+          <PreviewShell
+            onClick={() =>
+              navigate(`/projects/${latestProject.id}`, {
+                state: { back: { path: "/", label: "Dashboard" } },
+              })
+            }
+            className="gap-2 p-4"
+          >
             <div className="flex items-center justify-between px-px">
               <TypeChip label="Project" bg="#FEFFFEE6" />
               <span className="text-[11.5px] text-text-tertiary">
@@ -186,7 +193,14 @@ export function LatestRow({
 
         {/* Inspiration — fanned stack */}
         {latestBoard ? (
-          <PreviewShell onClick={() => navigate(`/inspiration/${latestBoard.id}`)} className="p-4">
+          <PreviewShell
+            onClick={() =>
+              navigate(`/inspiration/${latestBoard.id}`, {
+                state: { back: { path: "/", label: "Dashboard" } },
+              })
+            }
+            className="p-4"
+          >
             <div className="flex items-center justify-between">
               <TypeChip label="Inspiration" bg="#F3F6F0FA" />
               <span className="text-[11.5px] text-text-tertiary">{boardReferences.length} items</span>

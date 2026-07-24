@@ -62,10 +62,6 @@ export async function deleteProject(id: string): Promise<void> {
   return projectsRepository.remove(id);
 }
 
-export async function bulkArchiveProjects(ids: string[]): Promise<Project[]> {
-  return projectsRepository.bulkArchive(ids);
-}
-
 export async function bulkDeleteProjects(ids: string[]): Promise<void> {
   await Promise.all(ids.map((id) => deleteAllForParent("project", id)));
   return projectsRepository.bulkRemove(ids);

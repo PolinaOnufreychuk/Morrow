@@ -2,6 +2,7 @@ import type { ExternalLink, Project, ProjectStatus } from "@/types/entities";
 import type { CreateProjectInput } from "../schema";
 import { ProjectNotFoundError } from "../types";
 import { supabase } from "@/lib/supabase/client";
+import { toSupabaseError } from "@/lib/supabase/errors";
 
 /**
  * Pure data-access contract — no validation, no business rules (that's
@@ -39,6 +40,7 @@ interface ProjectRow {
   external_links: ExternalLink[];
   notes: string | null;
   is_archived: boolean;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +58,7 @@ function rowToProject(row: ProjectRow): Project {
     externalLinks: row.external_links,
     notes: row.notes,
     isArchived: row.is_archived,
+    archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -89,6 +92,7 @@ function projectToUpdateRow(patch: Partial<Project>) {
   if ("externalLinks" in patch) row.external_links = patch.externalLinks;
   if ("notes" in patch) row.notes = patch.notes;
   if ("isArchived" in patch) row.is_archived = patch.isArchived;
+  if ("archivedAt" in patch) row.archived_at = patch.archivedAt;
   return row;
 }
 
@@ -99,7 +103,7 @@ class SupabaseProjectsRepository implements ProjectsRepository {
       .select("*")
       .eq("is_archived", false)
       .order("created_at", { ascending: false });
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return (data as ProjectRow[]).map(rowToProject);
   }
 
@@ -108,14 +112,14 @@ class SupabaseProjectsRepository implements ProjectsRepository {
       .from("projects")
       .select("*")
       .eq("is_archived", true)
-      .order("updated_at", { ascending: false });
-    if (error) throw error;
+      .order("archived_at", { ascending: false });
+    if (error) throw toSupabaseError(error);
     return (data as ProjectRow[]).map(rowToProject);
   }
 
   async getById(id: string): Promise<Project | null> {
     const { data, error } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return data ? rowToProject(data as ProjectRow) : null;
   }
 
@@ -125,7 +129,7 @@ class SupabaseProjectsRepository implements ProjectsRepository {
       .insert(projectToInsertRow(input))
       .select()
       .single();
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return rowToProject(data as ProjectRow);
   }
 
@@ -136,37 +140,37 @@ class SupabaseProjectsRepository implements ProjectsRepository {
       .eq("id", id)
       .select()
       .maybeSingle();
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     if (!data) throw new ProjectNotFoundError(id);
     return rowToProject(data as ProjectRow);
   }
 
   async archive(id: string): Promise<Project> {
-    return this.update(id, { isArchived: true });
+    return this.update(id, { isArchived: true, archivedAt: new Date().toISOString() });
   }
 
   async unarchive(id: string): Promise<Project> {
-    return this.update(id, { isArchived: false });
+    return this.update(id, { isArchived: false, archivedAt: null });
   }
 
   async remove(id: string): Promise<void> {
     const { error } = await supabase.from("projects").delete().eq("id", id);
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
   }
 
   async bulkArchive(ids: string[]): Promise<Project[]> {
     const { data, error } = await supabase
       .from("projects")
-      .update({ is_archived: true })
+      .update({ is_archived: true, archived_at: new Date().toISOString() })
       .in("id", ids)
       .select();
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return (data as ProjectRow[]).map(rowToProject);
   }
 
   async bulkRemove(ids: string[]): Promise<void> {
     const { error } = await supabase.from("projects").delete().in("id", ids);
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
   }
 }
 

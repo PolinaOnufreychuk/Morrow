@@ -8,9 +8,11 @@ import {
   createResource,
   deleteResource,
   getResource,
+  linkResourceToProject,
   listArchivedResources,
   listResources,
   unarchiveResource,
+  unlinkResourceFromProject,
   updateResource,
 } from "../api/resources.service";
 
@@ -55,6 +57,29 @@ export function useUpdateResource() {
       queryClient.invalidateQueries({ queryKey: queryKeys.resources.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.resources.byId(variables.id) });
     },
+  });
+}
+
+function invalidateResourceLinks(queryClient: ReturnType<typeof useQueryClient>, resourceId: string) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.resources.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.resources.byId(resourceId) });
+}
+
+export function useLinkResourceToProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ resourceId, projectId }: { resourceId: string; projectId: string }) =>
+      linkResourceToProject(resourceId, projectId),
+    onSuccess: (_data, variables) => invalidateResourceLinks(queryClient, variables.resourceId),
+  });
+}
+
+export function useUnlinkResourceFromProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ resourceId, projectId }: { resourceId: string; projectId: string }) =>
+      unlinkResourceFromProject(resourceId, projectId),
+    onSuccess: (_data, variables) => invalidateResourceLinks(queryClient, variables.resourceId),
   });
 }
 

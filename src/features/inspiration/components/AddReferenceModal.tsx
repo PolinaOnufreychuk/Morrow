@@ -96,8 +96,10 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
       setPending([]);
       setUrl("");
       onOpenChange(false);
-    } catch {
-      notify.error("Couldn't upload one or more images. Try again.");
+    } catch (error) {
+      notify.error(
+        error instanceof Error ? error.message : "Couldn't upload one or more images. Try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -19,6 +19,7 @@ create table projects (
   external_links jsonb not null default '[]',
   notes text,
   is_archived boolean not null default false,
+  archived_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -32,6 +33,7 @@ create table inspiration_boards (
   notes text,
   project_id uuid references projects(id) on delete set null,
   is_archived boolean not null default false,
+  archived_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -71,6 +73,7 @@ create table notes (
   agenda text[],
   project_id uuid references projects(id) on delete set null,
   is_archived boolean not null default false,
+  archived_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -97,6 +100,7 @@ create table resources (
   cover_image_url text,
   project_id uuid references projects(id) on delete set null,
   is_archived boolean not null default false,
+  archived_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -163,5 +167,52 @@ create index idx_notes_search_agenda on notes using gin (agenda);
 create index idx_resources_search_title on resources using gin (title gin_trgm_ops);
 create index idx_resources_search_description on resources using gin (description gin_trgm_ops);
 create index idx_resources_search_tags on resources using gin (tags);
+
+-- ============ archived_at (retention) ============
+-- Idempotent — safe to re-run against a database created before this column
+-- existed. Delete now soft-archives everywhere (is_archived = true); the
+-- Archive screen purges anything archived_at more than 7 days ago.
+alter table projects add column if not exists archived_at timestamptz;
+alter table inspiration_boards add column if not exists archived_at timestamptz;
+alter table notes add column if not exists archived_at timestamptz;
+alter table resources add column if not exists archived_at timestamptz;
+
+create index if not exists idx_projects_archived_at on projects(archived_at);
+create index if not exists idx_inspiration_boards_archived_at on inspiration_boards(archived_at);
+create index if not exists idx_notes_archived_at on notes(archived_at);
+create index if not exists idx_resources_archived_at on resources(archived_at);
+
+-- ============ project links (many-to-many) ============
+-- A board/note/resource can appear on more than one Project Details page,
+-- so these replace the old single nullable project_id column on each table.
+create table project_boards (
+  project_id uuid not null references projects(id) on delete cascade,
+  board_id uuid not null references inspiration_boards(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (project_id, board_id)
+);
+create table project_notes (
+  project_id uuid not null references projects(id) on delete cascade,
+  note_id uuid not null references notes(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (project_id, note_id)
+);
+create table project_resources (
+  project_id uuid not null references projects(id) on delete cascade,
+  resource_id uuid not null references resources(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (project_id, resource_id)
+);
+
+drop index if exists idx_inspiration_boards_project_id;
+drop index if exists idx_notes_project_id;
+drop index if exists idx_resources_project_id;
+alter table inspiration_boards drop column if exists project_id;
+alter table notes drop column if exists project_id;
+alter table resources drop column if exists project_id;
+
+create index idx_project_boards_board_id on project_boards(board_id);
+create index idx_project_notes_note_id on project_notes(note_id);
+create index idx_project_resources_resource_id on project_resources(resource_id);
 
 -- No RLS — single-user, anon-key app per docs/DATABASE.md "Access".

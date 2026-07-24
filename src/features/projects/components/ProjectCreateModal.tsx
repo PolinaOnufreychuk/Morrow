@@ -60,7 +60,7 @@ export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalPro
         </Button>
       }
     >
-      <ProjectForm formId={FORM_ID} onSubmit={handleSubmit} submitError={submitError} />
+      <ProjectForm formId={FORM_ID} mode="create" onSubmit={handleSubmit} submitError={submitError} />
     </ModalShell>
   );
 }

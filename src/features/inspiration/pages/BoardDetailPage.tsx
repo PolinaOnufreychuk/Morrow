@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@/design-system/icons/Icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,14 +9,16 @@ import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AddDashedTile } from "@/components/shared/AddDashedTile";
 import { PageShell } from "@/components/shared/PageShell";
+import { BackLink } from "@/components/shared/BackLink";
 import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
+import { useBackContext } from "@/lib/navigation";
 import {
   useAddReferences,
+  useArchiveBoard,
   useBoard,
   useBoardReferences,
-  useDeleteBoard,
   useRemoveReferences,
 } from "../hooks/useInspiration";
 import { useBoardEditState } from "../hooks/useBoardEditState";
@@ -42,13 +44,15 @@ const EMPTY_BOARD: InspirationBoard = {
   coverImageUrl: null,
   tags: [],
   notes: null,
-  projectId: null,
+  projectIds: [],
   isArchived: false,
+  archivedAt: null,
   createdAt: "",
   updatedAt: "",
 };
 
 function BoardDetailPageContent({ boardId }: { boardId: string }) {
+  const back = useBackContext({ path: "/inspiration", label: "Inspiration" });
   const { data: board } = useBoard(boardId);
   const { data: references = [] } = useBoardReferences(boardId);
 
@@ -60,10 +64,22 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
 
   const addReferences = useAddReferences(boardId);
   const removeReferences = useRemoveReferences(boardId);
-  const deleteBoard = useDeleteBoard();
+  // "Delete" moves the board to Archive (soft-delete); the Archive screen's
+  // own "Delete permanently" is the only real hard-delete path.
+  const archiveBoard = useArchiveBoard();
   const navigate = useNavigate();
   // Hooks must run unconditionally — `board` may still be undefined here.
   const editState = useBoardEditState(board ?? EMPTY_BOARD);
+
+  // Grows the notes textarea to match its content height so entering edit mode
+  // doesn't add extra blank space beyond what the read-mode paragraph occupied.
+  const notesTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  useLayoutEffect(() => {
+    const el = notesTextareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [editState.isEditing, editState.draft.notes]);
 
   if (!board) {
     return (
@@ -71,9 +87,7 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
         title="Board not found"
         description="This board may have been deleted or archived."
         action={
-          <Link to="/inspiration" className="text-sage-700 underline underline-offset-2">
-            Back to inspiration
-          </Link>
+          <BackLink to={back.path} label={back.label} />
         }
       />
     );
@@ -108,13 +122,7 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
 
   return (
     <PageShell>
-      <Link
-        to="/inspiration"
-        className="inline-flex items-center gap-1.5 text-[13px] text-text-secondary hover:text-text-primary"
-      >
-        <Icon name="arrow-left" size={16} />
-        Back to inspiration
-      </Link>
+      <BackLink to={back.path} label={back.label} />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-1 flex-col gap-2">
@@ -133,14 +141,15 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
 
           {editState.isEditing ? (
             <Textarea
+              ref={notesTextareaRef}
               value={editState.draft.notes ?? ""}
               onChange={(event) => editState.patch({ notes: event.target.value })}
               placeholder="What's this collection about?"
-              rows={2}
-              className="min-h-0 resize-none border-none bg-transparent p-0 text-[14px] text-text-secondary shadow-none focus-visible:ring-1"
+              rows={1}
+              className="min-h-0 resize-none overflow-hidden border-none bg-transparent p-0 text-[14px] leading-normal text-text-secondary shadow-none focus-visible:ring-1"
             />
           ) : (
-            board.notes && <p className="text-[14px] text-text-secondary">{board.notes}</p>
+            board.notes && <p className="text-[14px] leading-normal text-text-secondary">{board.notes}</p>
           )}
 
           <div className="flex items-center gap-2">
@@ -184,7 +193,7 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
         </div>
       </div>
 
-      <div className="masonry4">
+      <div className="masonry4 mt-2">
         {references.map((reference, index) => (
           <div key={reference.id} className="masonry-item">
             <ReferenceGridItem
@@ -247,13 +256,13 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
         open={deleteBoardOpen}
         onOpenChange={setDeleteBoardOpen}
         title="Delete board?"
-        description={`"${board.title}" and all its references will be permanently removed.`}
+        description={`"${board.title}" will be moved to Archive and permanently deleted in 7 days.`}
         confirmLabel="Delete board"
         pendingLabel="Deleting…"
         destructive
         onConfirm={async () => {
-          await deleteBoard.mutateAsync(board.id);
-          notify.success(`"${board.title}" deleted`);
+          await archiveBoard.mutateAsync(board.id);
+          notify.success(`"${board.title}" moved to Archive`);
           navigate("/inspiration");
         }}
       />

@@ -24,9 +24,10 @@ Postgres via Supabase, used for data + Storage only — **no Supabase Auth**. Th
 - `cover_image_url` (text, nullable — typically the first reference's image)
 - `tags` (text[], default `{}`)
 - `notes` (text, nullable)
-- `project_id` (uuid, FK → projects.id, nullable — lets a board appear embedded on a Project Details page)
 - `is_archived` (boolean, default `false`)
 - `created_at`, `updated_at` (timestamptz)
+
+A board can appear on more than one Project Details page — see `project_boards` under **Project-scoped content** below.
 
 ### inspiration_references
 Individual images within a board — supports the fullscreen viewer's navigation and multi-select board editing.
@@ -53,7 +54,6 @@ Typed content — see [FEATURES.md](FEATURES.md) for the 10 visual types. `type`
 - `ingredients` (text[], nullable — used by `recipe`)
 - `filename` (text, nullable), `page_count` (int, nullable) — used by `pdf`
 - `attendees` (jsonb, nullable — array of `{ name: string, avatar_url: string|null }`), `agenda` (text[], nullable) — used by `meeting`
-- `project_id` (uuid, FK → projects.id, nullable — lets a note appear embedded on a Project Details page)
 - `is_archived` (boolean, default `false`)
 - `created_at`, `updated_at` (timestamptz)
 
@@ -71,7 +71,6 @@ Typed content — see [FEATURES.md](FEATURES.md) for the 10 visual types. `type`
 - `filename` (text, nullable), `page_count` (int, nullable) — used by `pdf`
 - `preview_image_url` (text, nullable), `is_figma` (boolean, default `false`) — used by `preview`
 - `cover_image_url` (text, nullable) — used by `image`
-- `project_id` (uuid, FK → projects.id, nullable — lets a resource appear embedded on a Project Details page)
 - `is_archived` (boolean, default `false`)
 - `created_at`, `updated_at` (timestamptz)
 
@@ -91,7 +90,7 @@ Simple `text[]` column per entity (Projects, Inspiration boards, Resources) — 
 
 ## Project-scoped content
 
-Inspiration boards, Notes, and Resources each carry an optional `project_id`. When set, the item appears embedded on that Project's Details page, rendered with its own native card component (see [DESIGN.md](DESIGN.md) — Cards). Unscoped items (`project_id IS NULL`) simply live in their own module's list.
+Inspiration boards, Notes, and Resources can each be linked to any number of Projects via a join table — `project_boards`, `project_notes`, `project_resources` (each a `(project_id, entity_id)` composite PK, `on delete cascade` both ways). A linked item appears embedded on every Project Details page it's linked to, rendered with its own native card component (see [DESIGN.md](DESIGN.md) — Cards). Items with no rows in the relevant join table simply live in their own module's list.
 
 ## Archive
 

@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatRelativeUpdated } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { BackContext } from "@/lib/navigation";
 import type { Project } from "@/types/entities";
 
 export type ProjectCardVariant = "compact" | "full" | "pinned";
@@ -14,12 +15,13 @@ export interface ProjectCardProps {
   project: Project;
   variant?: ProjectCardVariant;
   onEdit?: (project: Project) => void;
-  onArchive?: (project: Project) => void;
   onDelete?: (project: Project) => void;
   /** Not used when variant="pinned" — pins it to the sidebar. */
   onPin?: (project: Project) => void;
   /** Only used when variant="pinned" — removes it from the sidebar. */
   onUnpin?: () => void;
+  /** Where the detail page's back-link should point when opened from here, if not the default. */
+  backContext?: BackContext;
 }
 
 /**
@@ -31,10 +33,10 @@ export function ProjectCard({
   project,
   variant = "compact",
   onEdit,
-  onArchive,
   onDelete,
   onPin,
   onUnpin,
+  backContext,
 }: ProjectCardProps) {
   const isFull = variant === "full";
   const isPinned = variant === "pinned";
@@ -57,15 +59,23 @@ export function ProjectCard({
           entityType="project"
           onEdit={!isPinned && onEdit ? () => onEdit(project) : undefined}
           onPin={!isPinned && onPin ? () => onPin(project) : undefined}
-          onArchive={!isPinned && onArchive ? () => onArchive(project) : undefined}
           onDelete={!isPinned && onDelete ? () => onDelete(project) : undefined}
           actions={isPinned ? [{ label: "Unpin", onSelect: () => onUnpin?.() }] : undefined}
           triggerClassName={cn("bg-surface-card/70 backdrop-blur-sm", isPinned && "h-6 w-6")}
         />
       </div>
 
-      <Link to={`/projects/${project.id}`} className="flex flex-col">
-        <div className={cn("flex flex-col gap-2 p-4 pb-2", isPinned && "gap-[6px] p-[9px] pb-2")}>
+      <Link
+        to={`/projects/${project.id}`}
+        state={backContext ? { back: backContext } : undefined}
+        className="flex flex-col"
+      >
+        <div
+          className={cn(
+            "flex flex-col p-4 pb-2",
+            isPinned ? "gap-[6px] p-[9px] pb-2" : isFull ? "gap-2" : "gap-2",
+          )}
+        >
           <div className="flex items-center gap-2">
             {isPinned ? (
               <span className="inline-flex items-center rounded-chip border border-border-subtle bg-ink-900/[.05] px-[9px] py-1 text-[10.5px] font-medium leading-none text-text-secondary">
@@ -84,25 +94,28 @@ export function ProjectCard({
             )}
           </div>
 
-          <h3
-            className={cn(
-              "font-medium leading-snug text-text-primary",
-              isPinned ? "text-[12.5px] leading-[1.35]" : "text-[16px]",
-            )}
-          >
-            {project.title}
-          </h3>
+          <div className={cn(isFull && "min-h-[66px]")}>
+            <h3
+              className={cn(
+                "font-medium leading-snug text-text-primary",
+                isPinned ? "text-[12.5px] leading-[1.35]" : "text-[16px]",
+                isFull && "line-clamp-2",
+              )}
+            >
+              {project.title}
+            </h3>
 
-          {isFull && project.description && (
-            <p className="line-clamp-2 text-[13px] text-text-secondary">{project.description}</p>
-          )}
+            {isFull && project.description && (
+              <p className="line-clamp-2 mt-0 text-[13px] text-text-secondary">{project.description}</p>
+            )}
+          </div>
         </div>
 
         {project.coverImageUrl && (
           <div
             className={cn(
               "mx-4 overflow-hidden rounded-card-image",
-              isFull ? "h-52" : "h-40",
+              isFull ? "h-44" : "h-40",
               isPinned && "mx-[9px] mb-[9px] h-[86px] rounded-card-image-sidebar",
             )}
           >

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ModalShell } from "@/components/shared/ModalShell";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/components/shared/Toast";
+import { useConfirmDiscard } from "@/hooks/useConfirmDiscard";
 import { ProjectForm, type ProjectFormValues } from "./ProjectForm";
 import { useUpdateProject } from "../hooks/useProjects";
 import { ProjectValidationError } from "../types";
@@ -23,6 +24,7 @@ const FORM_ID = "project-edit-form";
 export function ProjectEditModal({ open, onOpenChange, project }: ProjectEditModalProps) {
   const updateProject = useUpdateProject();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   const handleSubmit = (values: ProjectFormValues) => {
     setSubmitError(null);
@@ -44,36 +46,42 @@ export function ProjectEditModal({ open, onOpenChange, project }: ProjectEditMod
     );
   };
 
+  const { guardedOnOpenChange, discardDialog } = useConfirmDiscard(isDirty, (next) => {
+    if (updateProject.isPending) return;
+    setSubmitError(null);
+    onOpenChange(next);
+  });
+
   return (
-    <ModalShell
-      open={open}
-      onOpenChange={(next) => {
-        if (updateProject.isPending) return;
-        setSubmitError(null);
-        onOpenChange(next);
-      }}
-      title="Edit project"
-      heroImage={heroMeadow}
-      footerAlign="stretch"
-      footer={
-        <Button
-          size="lg"
-          fullWidth
-          type="submit"
-          form={FORM_ID}
-          disabled={updateProject.isPending}
-          aria-busy={updateProject.isPending}
-        >
-          {updateProject.isPending ? "Saving…" : "Save changes"}
-        </Button>
-      }
-    >
-      <ProjectForm
-        formId={FORM_ID}
-        defaultValues={project}
-        onSubmit={handleSubmit}
-        submitError={submitError}
-      />
-    </ModalShell>
+    <>
+      <ModalShell
+        open={open}
+        onOpenChange={guardedOnOpenChange}
+        title="Edit project"
+        heroImage={heroMeadow}
+        footerAlign="stretch"
+        footer={
+          <Button
+            size="lg"
+            fullWidth
+            type="submit"
+            form={FORM_ID}
+            disabled={updateProject.isPending}
+            aria-busy={updateProject.isPending}
+          >
+            {updateProject.isPending ? "Saving…" : "Save changes"}
+          </Button>
+        }
+      >
+        <ProjectForm
+          formId={FORM_ID}
+          defaultValues={project}
+          onSubmit={handleSubmit}
+          submitError={submitError}
+          onDirtyChange={setIsDirty}
+        />
+      </ModalShell>
+      {discardDialog}
+    </>
   );
 }

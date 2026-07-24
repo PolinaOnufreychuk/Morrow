@@ -3,7 +3,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
@@ -13,11 +12,10 @@ import { PinnableItem } from "@/components/shared/PinnableItem";
 import { usePinned } from "@/context/PinnedContext";
 import { notify } from "@/components/shared/Toast";
 import type { Resource } from "@/types/entities";
-import { useDeleteResource, useResources } from "../hooks/useResources";
+import { useArchiveResource, useResources } from "../hooks/useResources";
 import { ResourceCard } from "../components/ResourceCard";
 import { ResourceCreateModal } from "../components/ResourceCreateModal";
 import { EntityFilterPopover, type EntityFilterOption } from "@/components/shared/EntityFilterPopover";
-import { ResourceBulkEditBar } from "../components/ResourceBulkEditBar";
 import { RESOURCE_CATEGORY_OPTIONS, type ResourceCategoryFilter, type ResourceSort } from "../types";
 
 const CATEGORY_OPTIONS: EntityFilterOption[] = [
@@ -33,15 +31,15 @@ const SORT_OPTIONS: EntityFilterOption[] = [
 
 export function ResourcesPage() {
   const { data: resources = [] } = useResources();
-  const deleteResource = useDeleteResource();
+  // "Delete" moves the resource to Archive (soft-delete); the Archive
+  // screen's own "Delete permanently" is the only real hard-delete path.
+  const archiveResource = useArchiveResource();
   const { pin } = usePinned();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ResourceCategoryFilter>("all");
   const [sort, setSort] = useState<ResourceSort>("recent");
   const [createOpen, setCreateOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Resource | null>(null);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -61,47 +59,16 @@ export function ResourcesPage() {
     });
   }, [resources, query, category, sort]);
 
-  const toggleEditMode = () => {
-    setEditMode((mode) => !mode);
-    setSelected([]);
-  };
-
-  const toggleSelect = (resource: Resource) => {
-    setSelected((current) =>
-      current.includes(resource.id)
-        ? current.filter((id) => id !== resource.id)
-        : [...current, resource.id],
-    );
-  };
-
-  const handleBulkDelete = async () => {
-    const count = selected.length;
-    try {
-      await Promise.all(selected.map((id) => deleteResource.mutateAsync(id)));
-      notify.success(`${count} resource${count === 1 ? "" : "s"} deleted`);
-    } catch {
-      notify.error("Couldn't delete one or more resources. Please try again.");
-    }
-    setSelected([]);
-    setEditMode(false);
-    setBulkDeleteOpen(false);
-  };
-
   return (
     <PageShell>
       <PageHeader
         title="Resources"
         titleClassName="mt-3 text-[44px]"
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={toggleEditMode} disabled={resources.length === 0}>
-              {editMode ? "Done" : "Edit"}
-            </Button>
-            <Button onClick={() => setCreateOpen(true)}>
-              <Icon name="plus" size={17} />
-              New resource
-            </Button>
-          </div>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Icon name="plus" size={17} />
+            New resource
+          </Button>
         }
       />
 
@@ -153,22 +120,11 @@ export function ResourcesPage() {
         <div className="masonry4">
           {filtered.map((resource) => (
             <div key={resource.id} className="masonry-item relative">
-              {editMode && (
-                <div className="absolute left-3 top-3 z-20" onClick={(event) => event.stopPropagation()}>
-                  <Checkbox
-                    checked={selected.includes(resource.id)}
-                    onCheckedChange={() => toggleSelect(resource)}
-                    aria-label={`Select ${resource.title}`}
-                    className="bg-surface-card/90 shadow-resting"
-                  />
-                </div>
-              )}
-              <PinnableItem entityType="resource" id={resource.id} disabled={editMode}>
+              <PinnableItem entityType="resource" id={resource.id}>
                 <ResourceCard
                   resource={resource}
-                  editMode={editMode}
-                  onSelectToggle={toggleSelect}
-                  onPin={editMode ? undefined : (target) => pin({ entityType: "resource", id: target.id })}
+                  onPin={(target) => pin({ entityType: "resource", id: target.id })}
+                  onDelete={setPendingDelete}
                 />
               </PinnableItem>
             </div>
@@ -176,22 +132,25 @@ export function ResourcesPage() {
         </div>
       )}
 
-      <ResourceBulkEditBar
-        selectedCount={selected.length}
-        onDeleteSelected={() => setBulkDeleteOpen(true)}
-        onClearSelection={() => setSelected([])}
-      />
-
       <ResourceCreateModal open={createOpen} onOpenChange={setCreateOpen} />
 
       <ConfirmDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        title={`Delete ${selected.length} resource${selected.length === 1 ? "" : "s"}?`}
-        description="This action cannot be undone."
-        confirmLabel="Delete"
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete resource?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" will be moved to Archive and permanently deleted in 7 days.`
+            : undefined
+        }
+        confirmLabel="Delete resource"
+        pendingLabel="Deleting…"
         destructive
-        onConfirm={handleBulkDelete}
+        onConfirm={async () => {
+          if (!pendingDelete) return;
+          await archiveResource.mutateAsync(pendingDelete.id);
+          notify.success(`"${pendingDelete.title}" moved to Archive`);
+        }}
       />
     </PageShell>
   );

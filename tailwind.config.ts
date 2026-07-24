@@ -53,6 +53,7 @@ export default {
           page: "rgb(var(--color-surface-page) / <alpha-value>)",
           card: "rgb(var(--color-surface-card) / <alpha-value>)",
           dark: "rgb(var(--color-surface-dark) / <alpha-value>)",
+          muted: "rgb(var(--color-surface-muted) / <alpha-value>)",
         },
         text: {
           primary: "rgb(var(--color-text-primary) / <alpha-value>)",

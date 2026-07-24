@@ -44,6 +44,14 @@ export async function updateNote(input: unknown): Promise<Note> {
   return notesRepository.update(id, patch);
 }
 
+export async function linkNoteToProject(noteId: string, projectId: string): Promise<void> {
+  return notesRepository.linkToProject(noteId, projectId);
+}
+
+export async function unlinkNoteFromProject(noteId: string, projectId: string): Promise<void> {
+  return notesRepository.unlinkFromProject(noteId, projectId);
+}
+
 export async function archiveNote(id: string): Promise<Note> {
   return notesRepository.archive(id);
 }

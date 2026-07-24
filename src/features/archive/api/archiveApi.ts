@@ -22,13 +22,19 @@ import {
  * services here is expected, not a layering violation.
  */
 
+/** Retention window: an archived item is hard-deleted this many days after
+ * `archivedAt` (docs/FEATURES.md Archive section — "delete moves to Archive,
+ * then permanent deletion after ~1 week"). Enforced client-side (see
+ * `sweepExpiredEntries`) since this app has no backend/cron infrastructure. */
+export const ARCHIVE_RETENTION_DAYS = 7;
+
 function projectToArchiveEntry(project: Project): ArchiveEntry {
   return {
     sourceType: "project",
     id: project.id,
     title: project.title,
     thumbnailUrl: project.coverImageUrl,
-    archivedAt: project.updatedAt,
+    archivedAt: project.archivedAt ?? project.updatedAt,
   };
 }
 
@@ -38,7 +44,7 @@ function boardToArchiveEntry(board: InspirationBoard): ArchiveEntry {
     id: board.id,
     title: board.title,
     thumbnailUrl: board.coverImageUrl,
-    archivedAt: board.updatedAt,
+    archivedAt: board.archivedAt ?? board.updatedAt,
   };
 }
 
@@ -52,7 +58,7 @@ function noteToArchiveEntry(note: Note): ArchiveEntry {
     id: note.id,
     title: note.title,
     thumbnailUrl,
-    archivedAt: note.updatedAt,
+    archivedAt: note.archivedAt ?? note.updatedAt,
   };
 }
 
@@ -71,8 +77,25 @@ function resourceToArchiveEntry(resource: Resource): ArchiveEntry {
     id: resource.id,
     title: resource.title,
     thumbnailUrl,
-    archivedAt: resource.updatedAt,
+    archivedAt: resource.archivedAt ?? resource.updatedAt,
   };
+}
+
+function isExpired(entry: ArchiveEntry): boolean {
+  const archivedAtMs = new Date(entry.archivedAt).getTime();
+  const ageDays = (Date.now() - archivedAtMs) / (24 * 60 * 60 * 1000);
+  return ageDays >= ARCHIVE_RETENTION_DAYS;
+}
+
+/** Client-side retention sweep — there's no backend/cron in this app, so the
+ * Archive screen itself hard-deletes anything past the retention window each
+ * time it loads, then returns only what's left. */
+async function sweepExpiredEntries(entries: ArchiveEntry[]): Promise<ArchiveEntry[]> {
+  const expired = entries.filter(isExpired);
+  if (expired.length === 0) return entries;
+  await Promise.all(expired.map((entry) => deleteEntryPermanently(entry.sourceType, entry.id)));
+  const expiredKeys = new Set(expired.map((entry) => `${entry.sourceType}-${entry.id}`));
+  return entries.filter((entry) => !expiredKeys.has(`${entry.sourceType}-${entry.id}`));
 }
 
 export async function fetchArchive(): Promise<ArchiveEntry[]> {
@@ -82,12 +105,14 @@ export async function fetchArchive(): Promise<ArchiveEntry[]> {
     listArchivedNotes(),
     listArchivedResources(),
   ]);
-  return [
+  const entries = [
     ...projects.map(projectToArchiveEntry),
     ...boards.map(boardToArchiveEntry),
     ...notes.map(noteToArchiveEntry),
     ...resources.map(resourceToArchiveEntry),
   ].sort((a, b) => b.archivedAt.localeCompare(a.archivedAt));
+
+  return sweepExpiredEntries(entries);
 }
 
 export async function restoreEntry(sourceType: ArchiveSourceType, id: string): Promise<void> {
@@ -125,4 +150,10 @@ export async function deleteEntryPermanently(
       await deleteResource(id);
       return;
   }
+}
+
+/** "Empty Archive" — permanently deletes every currently-archived entry
+ * across all four modules in one go. */
+export async function emptyArchive(entries: ArchiveEntry[]): Promise<void> {
+  await Promise.all(entries.map((entry) => deleteEntryPermanently(entry.sourceType, entry.id)));
 }

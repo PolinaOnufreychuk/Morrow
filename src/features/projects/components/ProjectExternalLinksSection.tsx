@@ -72,7 +72,7 @@ export function ProjectExternalLinksSection({
               <a
                 href={link.url}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 aria-label={`Open ${link.label}`}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip text-text-tertiary transition-colors duration-fast ease-out hover:bg-cream-100 hover:text-text-primary"
               >

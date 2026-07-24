@@ -43,7 +43,7 @@ export function EntityFilterPopover({ sections, isActive, onClear }: EntityFilte
           aria-label="Filters"
           className={cn(
             "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-search text-text-tertiary transition-colors duration-fast ease-out",
-            "bg-cream-100 hover:bg-cream-200 hover:text-text-primary",
+            "bg-surface-muted hover:bg-cream-200 hover:text-text-primary",
             "data-[state=open]:bg-cream-200 data-[state=open]:text-text-primary",
           )}
         >

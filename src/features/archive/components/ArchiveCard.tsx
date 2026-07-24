@@ -1,8 +1,9 @@
 import { GlassCard } from "@/components/shared/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/design-system/icons/Icon";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatExpiresIn } from "@/lib/format";
 import type { ArchiveEntry, ArchiveSourceType } from "@/types/entities";
+import { ARCHIVE_RETENTION_DAYS } from "../api/archiveApi";
 
 const SOURCE_LABEL: Record<ArchiveSourceType, string> = {
   project: "Project",
@@ -55,6 +56,8 @@ export function ArchiveCard({
           <span className="font-medium text-text-secondary">{SOURCE_LABEL[entry.sourceType]}</span>
           <span> · </span>
           <span>Archived {formatDate(entry.archivedAt)}</span>
+          <span> · </span>
+          <span>{formatExpiresIn(entry.archivedAt, ARCHIVE_RETENTION_DAYS)}</span>
         </div>
         <span className="truncate text-[15px] font-medium text-text-primary">{entry.title}</span>
       </div>
@@ -71,7 +74,7 @@ export function ArchiveCard({
           {isRestoring ? "Restoring…" : "Restore"}
         </Button>
         <Button
-          variant="ghost"
+          variant="destructive"
           size="sm"
           onClick={() => onDeletePermanently(entry)}
           disabled={isBusy}

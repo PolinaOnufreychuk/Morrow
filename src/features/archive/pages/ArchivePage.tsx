@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { ErrorState } from "@/components/shared/ErrorState";
@@ -10,7 +11,12 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
 import type { ArchiveEntry, ArchiveSourceType } from "@/types/entities";
-import { useArchive, useDeleteEntryPermanently, useRestoreEntry } from "../hooks/useArchive";
+import {
+  useArchive,
+  useDeleteEntryPermanently,
+  useEmptyArchive,
+  useRestoreEntry,
+} from "../hooks/useArchive";
 import { ArchiveCard } from "../components/ArchiveCard";
 import { ArchiveFilterPopover, type FilterOption } from "../components/ArchiveFilterPopover";
 
@@ -34,12 +40,14 @@ const SORT_OPTIONS: FilterOption<"recent" | "title">[] = [
 export function ArchivePage() {
   const { data: entries = [], isLoading, isError, error, refetch } = useArchive();
   const [pendingDelete, setPendingDelete] = useState<ArchiveEntry | null>(null);
+  const [emptyArchiveOpen, setEmptyArchiveOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<ArchiveSourceType | "all">("all");
   const [sort, setSort] = useState<"recent" | "title">("recent");
 
   const restoreEntry = useRestoreEntry();
   const deleteEntryPermanently = useDeleteEntryPermanently();
+  const emptyArchive = useEmptyArchive();
 
   const filteredEntries = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -71,7 +79,17 @@ export function ArchivePage() {
 
   return (
     <PageShell>
-      <PageHeader title="Archive" titleClassName="mt-2 text-[44px]" />
+      <PageHeader
+        title="Archive"
+        titleClassName="mt-2 text-[44px]"
+        actions={
+          entries.length > 0 ? (
+            <Button variant="secondary" onClick={() => setEmptyArchiveOpen(true)}>
+              Empty Archive
+            </Button>
+          ) : undefined
+        }
+      />
 
       <div className="flex items-center gap-2">
         <SearchInput
@@ -148,6 +166,20 @@ export function ArchivePage() {
             id: pendingDelete.id,
           });
           notify.success(`"${pendingDelete.title}" deleted permanently`);
+        }}
+      />
+
+      <ConfirmDialog
+        open={emptyArchiveOpen}
+        onOpenChange={setEmptyArchiveOpen}
+        title="Empty Archive?"
+        description={`This will permanently delete all ${entries.length} archived item${entries.length === 1 ? "" : "s"}. This action cannot be undone.`}
+        confirmLabel="Empty Archive"
+        pendingLabel="Deleting…"
+        destructive
+        onConfirm={async () => {
+          await emptyArchive.mutateAsync(entries);
+          notify.success("Archive emptied");
         }}
       />
     </PageShell>

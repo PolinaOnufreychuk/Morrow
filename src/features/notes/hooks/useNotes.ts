@@ -8,9 +8,11 @@ import {
   createNote,
   deleteNote,
   getNote,
+  linkNoteToProject,
   listArchivedNotes,
   listNotes,
   unarchiveNote,
+  unlinkNoteFromProject,
   updateNote,
 } from "../api/notes.service";
 
@@ -55,6 +57,29 @@ export function useUpdateNote() {
       queryClient.invalidateQueries({ queryKey: queryKeys.notes.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notes.byId(variables.id) });
     },
+  });
+}
+
+function invalidateNoteLinks(queryClient: ReturnType<typeof useQueryClient>, noteId: string) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.notes.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.notes.byId(noteId) });
+}
+
+export function useLinkNoteToProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ noteId, projectId }: { noteId: string; projectId: string }) =>
+      linkNoteToProject(noteId, projectId),
+    onSuccess: (_data, variables) => invalidateNoteLinks(queryClient, variables.noteId),
+  });
+}
+
+export function useUnlinkNoteFromProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ noteId, projectId }: { noteId: string; projectId: string }) =>
+      unlinkNoteFromProject(noteId, projectId),
+    onSuccess: (_data, variables) => invalidateNoteLinks(queryClient, variables.noteId),
   });
 }
 

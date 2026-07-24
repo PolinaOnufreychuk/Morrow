@@ -47,7 +47,7 @@ export function ReferenceGridItem({
       </button>
 
       {selectable && (
-        <div className="absolute left-2 top-2 z-10" onClick={(event) => event.stopPropagation()}>
+        <div className="absolute right-2 top-2 z-10" onClick={(event) => event.stopPropagation()}>
           <Checkbox
             checked={selected}
             onCheckedChange={() => onToggleSelect?.(reference.id)}

@@ -6,7 +6,8 @@ const daysAgo = (days: number) => new Date(now - days * 24 * 60 * 60 * 1000).toI
 
 const base = {
   isArchived: false,
-  projectId: null,
+  archivedAt: null,
+  projectIds: [],
 };
 
 /** One fixture per each of the 8 reference resources. */
@@ -14,7 +15,7 @@ export const resourceFixtures: Resource[] = [
   {
     ...base,
     id: "res-nielsen-norman-onboarding-ux",
-    projectId: "prj-fintech-onboarding",
+    projectIds: ["prj-fintech-onboarding"],
     kind: "link",
     title: "Nielsen Norman — Onboarding UX",
     url: "https://www.nngroup.com/articles/onboarding-ux",
@@ -40,7 +41,7 @@ export const resourceFixtures: Resource[] = [
   {
     ...base,
     id: "res-client-brief-fintech",
-    projectId: "prj-fintech-onboarding",
+    projectIds: ["prj-fintech-onboarding"],
     kind: "link",
     title: "Client brief — Fintech app",
     url: "https://notion.so/client-brief-fintech",

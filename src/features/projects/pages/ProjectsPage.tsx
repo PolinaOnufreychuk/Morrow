@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
-import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -14,18 +13,11 @@ import { Icon } from "@/design-system/icons/Icon";
 import { PinnableItem } from "@/components/shared/PinnableItem";
 import { usePinned } from "@/context/PinnedContext";
 import { sortByRecency } from "@/lib/utils";
-import {
-  useArchiveProject,
-  useBulkArchiveProjects,
-  useBulkDeleteProjects,
-  useDeleteProject,
-  useProjects,
-} from "../hooks/useProjects";
+import { useArchiveProject, useProjects } from "../hooks/useProjects";
 import { ProjectCard, ProjectCardSkeleton } from "../components/ProjectCard";
 import { ProjectStatusTabs } from "../components/ProjectStatusTabs";
 import { ProjectCreateModal } from "../components/ProjectCreateModal";
 import { ProjectEditModal } from "../components/ProjectEditModal";
-import { ProjectBulkEditBar } from "../components/ProjectBulkEditBar";
 import type { Project, ProjectStatusFilter } from "../types";
 
 export function ProjectsPage() {
@@ -35,15 +27,12 @@ export function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState<ProjectStatusFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
+  // "Delete" moves items to Archive (soft-delete) rather than removing them
+  // outright — the Archive screen's own "Delete permanently" is the only
+  // real hard-delete path (docs/FEATURES.md Archive section).
   const archiveProject = useArchiveProject();
-  const deleteProject = useDeleteProject();
-  const bulkArchive = useBulkArchiveProjects();
-  const bulkDelete = useBulkDeleteProjects();
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -61,48 +50,16 @@ export function ProjectsPage() {
     return sortByRecency(matches);
   }, [projects, query, statusFilter]);
 
-  const toggleEditMode = () => {
-    setEditMode((mode) => !mode);
-    setSelected([]);
-  };
-
-  const isBulkBusy = bulkArchive.isPending || bulkDelete.isPending;
-
-  const handleBulkArchive = () => {
-    const count = selected.length;
-    bulkArchive.mutate(selected, {
-      onSuccess: () => {
-        notify.success(`${count} project${count === 1 ? "" : "s"} archived`);
-        setSelected([]);
-        setEditMode(false);
-      },
-      onError: () => notify.error("Couldn't archive the selected projects."),
-    });
-  };
-
-  const handleBulkDelete = async () => {
-    const count = selected.length;
-    await bulkDelete.mutateAsync(selected);
-    notify.success(`${count} project${count === 1 ? "" : "s"} deleted`);
-    setSelected([]);
-    setEditMode(false);
-  };
-
   return (
     <PageShell>
       <PageHeader
         title="Projects"
         titleClassName="mt-3 text-[44px]"
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={toggleEditMode} disabled={projects.length === 0}>
-              {editMode ? "Done" : "Edit"}
-            </Button>
-            <Button onClick={() => setCreateOpen(true)}>
-              <Icon name="plus" size={17} />
-              New project
-            </Button>
-          </div>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Icon name="plus" size={17} />
+            New project
+          </Button>
         }
       />
 
@@ -150,55 +107,19 @@ export function ProjectsPage() {
         <div className="grid grid-cols-2 gap-4 board:grid-cols-4">
           {filtered.map((project) => (
             <div key={project.id} className="relative">
-              {editMode && (
-                <div
-                  className="absolute left-3 top-3 z-20"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <Checkbox
-                    checked={selected.includes(project.id)}
-                    onCheckedChange={() =>
-                      setSelected((current) =>
-                        current.includes(project.id)
-                          ? current.filter((id) => id !== project.id)
-                          : [...current, project.id],
-                      )
-                    }
-                    aria-label={`Select ${project.title}`}
-                    className="bg-surface-card/90 shadow-resting"
-                  />
-                </div>
-              )}
-              <PinnableItem entityType="project" id={project.id} disabled={editMode}>
+              <PinnableItem entityType="project" id={project.id}>
                 <ProjectCard
                   project={project}
                   variant="full"
-                  onEdit={editMode ? undefined : setEditing}
-                  onPin={editMode ? undefined : (target) => pin({ entityType: "project", id: target.id })}
-                  onArchive={
-                    editMode
-                      ? undefined
-                      : (target) =>
-                          archiveProject.mutate(target.id, {
-                            onSuccess: () => notify.success(`"${target.title}" archived`),
-                            onError: () => notify.error("Couldn't archive this project."),
-                          })
-                  }
-                  onDelete={editMode ? undefined : setPendingDelete}
+                  onEdit={setEditing}
+                  onPin={(target) => pin({ entityType: "project", id: target.id })}
+                  onDelete={setPendingDelete}
                 />
               </PinnableItem>
             </div>
           ))}
         </div>
       )}
-
-      <ProjectBulkEditBar
-        selectedCount={selected.length}
-        isBusy={isBulkBusy}
-        onArchiveSelected={handleBulkArchive}
-        onDeleteSelected={() => setBulkDeleteOpen(true)}
-        onClearSelection={() => setSelected([])}
-      />
 
       <ProjectCreateModal open={createOpen} onOpenChange={setCreateOpen} />
 
@@ -216,7 +137,7 @@ export function ProjectsPage() {
         title="Delete project?"
         description={
           pendingDelete
-            ? `"${pendingDelete.title}" and its links to inspiration, notes, and resources will be permanently removed.`
+            ? `"${pendingDelete.title}" will be moved to Archive and permanently deleted in 7 days.`
             : undefined
         }
         confirmLabel="Delete project"
@@ -224,20 +145,9 @@ export function ProjectsPage() {
         destructive
         onConfirm={async () => {
           if (!pendingDelete) return;
-          await deleteProject.mutateAsync(pendingDelete.id);
-          notify.success(`"${pendingDelete.title}" deleted`);
+          await archiveProject.mutateAsync(pendingDelete.id);
+          notify.success(`"${pendingDelete.title}" moved to Archive`);
         }}
-      />
-
-      <ConfirmDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        title={`Delete ${selected.length} project${selected.length === 1 ? "" : "s"}?`}
-        description="This action cannot be undone."
-        confirmLabel="Delete"
-        pendingLabel="Deleting…"
-        destructive
-        onConfirm={handleBulkDelete}
       />
     </PageShell>
   );

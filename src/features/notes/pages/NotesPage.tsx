@@ -13,7 +13,7 @@ import { Icon } from "@/design-system/icons/Icon";
 import { PinnableItem } from "@/components/shared/PinnableItem";
 import { usePinned } from "@/context/PinnedContext";
 import type { Note, NoteType } from "@/types/entities";
-import { useArchiveNote, useDeleteNote, useNotes } from "../hooks/useNotes";
+import { useArchiveNote, useNotes } from "../hooks/useNotes";
 import { NoteCard } from "../components/NoteCard";
 import { NoteTypePickerModal } from "../components/NoteTypePickerModal";
 import { NoteEditorModal } from "../components/NoteEditorModal";
@@ -39,8 +39,9 @@ const SORT_OPTIONS: { value: NoteSort; label: string }[] = [
 
 export function NotesPage() {
   const { data: notes = [] } = useNotes();
+  // "Delete" moves the note to Archive (soft-delete); the Archive screen's
+  // own "Delete permanently" is the only real hard-delete path.
   const archiveNote = useArchiveNote();
-  const deleteNote = useDeleteNote();
   const { pin } = usePinned();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
@@ -159,12 +160,6 @@ export function NotesPage() {
                   note={note}
                   onEdit={editNote}
                   onPin={(target) => pin({ entityType: "note", id: target.id })}
-                  onArchive={(target) =>
-                    archiveNote.mutate(target.id, {
-                      onSuccess: () => notify.success(`"${target.title}" archived`),
-                      onError: () => notify.error("Couldn't archive this note."),
-                    })
-                  }
                   onDelete={setPendingDelete}
                 />
               </PinnableItem>
@@ -197,14 +192,18 @@ export function NotesPage() {
         open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}
         title="Delete note?"
-        description={pendingDelete ? `"${pendingDelete.title}" will be permanently removed.` : undefined}
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" will be moved to Archive and permanently deleted in 7 days.`
+            : undefined
+        }
         confirmLabel="Delete note"
         destructive
         onConfirm={() => {
           if (!pendingDelete) return;
           const target = pendingDelete;
-          deleteNote.mutate(target.id, {
-            onSuccess: () => notify.success(`"${target.title}" deleted`),
+          archiveNote.mutate(target.id, {
+            onSuccess: () => notify.success(`"${target.title}" moved to Archive`),
             onError: () => notify.error("Couldn't delete this note."),
           });
           setPendingDelete(null);

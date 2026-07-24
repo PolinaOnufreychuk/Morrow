@@ -62,6 +62,14 @@ export async function deleteBoard(id: string): Promise<void> {
   return inspirationRepository.deleteBoard(id);
 }
 
+export async function linkBoardToProject(boardId: string, projectId: string): Promise<void> {
+  return inspirationRepository.linkBoardToProject(boardId, projectId);
+}
+
+export async function unlinkBoardFromProject(boardId: string, projectId: string): Promise<void> {
+  return inspirationRepository.unlinkBoardFromProject(boardId, projectId);
+}
+
 export async function listReferences(boardId: string): Promise<InspirationReference[]> {
   return inspirationRepository.listReferences(boardId);
 }

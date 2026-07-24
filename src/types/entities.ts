@@ -11,6 +11,10 @@ export type ISOTimestamp = string; // e.g. "2026-07-16T10:48:00Z"
 interface BaseEntity {
   id: string;
   isArchived: boolean;
+  /** Set when `isArchived` flips true, cleared on restore — drives the
+   * Archive screen's expiry countdown and retention sweep. `null` while
+   * the entity is active. */
+  archivedAt: ISOTimestamp | null;
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 }
@@ -47,7 +51,7 @@ export interface InspirationBoard extends BaseEntity {
   coverImageUrl: string | null;
   tags: string[];
   notes: string | null;
-  projectId: string | null;
+  projectIds: string[];
 }
 
 export interface InspirationReference {
@@ -88,7 +92,7 @@ export interface MeetingAttendee {
 /** Fields common to every note variant. */
 interface NoteBase extends BaseEntity {
   title: string;
-  projectId: string | null;
+  projectIds: string[];
 }
 
 export interface TextNote extends NoteBase {
@@ -171,7 +175,7 @@ interface ResourceBase extends BaseEntity {
   url: string;
   description: string | null;
   tags: string[];
-  projectId: string | null;
+  projectIds: string[];
 }
 
 export interface LinkResource extends ResourceBase {

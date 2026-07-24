@@ -15,7 +15,7 @@ const baseResourceFields = {
     z.string().trim().max(2000, "Description is too long").nullable(),
   ),
   tags: z.array(z.string().trim().min(1).max(32)).max(20, "Too many tags"),
-  projectId: z.string().nullable(),
+  projectIds: z.array(z.string()),
 };
 
 const linkResourceSchema = z.object({

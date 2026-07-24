@@ -1,4 +1,5 @@
 import { supabase } from "./client";
+import { toSupabaseError } from "./errors";
 
 /**
  * The only module that calls `supabase.storage.*` directly — mirrors how
@@ -38,13 +39,13 @@ export async function uploadFile(
   file: File,
 ): Promise<{ path: string; publicUrl: string }> {
   const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, file);
-  if (error) throw error;
+  if (error) throw toSupabaseError(error);
   return { path, publicUrl: getPublicUrl(path) };
 }
 
 export async function deleteFile(path: string): Promise<void> {
   const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).remove([path]);
-  if (error) throw error;
+  if (error) throw toSupabaseError(error);
 }
 
 export function getPublicUrl(path: string): string {

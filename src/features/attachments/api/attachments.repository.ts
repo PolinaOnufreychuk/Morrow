@@ -1,5 +1,6 @@
 import type { Attachment, AttachmentParentType } from "@/types/entities";
 import { supabase } from "@/lib/supabase/client";
+import { toSupabaseError } from "@/lib/supabase/errors";
 
 export interface CreateAttachmentInput {
   parentType: AttachmentParentType;
@@ -48,7 +49,7 @@ class SupabaseAttachmentsRepository implements AttachmentsRepository {
       .eq("parent_type", parentType)
       .eq("parent_id", parentId)
       .order("created_at", { ascending: false });
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return (data as AttachmentRow[]).map(rowToAttachment);
   }
 
@@ -64,13 +65,13 @@ class SupabaseAttachmentsRepository implements AttachmentsRepository {
       })
       .select()
       .single();
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return rowToAttachment(data as AttachmentRow);
   }
 
   async remove(id: string): Promise<void> {
     const { error } = await supabase.from("attachments").delete().eq("id", id);
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
   }
 }
 

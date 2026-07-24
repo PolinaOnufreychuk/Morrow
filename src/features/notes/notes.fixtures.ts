@@ -6,13 +6,14 @@ const daysAgo = (days: number) => new Date(now - days * 24 * 60 * 60 * 1000).toI
 
 const base = {
   isArchived: false,
-  projectId: null,
+  archivedAt: null,
+  projectIds: [],
 };
 
 export const noteFixtures: Note[] = [
   {
     ...base,
-    projectId: "prj-fintech-onboarding",
+    projectIds: ["prj-fintech-onboarding"],
     id: "note-client-kickoff",
     type: "meeting",
     title: "Client kickoff — Fintech app",
@@ -59,7 +60,7 @@ export const noteFixtures: Note[] = [
   },
   {
     ...base,
-    projectId: "prj-fintech-onboarding",
+    projectIds: ["prj-fintech-onboarding"],
     id: "note-before-next-review",
     type: "checklist",
     title: "Before next review",

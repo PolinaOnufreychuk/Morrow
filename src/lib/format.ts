@@ -29,6 +29,17 @@ export function formatRelativeUpdated(iso: string): string {
   return `${days}d ago`;
 }
 
+/** "Expires in 5 days" / "Expires today" — Archive screen's retention countdown. */
+export function formatExpiresIn(archivedAtIso: string, retentionDays: number): string {
+  const archivedAt = new Date(archivedAtIso);
+  if (Number.isNaN(archivedAt.getTime())) return "";
+  const ageDays = (Date.now() - archivedAt.getTime()) / (1000 * 60 * 60 * 24);
+  const daysLeft = Math.max(0, Math.ceil(retentionDays - ageDays));
+  if (daysLeft <= 0) return "Expires today";
+  if (daysLeft === 1) return "Expires in 1 day";
+  return `Expires in ${daysLeft} days`;
+}
+
 /** Hostname without "www." — the shared "secondary meta" fallback for any resource kind with a URL. */
 export function hostnameOf(url: string): string {
   try {

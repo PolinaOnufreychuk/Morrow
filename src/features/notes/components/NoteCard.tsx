@@ -26,7 +26,6 @@ export interface NoteCardProps {
   note: Note;
   variant?: NoteCardVariant;
   onEdit?: (note: Note) => void;
-  onArchive?: (note: Note) => void;
   onDelete?: (note: Note) => void;
   /** Not used when variant="pinned" — pins it to the sidebar. */
   onPin?: (note: Note) => void;
@@ -46,7 +45,6 @@ export function NoteCard({
   note,
   variant = "compact",
   onEdit,
-  onArchive,
   onDelete,
   onPin,
   onUnpin,
@@ -61,7 +59,6 @@ export function NoteCard({
       entityType="note"
       onEdit={!isPinned && onEdit ? () => onEdit(note) : undefined}
       onPin={!isPinned && onPin ? () => onPin(note) : undefined}
-      onArchive={!isPinned && onArchive ? () => onArchive(note) : undefined}
       onDelete={!isPinned && onDelete ? () => onDelete(note) : undefined}
       actions={isPinned ? [{ label: "Unpin", onSelect: () => onUnpin?.() }] : undefined}
       triggerClassName={isPinned ? "h-6 w-6" : undefined}
@@ -79,9 +76,14 @@ export function NoteCard({
       onClick={isPinned ? () => onEdit?.(note) : undefined}
       className={cn("flex flex-col gap-3 p-4", isPinned && "gap-2 p-[9px]")}
     >
-      {!isMedia && showTitle && <h3 className={titleClassName}>{note.title}</h3>}
-
-      <NoteBody note={note} variant={variant} isPinned={isPinned} />
+      {!isMedia && showTitle ? (
+        <div className="flex flex-col gap-1">
+          <h3 className={titleClassName}>{note.title}</h3>
+          <NoteBody note={note} variant={variant} isPinned={isPinned} />
+        </div>
+      ) : (
+        <NoteBody note={note} variant={variant} isPinned={isPinned} />
+      )}
 
       {isMedia && showTitle && <h3 className={titleClassName}>{note.title}</h3>}
 
@@ -197,7 +199,7 @@ function BookmarkBody({
     <a
       href={note.url}
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
       className={cn(
         "flex flex-col gap-1 border border-border-subtle bg-surface-card/60",
         mediaRadius,

@@ -11,11 +11,10 @@ import { notify } from "@/components/shared/Toast";
 import { Icon } from "@/design-system/icons/Icon";
 import { PinnableItem } from "@/components/shared/PinnableItem";
 import { usePinned } from "@/context/PinnedContext";
-import { useBoards, useDeleteBoard } from "../hooks/useInspiration";
+import { useArchiveBoard, useBoards } from "../hooks/useInspiration";
 import { InspirationCard } from "../components/InspirationCard";
 import { EntityFilterPopover, type EntityFilterOption } from "@/components/shared/EntityFilterPopover";
 import { BoardCreateModal } from "../components/BoardCreateModal";
-import { BoardEditModal } from "../components/BoardEditModal";
 import type { InspirationBoard } from "@/types/entities";
 import type { InspirationSort } from "../types";
 
@@ -36,13 +35,14 @@ const SORT_OPTIONS: EntityFilterOption[] = [
 
 export function InspirationPage() {
   const { data: boards = [] } = useBoards();
-  const deleteBoard = useDeleteBoard();
+  // "Delete" moves the board to Archive (soft-delete); the Archive screen's
+  // own "Delete permanently" is the only real hard-delete path.
+  const archiveBoard = useArchiveBoard();
   const { pin } = usePinned();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<InspirationSort>("recent");
   const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState<InspirationBoard | null>(null);
   const [pendingDelete, setPendingDelete] = useState<InspirationBoard | null>(null);
 
   const filtered = useMemo(() => {
@@ -120,31 +120,21 @@ export function InspirationPage() {
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query} />
       ) : (
-        <div className="masonry3">
+        <div className="board-grid">
           {filtered.map((board) => (
-            <div key={board.id} className="masonry-item">
-              <PinnableItem entityType="collection" id={board.id}>
-                <InspirationCard
-                  board={board}
-                  variant="full"
-                  onEdit={setEditing}
-                  onPin={(target) => pin({ entityType: "collection", id: target.id })}
-                  onDelete={setPendingDelete}
-                />
-              </PinnableItem>
-            </div>
+            <PinnableItem key={board.id} entityType="collection" id={board.id}>
+              <InspirationCard
+                board={board}
+                variant="full"
+                onPin={(target) => pin({ entityType: "collection", id: target.id })}
+                onDelete={setPendingDelete}
+              />
+            </PinnableItem>
           ))}
         </div>
       )}
 
       <BoardCreateModal open={createOpen} onOpenChange={setCreateOpen} />
-      {editing && (
-        <BoardEditModal
-          open={editing !== null}
-          onOpenChange={(open) => !open && setEditing(null)}
-          board={editing}
-        />
-      )}
 
       <ConfirmDialog
         open={pendingDelete !== null}
@@ -152,7 +142,7 @@ export function InspirationPage() {
         title="Delete board?"
         description={
           pendingDelete
-            ? `"${pendingDelete.title}" and all its references will be permanently removed.`
+            ? `"${pendingDelete.title}" will be moved to Archive and permanently deleted in 7 days.`
             : undefined
         }
         confirmLabel="Delete board"
@@ -160,8 +150,8 @@ export function InspirationPage() {
         onConfirm={() => {
           if (!pendingDelete) return;
           const target = pendingDelete;
-          deleteBoard.mutate(target.id, {
-            onSuccess: () => notify.success(`"${target.title}" deleted`),
+          archiveBoard.mutate(target.id, {
+            onSuccess: () => notify.success(`"${target.title}" moved to Archive`),
             onError: () => notify.error("Couldn't delete this board."),
           });
           setPendingDelete(null);

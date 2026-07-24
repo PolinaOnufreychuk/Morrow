@@ -3,6 +3,7 @@ import { EntityOverflowMenu } from "@/components/shared/EntityOverflowMenu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useBoardReferences } from "../hooks/useInspiration";
+import type { BackContext } from "@/lib/navigation";
 import type { InspirationBoard } from "@/types/entities";
 
 export type InspirationCardVariant = "compact" | "full" | "pinned";
@@ -10,13 +11,13 @@ export type InspirationCardVariant = "compact" | "full" | "pinned";
 export interface InspirationCardProps {
   board: InspirationBoard;
   variant?: InspirationCardVariant;
-  onEdit?: (board: InspirationBoard) => void;
-  onArchive?: (board: InspirationBoard) => void;
   onDelete?: (board: InspirationBoard) => void;
   /** Not used when variant="pinned" — pins it to the sidebar. */
   onPin?: (board: InspirationBoard) => void;
   /** Only used when variant="pinned" — removes it from the sidebar. */
   onUnpin?: () => void;
+  /** Where the detail page's back-link should point when opened from here, if not the default. */
+  backContext?: BackContext;
 }
 
 /**
@@ -30,11 +31,10 @@ export interface InspirationCardProps {
 export function InspirationCard({
   board,
   variant = "compact",
-  onEdit,
-  onArchive,
   onDelete,
   onPin,
   onUnpin,
+  backContext,
 }: InspirationCardProps) {
   const { data: references = [] } = useBoardReferences(board.id);
   const images = (
@@ -60,16 +60,18 @@ export function InspirationCard({
       >
         <EntityOverflowMenu
           entityType="collection"
-          onEdit={!isPinned && onEdit ? () => onEdit(board) : undefined}
           onPin={!isPinned && onPin ? () => onPin(board) : undefined}
-          onArchive={!isPinned && onArchive ? () => onArchive(board) : undefined}
           onDelete={!isPinned && onDelete ? () => onDelete(board) : undefined}
           actions={isPinned ? [{ label: "Unpin", onSelect: () => onUnpin?.() }] : undefined}
           triggerClassName={cn("bg-surface-card/70 backdrop-blur-sm", isPinned && "h-6 w-6")}
         />
       </div>
 
-      <Link to={`/inspiration/${board.id}`} className="flex flex-col">
+      <Link
+        to={`/inspiration/${board.id}`}
+        state={backContext ? { back: backContext } : undefined}
+        className="flex flex-col"
+      >
         <div className="grid">
           {/* Stack sliver — same grid cell as the collage, nudged down-left so its edge peeks out */}
           <div

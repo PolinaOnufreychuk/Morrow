@@ -5,7 +5,6 @@ import type { Project } from "@/types/entities";
 import type { CreateProjectInput, UpdateProjectInput } from "../schema";
 import {
   archiveProject,
-  bulkArchiveProjects,
   bulkDeleteProjects,
   createProject,
   deleteProject,
@@ -72,6 +71,7 @@ export function useCreateProject() {
         ...input,
         id: `optimistic-${Date.now()}`,
         isArchived: false,
+        archivedAt: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -133,12 +133,6 @@ export function useArchiveProject() {
 export function useDeleteProject() {
   return useRemoveFromListMutation<Project, string>(queryKeys.projects.all(), (id) =>
     deleteProject(id),
-  );
-}
-
-export function useBulkArchiveProjects() {
-  return useRemoveFromListMutation<Project, string[]>(queryKeys.projects.all(), (ids) =>
-    bulkArchiveProjects(ids),
   );
 }
 

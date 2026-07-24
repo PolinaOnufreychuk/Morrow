@@ -26,6 +26,8 @@ export interface ResourceCardProps {
   onPin?: (resource: Resource) => void;
   /** Only used when variant="pinned" — removes it from the sidebar. */
   onUnpin?: () => void;
+  /** Not used when variant="pinned". */
+  onDelete?: (resource: Resource) => void;
 }
 
 /** One consistent secondary-meta string per kind: reading time, page count, or domain. */
@@ -59,23 +61,24 @@ export function ResourceCard({
   onSelectToggle,
   onPin,
   onUnpin,
+  onDelete,
 }: ResourceCardProps) {
   const isPinned = variant === "pinned";
   const content = (
     <>
       <ResourceMedia resource={resource} variant={variant} />
 
-      <div className={cn("flex flex-col gap-2", isPinned && "gap-1")}>
-        <p
+      <div className="flex flex-col">
+        <h3
           className={cn(
-            "font-medium leading-snug text-text-primary",
+            "line-clamp-2 font-medium leading-snug text-text-primary",
             isPinned ? "text-[12.5px] leading-[1.35]" : "text-[15px]",
           )}
         >
           {resource.title}
-        </p>
+        </h3>
         {!isPinned && resource.description && (
-          <p className="line-clamp-2 text-[13px] text-text-secondary">{resource.description}</p>
+          <p className="line-clamp-2 mt-1 text-[13px] text-text-secondary">{resource.description}</p>
         )}
       </div>
 
@@ -123,7 +126,7 @@ export function ResourceCard({
         <a
           href={resource.url}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className={cn("glass-card block cursor-pointer rounded-card", cardClassName)}
         >
           {content}
@@ -134,11 +137,12 @@ export function ResourceCard({
 
   return (
     <div className="group relative">
-      {onPin && (
+      {(onPin || onDelete) && (
         <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity duration-fast ease-out group-hover:opacity-100">
           <EntityOverflowMenu
             entityType="resource"
-            onPin={() => onPin(resource)}
+            onPin={onPin ? () => onPin(resource) : undefined}
+            onDelete={onDelete ? () => onDelete(resource) : undefined}
             triggerClassName="bg-surface-card/70 backdrop-blur-sm"
           />
         </div>
@@ -146,7 +150,7 @@ export function ResourceCard({
       <a
         href={resource.url}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         className={cn("glass-card block cursor-pointer rounded-card", cardClassName)}
       >
         {content}

@@ -2,6 +2,7 @@ import type { ChecklistItem, MeetingAttendee, Note, NoteType } from "@/types/ent
 import type { CreateNoteInput } from "../types";
 import { NoteNotFoundError } from "../types";
 import { supabase } from "@/lib/supabase/client";
+import { toSupabaseError } from "@/lib/supabase/errors";
 
 /**
  * Pure data-access contract — mirrors `projects.repository.ts`'s shape.
@@ -15,6 +16,8 @@ export interface NotesRepository {
   archive(id: string): Promise<Note>;
   unarchive(id: string): Promise<Note>;
   remove(id: string): Promise<void>;
+  linkToProject(noteId: string, projectId: string): Promise<void>;
+  unlinkFromProject(noteId: string, projectId: string): Promise<void>;
 }
 
 /** Wide-table row: one row per note, only the columns for `type` populated. */
@@ -39,10 +42,11 @@ interface NoteRow {
   page_count: number | null;
   attendees: MeetingAttendee[] | null;
   agenda: string[] | null;
-  project_id: string | null;
   is_archived: boolean;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
+  project_notes: { project_id: string }[] | null;
 }
 
 /** Switches on `row.type` to build only that variant's fields — the
@@ -52,8 +56,9 @@ function rowToNote(row: NoteRow): Note {
   const base = {
     id: row.id,
     title: row.title,
-    projectId: row.project_id,
+    projectIds: (row.project_notes ?? []).map((link) => link.project_id),
     isArchived: row.is_archived,
+    archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -109,8 +114,8 @@ function rowToNote(row: NoteRow): Note {
 function noteToRow(input: Partial<Note>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
   if ("title" in input) row.title = input.title;
-  if ("projectId" in input) row.project_id = input.projectId;
   if ("isArchived" in input) row.is_archived = input.isArchived;
+  if ("archivedAt" in input) row.archived_at = input.archivedAt;
   if (!("type" in input) || input.type === undefined) return row;
 
   row.type = input.type;
@@ -156,37 +161,49 @@ function noteToRow(input: Partial<Note>): Record<string, unknown> {
   return row;
 }
 
+const NOTE_SELECT = "*, project_notes(project_id)";
+
 class SupabaseNotesRepository implements NotesRepository {
   async list(): Promise<Note[]> {
     const { data, error } = await supabase
       .from("notes")
-      .select("*")
+      .select(NOTE_SELECT)
       .eq("is_archived", false)
       .order("created_at", { ascending: false });
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     return (data as NoteRow[]).map(rowToNote);
   }
 
   async listArchived(): Promise<Note[]> {
     const { data, error } = await supabase
       .from("notes")
-      .select("*")
+      .select(NOTE_SELECT)
       .eq("is_archived", true)
-      .order("updated_at", { ascending: false });
-    if (error) throw error;
+      .order("archived_at", { ascending: false });
+    if (error) throw toSupabaseError(error);
     return (data as NoteRow[]).map(rowToNote);
   }
 
   async getById(id: string): Promise<Note | null> {
-    const { data, error } = await supabase.from("notes").select("*").eq("id", id).maybeSingle();
-    if (error) throw error;
+    const { data, error } = await supabase
+      .from("notes")
+      .select(NOTE_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw toSupabaseError(error);
     return data ? rowToNote(data as NoteRow) : null;
   }
 
   async create(input: CreateNoteInput): Promise<Note> {
     const { data, error } = await supabase.from("notes").insert(noteToRow(input)).select().single();
-    if (error) throw error;
-    return rowToNote(data as NoteRow);
+    if (error) throw toSupabaseError(error);
+    const note = data as NoteRow;
+    const projectIds = input.projectIds ?? [];
+    if (projectIds.length > 0) {
+      await Promise.all(projectIds.map((projectId) => this.linkToProject(note.id, projectId)));
+      return { ...rowToNote(note), projectIds };
+    }
+    return rowToNote(note);
   }
 
   async update(id: string, patch: Partial<Note>): Promise<Note> {
@@ -194,24 +211,38 @@ class SupabaseNotesRepository implements NotesRepository {
       .from("notes")
       .update(noteToRow(patch))
       .eq("id", id)
-      .select()
+      .select(NOTE_SELECT)
       .maybeSingle();
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
     if (!data) throw new NoteNotFoundError(id);
     return rowToNote(data as NoteRow);
   }
 
+  async linkToProject(noteId: string, projectId: string): Promise<void> {
+    const { error } = await supabase.from("project_notes").insert({ note_id: noteId, project_id: projectId });
+    if (error) throw toSupabaseError(error);
+  }
+
+  async unlinkFromProject(noteId: string, projectId: string): Promise<void> {
+    const { error } = await supabase
+      .from("project_notes")
+      .delete()
+      .eq("note_id", noteId)
+      .eq("project_id", projectId);
+    if (error) throw toSupabaseError(error);
+  }
+
   async archive(id: string): Promise<Note> {
-    return this.update(id, { isArchived: true });
+    return this.update(id, { isArchived: true, archivedAt: new Date().toISOString() });
   }
 
   async unarchive(id: string): Promise<Note> {
-    return this.update(id, { isArchived: false });
+    return this.update(id, { isArchived: false, archivedAt: null });
   }
 
   async remove(id: string): Promise<void> {
     const { error } = await supabase.from("notes").delete().eq("id", id);
-    if (error) throw error;
+    if (error) throw toSupabaseError(error);
   }
 }
 

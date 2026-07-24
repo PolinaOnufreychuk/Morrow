@@ -9,11 +9,13 @@ import {
   createBoard,
   deleteBoard,
   getBoard,
+  linkBoardToProject,
   listArchivedBoards,
   listBoards,
   listReferences,
   removeReferences,
   unarchiveBoard,
+  unlinkBoardFromProject,
   updateBoard,
   type AddReferenceInput,
 } from "../api/inspiration.service";
@@ -67,6 +69,29 @@ export function useUpdateBoard() {
       queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.byId(variables.id) });
     },
+  });
+}
+
+function invalidateBoardLinks(queryClient: ReturnType<typeof useQueryClient>, boardId: string) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.byId(boardId) });
+}
+
+export function useLinkBoardToProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ boardId, projectId }: { boardId: string; projectId: string }) =>
+      linkBoardToProject(boardId, projectId),
+    onSuccess: (_data, variables) => invalidateBoardLinks(queryClient, variables.boardId),
+  });
+}
+
+export function useUnlinkBoardFromProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ boardId, projectId }: { boardId: string; projectId: string }) =>
+      unlinkBoardFromProject(boardId, projectId),
+    onSuccess: (_data, variables) => invalidateBoardLinks(queryClient, variables.boardId),
   });
 }
 

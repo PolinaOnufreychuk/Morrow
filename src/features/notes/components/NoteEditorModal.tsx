@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/shared/FormField";
 import { ImageDropzone } from "@/components/shared/ImageDropzone";
 import { notify } from "@/components/shared/Toast";
+import { useConfirmDiscard } from "@/hooks/useConfirmDiscard";
 import { uploadCoverImage } from "@/lib/supabase/storage";
 import type { ChecklistItem, MeetingAttendee, Note, NoteType } from "@/types/entities";
 import { NOTE_TYPE_META } from "../noteTypeMeta";
@@ -20,6 +21,9 @@ export interface NoteEditorModalProps {
   /** Editing an existing note, or creating a new one of this type. */
   note?: Note;
   type: NoteType;
+  /** Projects to pre-link a newly created note to (e.g. when opened from a
+   * project's detail page). Ignored when editing an existing note. */
+  initialProjectIds?: string[];
 }
 
 const FORM_ID = "note-editor-form";
@@ -34,13 +38,18 @@ const EMPTY_MOODBOARD: [string | null, string | null, string | null, string | nu
  * create/update mutations. Local `useState` per field (rather than a single
  * typed object) keeps each control trivially controlled regardless of which
  * of the 10 discriminated note variants is active. */
-export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorModalProps) {
+export function NoteEditorModal({ open, onOpenChange, note, type, initialProjectIds }: NoteEditorModalProps) {
   const meta = NOTE_TYPE_META[type];
   const isEditing = Boolean(note);
   const createNote = useCreateNote();
   const updateNote = useUpdateNote();
   const isPending = createNote.isPending || updateNote.isPending;
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // No react-hook-form here (see file header comment), so dirtiness is
+  // tracked manually — any field change flips this once, for the lifetime
+  // of the modal instance.
+  const [isDirty, setIsDirty] = useState(false);
+  const markDirty = () => setIsDirty(true);
 
   const [title, setTitle] = useState(note?.title ?? "");
   const [body, setBody] = useState(note?.type === "text" ? note.body : "");
@@ -85,8 +94,8 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
       return;
     }
 
-    const projectId = note?.projectId ?? null;
-    const base = { title: trimmedTitle, projectId };
+    const projectIds = note?.projectIds ?? initialProjectIds ?? [];
+    const base = { title: trimmedTitle, projectIds };
     let payload: Record<string, unknown>;
 
     switch (type) {
@@ -182,16 +191,20 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
       next[index] = value;
       return next;
     });
+    markDirty();
   };
 
+  const { guardedOnOpenChange, discardDialog } = useConfirmDiscard(isDirty, (next) => {
+    if (isPending) return;
+    setSubmitError(null);
+    onOpenChange(next);
+  });
+
   return (
+    <>
     <ModalShell
       open={open}
-      onOpenChange={(next) => {
-        if (isPending) return;
-        setSubmitError(null);
-        onOpenChange(next);
-      }}
+      onOpenChange={guardedOnOpenChange}
       title={isEditing ? `Edit ${meta.label.toLowerCase()} note` : `New ${meta.label.toLowerCase()} note`}
       footerAlign="stretch"
       footer={
@@ -205,7 +218,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
           <Input
             id="note-title"
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => {
+              setTitle(event.target.value);
+              markDirty();
+            }}
             placeholder="Note title"
           />
         </FormField>
@@ -215,7 +231,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
             <Textarea
               id="note-body"
               value={body}
-              onChange={(event) => setBody(event.target.value)}
+              onChange={(event) => {
+                setBody(event.target.value);
+                markDirty();
+              }}
               placeholder="Write something…"
             />
           </FormField>
@@ -223,7 +242,13 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
 
         {type === "checklist" && (
           <FormField label="Items">
-            <ChecklistItemsField value={items} onChange={setItems} />
+            <ChecklistItemsField
+              value={items}
+              onChange={(value) => {
+                setItems(value);
+                markDirty();
+              }}
+            />
           </FormField>
         )}
 
@@ -234,7 +259,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
                 id="note-url"
                 type="url"
                 value={url}
-                onChange={(event) => setUrl(event.target.value)}
+                onChange={(event) => {
+                  setUrl(event.target.value);
+                  markDirty();
+                }}
                 placeholder="https://…"
               />
             </FormField>
@@ -242,7 +270,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
               <Textarea
                 id="note-snippet"
                 value={snippet}
-                onChange={(event) => setSnippet(event.target.value)}
+                onChange={(event) => {
+                  setSnippet(event.target.value);
+                  markDirty();
+                }}
                 placeholder="A short excerpt or description…"
               />
             </FormField>
@@ -253,7 +284,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
           <FormField label="Image">
             <ImageDropzone
               value={coverImageUrl}
-              onChange={setCoverImageUrl}
+              onChange={(value) => {
+                setCoverImageUrl(value);
+                markDirty();
+              }}
               onUpload={(file) => uploadCoverImage("note", file)}
             />
           </FormField>
@@ -281,7 +315,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
               <Input
                 id="note-language"
                 value={language}
-                onChange={(event) => setLanguage(event.target.value)}
+                onChange={(event) => {
+                  setLanguage(event.target.value);
+                  markDirty();
+                }}
                 placeholder="e.g. TypeScript"
               />
             </FormField>
@@ -289,7 +326,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
               <Textarea
                 id="note-code"
                 value={code}
-                onChange={(event) => setCode(event.target.value)}
+                onChange={(event) => {
+                  setCode(event.target.value);
+                  markDirty();
+                }}
                 placeholder="Paste a snippet…"
                 className="min-h-[160px] font-mono text-[13px]"
               />
@@ -303,7 +343,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
               <Textarea
                 id="note-quote"
                 value={quote}
-                onChange={(event) => setQuote(event.target.value)}
+                onChange={(event) => {
+                  setQuote(event.target.value);
+                  markDirty();
+                }}
                 placeholder="Write the quote…"
               />
             </FormField>
@@ -311,7 +354,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
               <Input
                 id="note-author"
                 value={author}
-                onChange={(event) => setAuthor(event.target.value)}
+                onChange={(event) => {
+                  setAuthor(event.target.value);
+                  markDirty();
+                }}
                 placeholder="Who said it?"
               />
             </FormField>
@@ -322,7 +368,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
           <FormField label="Ingredients">
             <StringListField
               value={ingredients}
-              onChange={setIngredients}
+              onChange={(value) => {
+                setIngredients(value);
+                markDirty();
+              }}
               itemLabel="Ingredient"
               addLabel="Add ingredient"
             />
@@ -335,7 +384,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
               <Input
                 id="note-filename"
                 value={filename}
-                onChange={(event) => setFilename(event.target.value)}
+                onChange={(event) => {
+                  setFilename(event.target.value);
+                  markDirty();
+                }}
                 placeholder="document.pdf"
               />
             </FormField>
@@ -345,7 +397,10 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
                 type="number"
                 min={1}
                 value={pageCount}
-                onChange={(event) => setPageCount(event.target.value)}
+                onChange={(event) => {
+                  setPageCount(event.target.value);
+                  markDirty();
+                }}
                 placeholder="e.g. 12"
               />
             </FormField>
@@ -357,17 +412,30 @@ export function NoteEditorModal({ open, onOpenChange, note, type }: NoteEditorMo
             <FormField label="Attendees">
               <StringListField
                 value={attendeeNames}
-                onChange={setAttendeeNames}
+                onChange={(value) => {
+                  setAttendeeNames(value);
+                  markDirty();
+                }}
                 itemLabel="Attendee"
                 addLabel="Add attendee"
               />
             </FormField>
             <FormField label="Agenda">
-              <StringListField value={agenda} onChange={setAgenda} itemLabel="Agenda item" addLabel="Add agenda item" />
+              <StringListField
+                value={agenda}
+                onChange={(value) => {
+                  setAgenda(value);
+                  markDirty();
+                }}
+                itemLabel="Agenda item"
+                addLabel="Add agenda item"
+              />
             </FormField>
           </>
         )}
       </form>
     </ModalShell>
+    {discardDialog}
+    </>
   );
 }

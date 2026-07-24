@@ -1,11 +1,12 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Icon } from "@/design-system/icons/Icon";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
 import { formatBytes } from "@/lib/format";
 import { ProjectSection } from "@/features/projects/components/ProjectSection";
 import { FileValidationError } from "@/lib/supabase/storage";
-import type { AttachmentParentType } from "@/types/entities";
+import type { Attachment, AttachmentParentType } from "@/types/entities";
 import { useAttachments, useDeleteAttachment, useUploadAttachment } from "../hooks/useAttachments";
 import { attachmentFilename } from "../types";
 import { getAttachmentUrl } from "../api/attachments.service";
@@ -26,6 +27,7 @@ export function AttachmentsSection({ parentType, parentId, editMode }: Attachmen
   const { data: attachments = [] } = useAttachments(parentType, parentId);
   const uploadAttachment = useUploadAttachment(parentType, parentId);
   const deleteAttachment = useDeleteAttachment(parentType, parentId);
+  const [pendingDelete, setPendingDelete] = useState<Attachment | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -71,7 +73,7 @@ export function AttachmentsSection({ parentType, parentId, editMode }: Attachmen
               key={attachment.id}
               href={getAttachmentUrl(attachment)}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-chip border border-border-subtle bg-surface-card/60 px-3 py-2.5"
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip bg-blush-100 text-blush-600">
@@ -91,9 +93,7 @@ export function AttachmentsSection({ parentType, parentId, editMode }: Attachmen
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    deleteAttachment.mutate(attachment, {
-                      onError: () => notify.error("Couldn't remove that attachment."),
-                    });
+                    setPendingDelete(attachment);
                   }}
                   aria-label="Remove attachment"
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip text-text-tertiary transition-colors duration-fast ease-out hover:bg-cream-100 hover:text-blush-600"
@@ -105,6 +105,28 @@ export function AttachmentsSection({ parentType, parentId, editMode }: Attachmen
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Remove attachment?"
+        description={
+          pendingDelete
+            ? `"${attachmentFilename(pendingDelete)}" will be permanently removed.`
+            : undefined
+        }
+        confirmLabel="Remove"
+        pendingLabel="Removing…"
+        destructive
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          const target = pendingDelete;
+          deleteAttachment.mutate(target, {
+            onError: () => notify.error("Couldn't remove that attachment."),
+          });
+          setPendingDelete(null);
+        }}
+      />
     </ProjectSection>
   );
 }

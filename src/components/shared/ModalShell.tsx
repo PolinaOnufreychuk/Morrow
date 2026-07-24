@@ -53,16 +53,16 @@ export function ModalShell({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn("overflow-hidden p-0", className)}>
-          <img src={heroImage} alt="" className="h-20 w-full object-cover" />
+          <img src={heroImage} alt="" className="h-16 w-full object-cover" />
 
-          <div className="flex flex-col items-center gap-1 px-8 pt-4 text-center">
+          <div className="flex flex-col items-center gap-0.5 px-7 pt-4 text-center">
             <h2 className={cn("font-display text-[28px] font-light text-text-primary", titleClassName)}>
               {title}
             </h2>
             {description && <p className="text-[13px] text-text-secondary">{description}</p>}
           </div>
 
-          <div className="px-8 pb-2 pt-4">
+          <div className="px-7 pb-2 pt-4">
             <div className="h-[360px] overflow-y-auto rounded-card border border-border-subtle p-6">
               {children}
             </div>
@@ -71,7 +71,7 @@ export function ModalShell({
           {footer && (
             <div
               className={cn(
-                "flex gap-2 px-8 pb-8 pt-6",
+                "flex gap-2 px-7 pb-7 pt-4",
                 footerAlign === "end" ? "justify-end" : "flex-col",
               )}
             >

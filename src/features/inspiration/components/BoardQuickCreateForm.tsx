@@ -1,86 +1,80 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
-import { ImageDropzone } from "@/components/shared/ImageDropzone";
-import { FormField } from "@/components/shared/FormField";
-import { ModalSection } from "@/components/shared/ModalSection";
 import { uploadCoverImage } from "@/lib/supabase/storage";
+import { queryKeys } from "@/lib/api/queryKeys";
+import { BoardForm, type BoardFormValues } from "./BoardForm";
 import { useCreateBoard } from "../hooks/useInspiration";
-import { INSPIRATION_CATEGORY_OPTIONS as CATEGORY_OPTIONS } from "../types";
-
-const CATEGORY_SELECT_OPTIONS = CATEGORY_OPTIONS.map((value) => ({ value, label: value }));
+import { addReferences } from "../api/inspiration.service";
+import { InspirationValidationError } from "../types";
 
 export interface BoardQuickCreateFormProps {
   projectId: string;
   onCreated: () => void;
 }
 
-/** Inline "create new board, pre-linked to this project" form for the project-details Link-or-Create modal. */
-export function BoardQuickCreateForm({ projectId, onCreated }: BoardQuickCreateFormProps) {
-  const [title, setTitle] = useState("");
-  const [notes, setNotes] = useState("");
-  const [category, setCategory] = useState<(typeof CATEGORY_OPTIONS)[number]>(CATEGORY_OPTIONS[0]);
-  const [coverImageUrl, setCoverImageUrl] = useState("");
-  const createBoard = useCreateBoard();
+const FORM_ID = "board-quick-create-form";
 
-  const handleSubmit = () => {
-    if (!title.trim()) return;
-    createBoard.mutate(
-      {
-        title: title.trim(),
-        notes: notes.trim() || null,
-        tags: [category],
-        coverImageUrl: coverImageUrl.trim() || null,
+/**
+ * Inline "create new board, pre-linked to this project" form for the
+ * project-details Link-or-Create modal. Same fields/logic as the Inspiration
+ * page's BoardCreateModal — a board's cover always comes from its first
+ * references (dropped photos), never a standalone cover-image field.
+ */
+export function BoardQuickCreateForm({ projectId, onCreated }: BoardQuickCreateFormProps) {
+  const createBoard = useCreateBoard();
+  const queryClient = useQueryClient();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (values: BoardFormValues, photos: File[]) => {
+    setSubmitError(null);
+    setIsSaving(true);
+    try {
+      const board = await createBoard.mutateAsync({
+        title: values.title,
+        coverImageUrl: null,
+        tags: [values.category],
+        notes: values.notes || null,
         projectId,
-      },
-      { onSuccess: onCreated },
-    );
+      });
+
+      if (photos.length > 0) {
+        const inputs = await Promise.all(
+          photos.map(async (file) => ({
+            imageUrl: await uploadCoverImage("inspiration-reference", file),
+            sourceUrl: null,
+          })),
+        );
+        await addReferences(board.id, inputs);
+        queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.all() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.references(board.id) });
+      }
+
+      onCreated();
+    } catch (error) {
+      setSubmitError(
+        error instanceof InspirationValidationError
+          ? error.message
+          : "Couldn't create the collection. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <ModalSection tone="primary">
-        <FormField htmlFor="board-quick-title" label="Title">
-          <Input
-            id="board-quick-title"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="e.g. Morning color studies"
-          />
-        </FormField>
-
-        <FormField htmlFor="board-quick-notes" label="Description" optional>
-          <Textarea
-            id="board-quick-notes"
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="What's this collection about?"
-          />
-        </FormField>
-      </ModalSection>
-
-      <ModalSection tone="secondary">
-        <PropertyDropdown label="Category" options={CATEGORY_SELECT_OPTIONS} value={category} onValueChange={setCategory} />
-
-        <FormField label="Cover image" optional>
-          <ImageDropzone
-            value={coverImageUrl || null}
-            onChange={(url) => setCoverImageUrl(url ?? "")}
-            onUpload={(file) => uploadCoverImage("inspiration-board", file)}
-          />
-        </FormField>
-      </ModalSection>
-
+      <BoardForm formId={FORM_ID} onSubmit={handleSubmit} submitError={submitError} showPhotoUpload />
       <Button
-        type="button"
+        type="submit"
+        form={FORM_ID}
         size="lg"
         fullWidth
-        onClick={handleSubmit}
-        disabled={!title.trim() || createBoard.isPending}
+        disabled={isSaving}
+        aria-busy={isSaving}
       >
-        Save collection
+        {isSaving ? "Creating…" : "Save collection"}
       </Button>
     </div>
   );

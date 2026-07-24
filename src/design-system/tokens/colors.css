@@ -36,6 +36,9 @@
   --color-warm-300: 202 201 199; /* #CAC9C7 */
   --color-warm-500: 154 151 147; /* #9A9793 */
 
+  /* Search/filter surface — main list pages only, not modals (see SearchInput, *FilterPopover). */
+  --color-surface-muted: 242 241 238; /* #F2F1EE */
+
   /* Ink */
   --color-ink-700: 74 75 69; /* #4A4B45 */
   --color-ink-900: 36 38 33; /* #242621 */

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -30,9 +31,22 @@ export interface ProjectFormProps {
   onSubmit: (values: ProjectFormValues) => void;
   /** Server/mutation-level error not tied to a specific field. */
   submitError?: string | null;
+  /** Reports react-hook-form's `isDirty` up to the modal so it can guard
+   * against closing with unsaved changes (see `useConfirmDiscard`). */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** "create" hides Tags/Deadline/External links/Notes — those get
+   * configured on the project's own page afterward, not at creation. */
+  mode?: "create" | "edit";
 }
 
-export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: ProjectFormProps) {
+export function ProjectForm({
+  formId,
+  defaultValues,
+  onSubmit,
+  submitError,
+  onDirtyChange,
+  mode = "edit",
+}: ProjectFormProps) {
   const { register, handleSubmit, setValue, watch, formState } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectInputSchema),
     defaultValues: {
@@ -54,6 +68,10 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
   const tags = watch("tags");
   const externalLinks = watch("externalLinks");
   const description = watch("description") ?? "";
+
+  useEffect(() => {
+    onDirtyChange?.(formState.isDirty);
+  }, [formState.isDirty, onDirtyChange]);
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
@@ -110,13 +128,15 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
           />
         </div>
 
-        <FormField htmlFor={`${formId}-tags`} label="Tags" optional>
-          <TagInput
-            id={`${formId}-tags`}
-            value={tags}
-            onChange={(value) => setValue("tags", value, { shouldDirty: true })}
-          />
-        </FormField>
+        {mode === "edit" && (
+          <FormField htmlFor={`${formId}-tags`} label="Tags" optional>
+            <TagInput
+              id={`${formId}-tags`}
+              value={tags}
+              onChange={(value) => setValue("tags", value, { shouldDirty: true })}
+            />
+          </FormField>
+        )}
 
         <FormField label="Cover image" optional error={formState.errors.coverImageUrl?.message}>
           <ImageDropzone
@@ -127,27 +147,29 @@ export function ProjectForm({ formId, defaultValues, onSubmit, submitError }: Pr
         </FormField>
       </ModalSection>
 
-      <ModalSection tone="optional">
-        <ProjectDeadlineField
-          value={deadline}
-          onChange={(value) => setValue("deadline", value, { shouldDirty: true })}
-        />
-
-        <FormField label="External links" optional>
-          <ExternalLinksField
-            value={externalLinks}
-            onChange={(value) => setValue("externalLinks", value, { shouldDirty: true })}
+      {mode === "edit" && (
+        <ModalSection tone="optional">
+          <ProjectDeadlineField
+            value={deadline}
+            onChange={(value) => setValue("deadline", value, { shouldDirty: true })}
           />
-        </FormField>
 
-        <FormField htmlFor={`${formId}-notes`} label="Notes" optional>
-          <Textarea
-            id={`${formId}-notes`}
-            placeholder="Anything worth remembering about this project…"
-            {...register("notes")}
-          />
-        </FormField>
-      </ModalSection>
+          <FormField label="External links" optional>
+            <ExternalLinksField
+              value={externalLinks}
+              onChange={(value) => setValue("externalLinks", value, { shouldDirty: true })}
+            />
+          </FormField>
+
+          <FormField htmlFor={`${formId}-notes`} label="Notes" optional>
+            <Textarea
+              id={`${formId}-notes`}
+              placeholder="Anything worth remembering about this project…"
+              {...register("notes")}
+            />
+          </FormField>
+        </ModalSection>
+      )}
     </form>
   );
 }

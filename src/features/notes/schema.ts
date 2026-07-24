@@ -14,7 +14,7 @@ import { z } from "zod";
 
 const baseNoteFields = {
   title: z.string().trim().min(1, "Title is required").max(160, "Title is too long"),
-  projectId: z.string().nullable(),
+  projectIds: z.array(z.string()),
 };
 
 const checklistItemSchema = z.object({

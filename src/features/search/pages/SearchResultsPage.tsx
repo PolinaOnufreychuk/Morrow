@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { PageShell } from "@/components/shared/PageShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
@@ -7,7 +7,7 @@ import { SearchModuleFilterPopover } from "../components/SearchModuleFilterPopov
 import { EmptyState } from "@/components/shared/EmptyState";
 import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
-import { Icon } from "@/design-system/icons/Icon";
+import { BackLink } from "@/components/shared/BackLink";
 import { searchWorkspace } from "@/lib/search";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { ProjectCard } from "@/features/projects/components/ProjectCard";
@@ -15,6 +15,8 @@ import { useBoards } from "@/features/inspiration/hooks/useInspiration";
 import { InspirationCard } from "@/features/inspiration/components/InspirationCard";
 import { useNotes } from "@/features/notes/hooks/useNotes";
 import { NoteCard } from "@/features/notes/components/NoteCard";
+import { NoteEditorModal } from "@/features/notes/components/NoteEditorModal";
+import type { Note } from "@/types/entities";
 import { useResources } from "@/features/resources/hooks/useResources";
 import { ResourceCard } from "@/features/resources/components/ResourceCard";
 
@@ -25,6 +27,7 @@ export function SearchResultsPage() {
   const query = searchParams.get("q") ?? "";
   const [inputValue, setInputValue] = useState(query);
   const [tab, setTab] = useState<ResultTab>("all");
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   useEffect(() => {
     setInputValue(query);
@@ -41,6 +44,11 @@ export function SearchResultsPage() {
   );
 
   const total = results.projects.length + results.boards.length + results.notes.length + results.resources.length;
+
+  const backContext = {
+    path: `/search?${searchParams.toString()}`,
+    label: "Search results",
+  };
 
   const submitSearch = () => {
     const trimmed = inputValue.trim();
@@ -61,13 +69,7 @@ export function SearchResultsPage() {
   return (
     <PageShell>
       <div className="flex flex-col gap-3">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-[13px] text-text-secondary hover:text-text-primary"
-        >
-          <Icon name="arrow-left" size={16} />
-          Back to dashboard
-        </Link>
+        <BackLink to="/" label="dashboard" />
 
         <PageHeader title="Search results" titleClassName="text-[44px]" />
 
@@ -123,7 +125,7 @@ export function SearchResultsPage() {
                   <h2 className="eyebrow text-text-tertiary">Projects</h2>
                   <div className="grid grid-cols-2 gap-4 board:grid-cols-4">
                     {results.projects.map((project) => (
-                      <ProjectCard key={project.id} project={project} variant="full" />
+                      <ProjectCard key={project.id} project={project} variant="full" backContext={backContext} />
                     ))}
                   </div>
                 </section>
@@ -135,7 +137,7 @@ export function SearchResultsPage() {
                   <div className="masonry4">
                     {results.notes.map((note) => (
                       <div key={note.id} className="masonry-item">
-                        <NoteCard note={note} />
+                        <NoteCard note={note} onEdit={setEditingNote} />
                       </div>
                     ))}
                   </div>
@@ -158,11 +160,9 @@ export function SearchResultsPage() {
               {showInspiration && results.boards.length > 0 && (
                 <section className="flex flex-col gap-4">
                   <h2 className="eyebrow text-text-tertiary">Inspiration</h2>
-                  <div className="masonry3">
+                  <div className="board-grid">
                     {results.boards.map((board) => (
-                      <div key={board.id} className="masonry-item">
-                        <InspirationCard board={board} variant="full" />
-                      </div>
+                      <InspirationCard key={board.id} board={board} variant="full" backContext={backContext} />
                     ))}
                   </div>
                 </section>
@@ -170,6 +170,17 @@ export function SearchResultsPage() {
             </div>
           )}
         </>
+      )}
+
+      {editingNote && (
+        <NoteEditorModal
+          open={editingNote !== null}
+          onOpenChange={(open) => {
+            if (!open) setEditingNote(null);
+          }}
+          note={editingNote}
+          type={editingNote.type}
+        />
       )}
     </PageShell>
   );

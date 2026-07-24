@@ -18,7 +18,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     <div
       className={cn(
         "group flex items-center gap-2 rounded-search px-3",
-        variant === "glass" ? "glass-control h-11" : "h-12 bg-cream-100 px-4",
+        variant === "glass" ? "glass-control h-11" : "h-12 bg-surface-muted px-4",
         className,
       )}
     >

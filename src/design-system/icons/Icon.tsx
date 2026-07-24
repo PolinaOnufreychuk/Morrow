@@ -24,7 +24,8 @@ export type IconName =
   | "restore"
   | "link"
   | "external-link"
-  | "upload";
+  | "upload"
+  | "calendar";
 
 const paths: Record<IconName, ReactNode> = {
   search: (
@@ -101,8 +102,11 @@ const paths: Record<IconName, ReactNode> = {
   ),
   restore: (
     <>
-      <path d="M2 8.5c0-3.6 2.9-6.5 6.5-6.5 2.4 0 4.5 1.3 5.6 3.2" />
-      <path d="M7 3.5 10 2v4" />
+      {/* Counter-clockwise "undo" arrow — a hooked arrowhead plus a ~270°
+          arc, reading unambiguously as "restore" rather than a partial
+          circle with no directional cue. */}
+      <path d="M3 4v4.4h4.4" strokeLinejoin="round" />
+      <path d="M3.6 12A6.7 6.7 0 1 0 5.7 5.3L3 8.4" />
     </>
   ),
   link: (
@@ -123,6 +127,14 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M9.5 12.5V3" />
       <path d="M5.5 7 9.5 3l4 4" />
       <path d="M3 13v2.5h13V13" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="2.5" y="4" width="14" height="12.5" rx="2.3" />
+      <path d="M2.5 8h14" />
+      <path d="M6 2.5v3" />
+      <path d="M13 2.5v3" />
     </>
   ),
 };

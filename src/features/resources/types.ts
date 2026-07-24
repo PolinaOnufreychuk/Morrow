@@ -17,7 +17,7 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : n
 
 export type CreateResourceInput = DistributiveOmit<
   Resource,
-  "id" | "isArchived" | "createdAt" | "updatedAt"
+  "id" | "isArchived" | "archivedAt" | "createdAt" | "updatedAt"
 >;
 
 export type UpdateResourceInput = Partial<Resource> & { id: string };

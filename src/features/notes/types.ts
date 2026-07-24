@@ -11,7 +11,7 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : n
 
 export type CreateNoteInput = DistributiveOmit<
   Note,
-  "id" | "isArchived" | "createdAt" | "updatedAt"
+  "id" | "isArchived" | "archivedAt" | "createdAt" | "updatedAt"
 >;
 
 export type UpdateNoteInput = Partial<Note> & { id: string };

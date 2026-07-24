@@ -20,7 +20,10 @@ export const boardInputSchema = z.object({
   ),
   tags: z.array(boardTagSchema).max(20, "Too many tags"),
   notes: z.preprocess(emptyToNull, z.string().trim().max(4000, "Notes are too long").nullable()),
-  projectId: z.string().nullable(),
+  /** Optional single project to link at creation (e.g. the project's own
+   * "+ Add board" quick-create). Further links/unlinks after that go through
+   * the dedicated linkBoardToProject/unlinkBoardFromProject calls. */
+  projectId: z.string().nullable().optional(),
 });
 
 export const createBoardSchema = boardInputSchema;
