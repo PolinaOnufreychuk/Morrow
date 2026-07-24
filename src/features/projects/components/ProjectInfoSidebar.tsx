@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
 import { formatDate, formatRelativeUpdated } from "@/lib/format";
 import { useUpdateProject } from "../hooks/useProjects";
@@ -30,8 +31,10 @@ export function ProjectInfoSidebar({ project }: ProjectInfoSidebarProps) {
   const updateProject = useUpdateProject();
 
   return (
-    <aside className="sticky top-8 flex w-full flex-col gap-5 rounded-card border border-border-subtle bg-surface-card/60 p-5">
-      <span className="eyebrow text-text-tertiary">Project info</span>
+    <aside className="sticky top-8 flex w-full flex-col gap-5 rounded-card border border-border-subtle bg-cream-50 p-5">
+      <Badge variant="outline" className="w-fit">
+        Project info
+      </Badge>
 
       <Field label="Status">
         <PropertyDropdown
@@ -56,13 +59,11 @@ export function ProjectInfoSidebar({ project }: ProjectInfoSidebarProps) {
       />
 
       <Field label="Created">
-        <span className="text-[14px] text-text-secondary">{formatDate(project.createdAt)}</span>
+        <ReadOnlyChip>{formatDate(project.createdAt)}</ReadOnlyChip>
       </Field>
 
       <Field label="Last updated">
-        <span className="text-[14px] text-text-secondary">
-          Updated {formatRelativeUpdated(project.updatedAt).toLowerCase()}
-        </span>
+        <ReadOnlyChip>Updated {formatRelativeUpdated(project.updatedAt).toLowerCase()}</ReadOnlyChip>
       </Field>
     </aside>
   );
@@ -74,5 +75,15 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <span className="eyebrow text-text-tertiary">{label}</span>
       {children}
     </div>
+  );
+}
+
+/** Matches the filled look of PropertyDropdown/Input so read-only fields sit
+ * visually consistent with the editable Status/Category/Due date chips. */
+function ReadOnlyChip({ children }: { children: ReactNode }) {
+  return (
+    <span className="flex h-11 items-center rounded-button bg-cream-100/60 px-3.5 text-[14px] text-text-secondary">
+      {children}
+    </span>
   );
 }

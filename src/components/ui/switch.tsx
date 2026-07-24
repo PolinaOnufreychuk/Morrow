@@ -13,7 +13,7 @@ export const Switch = forwardRef<
     className={cn(
       "relative h-[22px] w-[38px] shrink-0 rounded-full bg-warm-300 transition-colors duration-fast ease-out",
       "data-[state=checked]:bg-sage-900",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}

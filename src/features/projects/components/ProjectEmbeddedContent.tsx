@@ -27,7 +27,11 @@ export interface ProjectEmbeddedContentProps {
   editMode: boolean;
 }
 
-const CARD_GRID = "grid grid-cols-2 gap-4 board:grid-cols-3";
+// auto-fit keeps cards filling the full row width — up to three per row on
+// wide screens, but never leaving a dead trailing column when fewer items
+// are linked (a fixed grid-cols-3 would otherwise shrink cards and still
+// leave empty space when there are only 1-2 items).
+const CARD_GRID = "grid grid-cols-2 gap-4 board:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]";
 
 /**
  * Project-scoped content, rendered with each module's NATIVE card component

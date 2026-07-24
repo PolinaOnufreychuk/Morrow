@@ -7,26 +7,44 @@ export interface EmptyStateProps {
   /** Primary action guiding the user to the next step (docs/CLAUDE.md UX rules). */
   action?: ReactNode;
   icon?: ReactNode;
+  /** Small wireframe illustration — see EmptyStateIllustration, unified per page's real card shape. */
+  illustration?: ReactNode;
   className?: string;
 }
 
 /** Intentional empty state — always points toward the next action. */
-export function EmptyState({ title, description, action, icon, className }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  action,
+  icon,
+  illustration,
+  className,
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-card border border-dashed border-border-default bg-surface-card/40 px-6 py-16 text-center",
+        "relative overflow-hidden rounded-card border border-dashed border-border-default/50 bg-cream-100/50 px-6 py-20 text-center sm:py-24",
         className,
       )}
     >
-      {icon && <div className="text-text-tertiary">{icon}</div>}
-      <div className="flex flex-col gap-1">
-        <h3 className="text-[16px] font-medium text-text-primary">{title}</h3>
-        {description && (
-          <p className="mx-auto max-w-sm text-[13px] text-text-secondary">{description}</p>
-        )}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_65%_15%,rgba(143,169,135,0.05),transparent_60%)]"
+      />
+      <div className="relative flex flex-col items-center">
+        {illustration}
+        {icon && <div className="mt-8 text-text-tertiary">{icon}</div>}
+        <div className={cn("flex flex-col gap-1.5", illustration || icon ? "mt-8" : undefined)}>
+          <h3 className="font-body text-[14px] text-text-tertiary">{title}</h3>
+          {description && (
+            <p className="mx-auto max-w-[280px] text-[13px] leading-relaxed text-text-tertiary">
+              {description}
+            </p>
+          )}
+        </div>
+        {action && <div className="mt-5">{action}</div>}
       </div>
-      {action}
     </div>
   );
 }

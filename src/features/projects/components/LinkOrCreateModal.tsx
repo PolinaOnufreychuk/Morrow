@@ -83,7 +83,7 @@ export function LinkOrCreateModal<T extends { id: string; title: string; project
                 filtered.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between gap-3 rounded-chip border border-border-subtle px-3 py-2.5"
+                    className="flex items-center justify-between gap-3 rounded-chip border border-border-subtle px-4 py-3"
                   >
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="truncate text-[14px] font-medium text-text-primary">

@@ -92,7 +92,14 @@ export function DashboardPage() {
       </header>
 
       {/* Latest — four bespoke cards, straight from hero to content */}
-      <LatestRow onPreviewNote={setPreviewNote} onPreviewResource={setPreviewResource} />
+      <LatestRow
+        onPreviewNote={setPreviewNote}
+        onPreviewResource={setPreviewResource}
+        onCreateProject={() => setCreateProjectOpen(true)}
+        onCreateBoard={() => setCreateBoardOpen(true)}
+        onCreateNote={() => setNotePickerOpen(true)}
+        onCreateResource={() => setCreateResourceOpen(true)}
+      />
 
       {/* Quick-action creation modals */}
       <ProjectCreateModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />

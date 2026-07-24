@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useUpdateProject } from "./useProjects";
-import type { ExternalLink, Project, ProjectAttachment } from "@/types/entities";
+import type { ExternalLink, Project } from "@/types/entities";
 
 export interface ProjectDraft {
   title: string;
   description: string | null;
   coverImageUrl: string | null;
   externalLinks: ExternalLink[];
-  attachments: ProjectAttachment[];
   notes: string | null;
 }
 
@@ -17,7 +16,6 @@ function toDraft(project: Project): ProjectDraft {
     description: project.description,
     coverImageUrl: project.coverImageUrl,
     externalLinks: project.externalLinks,
-    attachments: project.attachments,
     notes: project.notes,
   };
 }
@@ -27,6 +25,9 @@ function toDraft(project: Project): ProjectDraft {
  * staged in `draft` — linking/unlinking/creating boards, notes, and resources
  * happens as immediate mutations independent of Cancel/Save (confirmed
  * decision: undoing a just-created entity on Cancel would be surprising).
+ * Attachments are the same: their own table with their own `created_at`, so
+ * uploads/removals persist immediately via `AttachmentsSection` regardless
+ * of whether this draft is saved or cancelled.
  * Status/Category/Due date live entirely in `ProjectInfoSidebar` now — they
  * save immediately and are never part of this staged draft.
  */
@@ -56,7 +57,6 @@ export function useProjectEditState(project: Project) {
       description: draft.description,
       coverImageUrl: draft.coverImageUrl,
       externalLinks: draft.externalLinks,
-      attachments: draft.attachments,
       notes: draft.notes,
     });
     setIsEditing(false);

@@ -58,7 +58,7 @@ export function NoteTypePickerModal({ open, onOpenChange, onSelectType }: NoteTy
               type="button"
               onClick={() => setSelected(type)}
               className={cn(
-                "flex items-center gap-3 rounded-card border border-border-subtle bg-surface-card/60 p-3 text-left transition-all duration-fast ease-out",
+                "flex items-center gap-3 rounded-card border border-border-subtle bg-surface-card/60 p-4 text-left transition-all duration-fast ease-out",
                 "hover:-translate-y-px hover:border-sage-300 hover:shadow-resting focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 active && "border-sage-300 shadow-resting",
               )}

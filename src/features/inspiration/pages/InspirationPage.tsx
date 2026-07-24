@@ -4,20 +4,22 @@ import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { notify } from "@/components/shared/Toast";
 import { Icon } from "@/design-system/icons/Icon";
 import { PinnableItem } from "@/components/shared/PinnableItem";
 import { usePinned } from "@/context/PinnedContext";
-import { useBoards } from "../hooks/useInspiration";
+import { useBoards, useDeleteBoard } from "../hooks/useInspiration";
 import { InspirationCard } from "../components/InspirationCard";
-import { InspirationFilterPopover } from "../components/InspirationFilterPopover";
+import { EntityFilterPopover, type EntityFilterOption } from "@/components/shared/EntityFilterPopover";
 import { BoardCreateModal } from "../components/BoardCreateModal";
 import { BoardEditModal } from "../components/BoardEditModal";
 import type { InspirationBoard } from "@/types/entities";
 import type { InspirationSort } from "../types";
 
-const CATEGORY_OPTIONS = [
+const CATEGORY_OPTIONS: EntityFilterOption[] = [
   { value: "all", label: "All" },
   { value: "Color", label: "Color" },
   { value: "UI patterns", label: "UI patterns" },
@@ -26,7 +28,7 @@ const CATEGORY_OPTIONS = [
   { value: "UX patterns", label: "UX patterns" },
 ];
 
-const SORT_OPTIONS: { value: InspirationSort; label: string }[] = [
+const SORT_OPTIONS: EntityFilterOption[] = [
   { value: "recent", label: "Recently updated" },
   { value: "created", label: "Recently added" },
   { value: "title", label: "Alphabetical" },
@@ -34,6 +36,7 @@ const SORT_OPTIONS: { value: InspirationSort; label: string }[] = [
 
 export function InspirationPage() {
   const { data: boards = [] } = useBoards();
+  const deleteBoard = useDeleteBoard();
   const { pin } = usePinned();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -63,8 +66,7 @@ export function InspirationPage() {
     <PageShell>
       <PageHeader
         title="Inspiration"
-        titleClassName="text-[42px]"
-        className="!items-center"
+        titleClassName="mt-3 text-[44px]"
         actions={
           <Button onClick={() => setCreateOpen(true)}>
             <Icon name="plus" size={17} />
@@ -81,25 +83,39 @@ export function InspirationPage() {
           variant="flat"
           className="flex-1"
         />
-        <InspirationFilterPopover
-          categories={CATEGORY_OPTIONS}
-          category={category}
-          onCategoryChange={setCategory}
-          sortOptions={SORT_OPTIONS}
-          sort={sort}
-          onSortChange={setSort}
+        <EntityFilterPopover
+          isActive={category !== "all" || sort !== "recent"}
           onClear={() => {
             setCategory("all");
             setSort("recent");
           }}
+          sections={[
+            {
+              eyebrow: "Category",
+              options: CATEGORY_OPTIONS,
+              selected: category,
+              onChange: setCategory,
+            },
+            {
+              eyebrow: "Sort by",
+              options: SORT_OPTIONS,
+              selected: sort,
+              onChange: (value) => setSort(value as InspirationSort),
+            },
+          ]}
         />
       </div>
 
       {boards.length === 0 ? (
         <EmptyState
-          title="No boards yet"
-          description="Create a board to start collecting visual references."
-          action={<Button onClick={() => setCreateOpen(true)}>New Collection</Button>}
+          title="How about starting a collection right now?"
+          action={
+            <Button onClick={() => setCreateOpen(true)}>
+              <Icon name="plus" size={16} />
+              New Collection
+            </Button>
+          }
+          illustration={<EmptyStateIllustration variant="inspiration" />}
         />
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query} />
@@ -142,7 +158,13 @@ export function InspirationPage() {
         confirmLabel="Delete board"
         destructive
         onConfirm={() => {
-          // TODO: wire to a delete-board mutation (not yet in useInspiration.ts)
+          if (!pendingDelete) return;
+          const target = pendingDelete;
+          deleteBoard.mutate(target.id, {
+            onSuccess: () => notify.success(`"${target.title}" deleted`),
+            onError: () => notify.error("Couldn't delete this board."),
+          });
+          setPendingDelete(null);
         }}
       />
     </PageShell>

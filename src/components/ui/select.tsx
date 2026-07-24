@@ -15,8 +15,8 @@ export const SelectTrigger = forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between gap-2 rounded-button border border-border-default bg-surface-card px-3 text-[14px] font-body text-text-primary",
-      "focus:outline-none focus:ring-2 focus:ring-ring",
+      "flex h-11 w-full items-center justify-between gap-2 rounded-button border border-transparent bg-cream-100/60 px-3.5 text-[14px] font-body text-text-primary transition-shadow duration-fast ease-out",
+      "focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
@@ -45,7 +45,7 @@ export const SelectContent = forwardRef<
       )}
       {...props}
     >
-      <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+      <SelectPrimitive.Viewport className="p-1.5">{children}</SelectPrimitive.Viewport>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ));
@@ -58,13 +58,16 @@ export const SelectItem = forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-chip px-2 py-1.5 text-[14px] font-body text-text-primary outline-none",
+      "relative flex cursor-pointer select-none items-center justify-between gap-2 rounded-chip px-3 py-2 text-[14px] font-body text-text-primary outline-none transition-colors duration-fast",
       "focus:bg-cream-100 data-[state=checked]:bg-sage-100 data-[state=checked]:text-sage-900",
       className,
     )}
     {...props}
   >
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    <SelectPrimitive.ItemIndicator>
+      <Icon name="check" size={14} className="shrink-0" />
+    </SelectPrimitive.ItemIndicator>
   </SelectPrimitive.Item>
 ));
 SelectItem.displayName = "SelectItem";

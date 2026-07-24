@@ -30,6 +30,7 @@ export function ExternalLinksField({ value, onChange, id }: ExternalLinksFieldPr
       {value.map((link, index) => (
         <div key={index} className="flex items-center gap-2">
           <Input
+            size="sm"
             value={link.label}
             onChange={(event) => updateAt(index, { label: event.target.value })}
             placeholder="Label (e.g. Figma)"
@@ -37,6 +38,7 @@ export function ExternalLinksField({ value, onChange, id }: ExternalLinksFieldPr
             className="w-[140px] shrink-0"
           />
           <Input
+            size="sm"
             value={link.url}
             onChange={(event) => updateAt(index, { url: event.target.value })}
             placeholder="https://…"

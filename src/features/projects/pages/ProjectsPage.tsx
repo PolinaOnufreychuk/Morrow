@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -91,7 +92,7 @@ export function ProjectsPage() {
     <PageShell>
       <PageHeader
         title="Projects"
-        titleClassName="mt-2 text-[44px]"
+        titleClassName="mt-3 text-[44px]"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={toggleEditMode} disabled={projects.length === 0}>
@@ -134,9 +135,14 @@ export function ProjectsPage() {
         </div>
       ) : projects.length === 0 ? (
         <EmptyState
-          title="No projects yet"
-          description="Create your first project to start organizing your work."
-          action={<Button onClick={() => setCreateOpen(true)}>New project</Button>}
+          title="How about creating a project right now?"
+          action={
+            <Button onClick={() => setCreateOpen(true)}>
+              <Icon name="plus" size={16} />
+              New project
+            </Button>
+          }
+          illustration={<EmptyStateIllustration variant="project" />}
         />
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query || statusFilter} />

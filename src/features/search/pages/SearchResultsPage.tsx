@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SearchModuleFilterPopover } from "../components/SearchModuleFilterPopover";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { Icon } from "@/design-system/icons/Icon";
 import { searchWorkspace } from "@/lib/search";
@@ -104,8 +105,8 @@ export function SearchResultsPage() {
 
       {!query ? (
         <EmptyState
-          title="Search your workspace"
-          description="Type something into the search bar on the Dashboard to find projects, inspiration, notes, and resources."
+          title="Start typing to search your workspace."
+          illustration={<EmptyStateIllustration variant="search" />}
         />
       ) : (
         <>

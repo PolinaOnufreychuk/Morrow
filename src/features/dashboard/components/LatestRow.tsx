@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { sortByRecency } from "@/lib/utils";
 import { formatRelativeUpdated } from "@/lib/format";
 import { TypeChip } from "@/components/shared/TypeChip";
+import { AddDashedTile } from "@/components/shared/AddDashedTile";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { GithubMark } from "@/design-system/icons/GithubMark";
 import { useBoardReferences, useBoards } from "@/features/inspiration/hooks/useInspiration";
@@ -10,7 +11,6 @@ import { useNotes } from "@/features/notes/hooks/useNotes";
 import { useResources } from "@/features/resources/hooks/useResources";
 import type { ChecklistNote, RepoResource, Resource } from "@/types/entities";
 import projectCoverFallback from "@/assets/petal-macro-1.png";
-import inspirationCoverFallback from "@/assets/lotus-petals-1.png";
 
 /**
  * The "Latest" row — exactly four bespoke 320px cards (Project, Note,
@@ -45,7 +45,7 @@ function PreviewShell({
   return (
     <div
       onClick={onClick}
-      className={`group flex h-[320px] cursor-pointer flex-col overflow-hidden rounded-[20px] transition-[transform,box-shadow] duration-[400ms] ease-out hover:-translate-y-[3px] hover:!shadow-[inset_0_1px_0_rgba(255,255,255,.6),0_26px_56px_-18px_hsl(30_25%_20%_/_.2)] ${className ?? ""}`}
+      className={`group flex h-[296px] cursor-pointer flex-col overflow-hidden rounded-[20px] transition-[transform,box-shadow] duration-[400ms] ease-out hover:-translate-y-[3px] hover:!shadow-[inset_0_1px_0_rgba(255,255,255,.6),0_26px_56px_-18px_hsl(30_25%_20%_/_.2)] ${className ?? ""}`}
       style={{ ...GLASS_SHELL_STYLE, ...style }}
     >
       {children}
@@ -56,9 +56,20 @@ function PreviewShell({
 export interface LatestRowProps {
   onPreviewNote: (note: ChecklistNote) => void;
   onPreviewResource: (resource: Resource) => void;
+  onCreateProject: () => void;
+  onCreateBoard: () => void;
+  onCreateNote: () => void;
+  onCreateResource: () => void;
 }
 
-export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) {
+export function LatestRow({
+  onPreviewNote,
+  onPreviewResource,
+  onCreateProject,
+  onCreateBoard,
+  onCreateNote,
+  onCreateResource,
+}: LatestRowProps) {
   const navigate = useNavigate();
 
   const { data: projects = [] } = useProjects();
@@ -74,14 +85,23 @@ export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) 
   const latestResource = sortByRecency(resources)[0];
 
   const { data: boardReferences = [] } = useBoardReferences(latestBoard?.id ?? "");
+  const collageImages = (
+    boardReferences.length > 0
+      ? boardReferences.map((reference) => reference.imageUrl)
+      : latestBoard?.coverImageUrl
+        ? [latestBoard.coverImageUrl]
+        : []
+  ).slice(0, 3);
+  const [primaryImage, topRightImage, bottomRightImage] = collageImages;
 
   return (
     // Per the hi-fi source: exactly 4 cards, one row, never wraps/crushes —
     // horizontal scroll below the 960px floor rather than collapsing columns.
-    <div className="mt-10 overflow-x-auto">
-      <div className="grid min-w-[960px] grid-cols-4 items-start gap-4">
+    <div className="mt-14">
+      <div className="-mx-2 -my-8 overflow-x-auto px-2 py-8">
+        <div className="grid min-w-[960px] grid-cols-4 items-start gap-4">
         {/* Project */}
-        {latestProject && (
+        {latestProject ? (
           <PreviewShell onClick={() => navigate(`/projects/${latestProject.id}`)} className="gap-2 p-4">
             <div className="flex items-center justify-between px-px">
               <TypeChip label="Project" bg="#FEFFFEE6" />
@@ -104,10 +124,22 @@ export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) 
               style={{ backgroundImage: `url(${latestProject.coverImageUrl ?? projectCoverFallback})` }}
             />
           </PreviewShell>
+        ) : (
+          <PreviewShell className="gap-2 p-4">
+            <div className="flex items-center px-px">
+              <TypeChip label="Project" bg="#FEFFFEE6" />
+            </div>
+            <span className="mt-1.5 px-px text-[13px] text-text-secondary">No projects yet</span>
+            <AddDashedTile
+              label="New project"
+              onClick={onCreateProject}
+              className="mt-1 min-h-0 flex-1"
+            />
+          </PreviewShell>
         )}
 
         {/* Note — latest checklist */}
-        {latestChecklistNote && (
+        {latestChecklistNote ? (
           <PreviewShell
             onClick={() => onPreviewNote(latestChecklistNote)}
             className="gap-[9px] px-[18px] py-4"
@@ -137,22 +169,62 @@ export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) 
               {latestChecklistNote.items.length} done
             </span>
           </PreviewShell>
+        ) : (
+          <PreviewShell
+            className="gap-[9px] px-[18px] py-4"
+            style={{
+              background: "linear-gradient(168deg,rgba(255,252,243,.78),rgba(255,255,255,.5))",
+            }}
+          >
+            <div className="flex items-center">
+              <TypeChip label="Note" bg="#FEFFFEE6" />
+            </div>
+            <span className="mt-1 text-[13px] text-text-secondary">No notes yet</span>
+            <AddDashedTile label="New note" onClick={onCreateNote} className="mt-1 min-h-0 flex-1" />
+          </PreviewShell>
         )}
 
         {/* Inspiration — fanned stack */}
-        {latestBoard && (
+        {latestBoard ? (
           <PreviewShell onClick={() => navigate(`/inspiration/${latestBoard.id}`)} className="p-4">
             <div className="flex items-center justify-between">
               <TypeChip label="Inspiration" bg="#F3F6F0FA" />
               <span className="text-[11.5px] text-text-tertiary">{boardReferences.length} items</span>
             </div>
             <div className="relative mb-[13px] mt-3 flex-1">
-              <div className="absolute inset-x-[10px] bottom-1 top-[14px] rotate-[3.5deg] rounded-[14px] bg-white/80 shadow-[0_8px_20px_-12px_hsl(30_25%_20%_/_.25)]" />
-              <div className="absolute inset-x-[5px] bottom-px top-2 -rotate-2 rounded-[14px] bg-white/95 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.2)]" />
-              <div
-                className="absolute inset-0 top-px rounded-[14px] bg-cover bg-center shadow-[0_10px_24px_-12px_hsl(30_25%_20%_/_.3)]"
-                style={{ backgroundImage: `url(${latestBoard.coverImageUrl ?? inspirationCoverFallback})` }}
-              />
+              <div className="absolute inset-x-[5px] bottom-px top-2 -rotate-2 rounded-[14px] border border-white/70 bg-cream-50 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.2)]" />
+              <div className="absolute inset-0 top-px grid grid-cols-[1.6fr_1fr] grid-rows-2 gap-1.5 overflow-hidden rounded-[14px] bg-surface-card p-1.5 shadow-[0_10px_24px_-12px_hsl(30_25%_20%_/_.3)]">
+                {primaryImage ? (
+                  <img
+                    src={primaryImage}
+                    alt=""
+                    draggable={false}
+                    className="col-span-1 row-span-2 h-full w-full rounded-[10px] object-cover"
+                  />
+                ) : (
+                  <div className="col-span-1 row-span-2 rounded-[10px] bg-sage-100" />
+                )}
+                {topRightImage ? (
+                  <img
+                    src={topRightImage}
+                    alt=""
+                    draggable={false}
+                    className="h-full w-full rounded-[10px] object-cover"
+                  />
+                ) : (
+                  <div className="rounded-[10px] bg-sage-100" />
+                )}
+                {bottomRightImage ? (
+                  <img
+                    src={bottomRightImage}
+                    alt=""
+                    draggable={false}
+                    className="h-full w-full rounded-[10px] object-cover"
+                  />
+                ) : (
+                  <div className="rounded-[10px] bg-sage-100" />
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-1.5 px-1.5 pb-1.5 pt-0.5">
               <span className="text-[16.5px] font-medium leading-[1.3] text-text-primary">
@@ -163,10 +235,22 @@ export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) 
               </span>
             </div>
           </PreviewShell>
+        ) : (
+          <PreviewShell className="gap-2 p-4">
+            <div className="flex items-center">
+              <TypeChip label="Inspiration" bg="#F3F6F0FA" />
+            </div>
+            <span className="mt-1.5 text-[13px] text-text-secondary">No boards yet</span>
+            <AddDashedTile
+              label="New Collection"
+              onClick={onCreateBoard}
+              className="mt-1 min-h-0 flex-1"
+            />
+          </PreviewShell>
         )}
 
         {/* Resource — GitHub repo preview, or a generic fallback for other kinds */}
-        {latestResource && (
+        {latestResource ? (
           <PreviewShell
             onClick={() => onPreviewResource(latestResource)}
             className="gap-[11px] px-4 py-[14px]"
@@ -218,7 +302,20 @@ export function LatestRow({ onPreviewNote, onPreviewResource }: LatestRowProps) 
               )}
             </div>
           </PreviewShell>
+        ) : (
+          <PreviewShell className="gap-[11px] px-4 py-[14px]">
+            <div className="flex items-center">
+              <TypeChip label="Resource" bg="#EEF1EA" />
+            </div>
+            <span className="mt-1 text-[13px] text-text-secondary">No resources yet</span>
+            <AddDashedTile
+              label="New resource"
+              onClick={onCreateResource}
+              className="mt-1 min-h-0 flex-1"
+            />
+          </PreviewShell>
         )}
+        </div>
       </div>
     </div>
   );

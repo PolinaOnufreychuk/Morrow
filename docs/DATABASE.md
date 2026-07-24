@@ -11,6 +11,7 @@ Postgres via Supabase, used for data + Storage only — **no Supabase Auth**. Th
 - `description` (text, nullable)
 - `status` (text)
 - `deadline` (date, nullable) — manual field, no calendar UI
+- `category` (text, nullable) — single classification value, fixed vocabulary (see `PROJECT_CATEGORY_OPTIONS`), distinct from free-form `tags`
 - `tags` (text[], default `{}`)
 - `external_links` (jsonb, array of `{ label: text, url: text }` — e.g. Figma, GitHub, Demo)
 - `notes` (text, nullable)
@@ -64,9 +65,10 @@ Typed content — see [FEATURES.md](FEATURES.md) for the 10 visual types. `type`
 - `url` (text)
 - `description` (text, nullable)
 - `tags` (text[], default `{}`)
+- `reading_minutes` (int, nullable) — used by `link`
 - `owner` (text, nullable), `repo_name` (text, nullable), `language` (text, nullable), `stars` (int, nullable) — used by `repo`
 - `thumbnail_url` (text, nullable), `duration` (text, nullable) — used by `video`
-- `filename` (text, nullable) — used by `pdf`
+- `filename` (text, nullable), `page_count` (int, nullable) — used by `pdf`
 - `preview_image_url` (text, nullable), `is_figma` (boolean, default `false`) — used by `preview`
 - `cover_image_url` (text, nullable) — used by `image`
 - `project_id` (uuid, FK → projects.id, nullable — lets a resource appear embedded on a Project Details page)
@@ -109,4 +111,12 @@ Local, per-module only — no global search or cross-table index. Use Postgres t
 
 ## Storage
 
-One Supabase Storage bucket for attachments and reference images, objects scoped by `parent_type/parent_id/filename`. Allowed MIME types: PNG, JPG, WEBP, SVG, small PDF. Enforce a max file size at the client + bucket policy level (exact limit TBD before Phase 1 attachments work). This is explicitly not a general file storage service — attachments are for supplementary context only.
+One public Supabase Storage bucket (`attachments`, see `supabase/storage.sql`) for both real `attachments` rows and "loose" cover/reference images that only ever populate a plain URL column. Max file size: 5MB, enforced both client-side (`src/lib/supabase/storage.ts`) and via the bucket's own `file_size_limit`. Allowed MIME types: PNG, JPG, WEBP, SVG, small PDF. This is explicitly not a general file storage service — attachments are for supplementary context only.
+
+Two path conventions inside the bucket:
+- Table-backed attachments (Projects + Inspiration boards): `${parent_type}/${parent_id}/${filename}`.
+- Loose cover/reference images (Project/Board cover, Inspiration references, Resource cover — not tracked in any table): `covers/${surface}/${uuid}-${filename}`.
+
+Loose cover images are never cleaned up from Storage when replaced or when their parent is deleted (no row tracks them) — an accepted tradeoff for a personal, low-volume tool. Table-backed attachments ARE cleaned up: on their own delete action, and pre-emptively when their parent project/board is deleted (no DB cascade exists for this polymorphic table).
+
+No RLS on the Postgres side, but Supabase Storage always enforces RLS on `storage.objects` regardless — see the policies in `supabase/storage.sql` granting the anon key select/insert/update/delete scoped to this one bucket.

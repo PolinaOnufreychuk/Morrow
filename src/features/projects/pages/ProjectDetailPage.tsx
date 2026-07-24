@@ -20,7 +20,7 @@ import { ProjectInfoSidebar } from "../components/ProjectInfoSidebar";
 import { ProjectSection } from "../components/ProjectSection";
 import { ProjectEmbeddedContent } from "../components/ProjectEmbeddedContent";
 import { ProjectExternalLinksSection } from "../components/ProjectExternalLinksSection";
-import { ProjectAttachmentsSection } from "../components/ProjectAttachmentsSection";
+import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { ProjectNotesTextSection } from "../components/ProjectNotesTextSection";
 
 export function ProjectDetailPage() {
@@ -46,7 +46,6 @@ export function ProjectDetailPage() {
       category: null,
       tags: [],
       externalLinks: [],
-      attachments: [],
       notes: null,
       isArchived: false,
       createdAt: "",
@@ -134,15 +133,17 @@ export function ProjectDetailPage() {
         Projects
       </Link>
 
-      <ProjectHero
-        project={project}
-        onEdit={editState.startEditing}
-        onArchive={handleArchive}
-        onDelete={() => setDeleteOpen(true)}
-        editMode={editState.isEditing}
-        coverImageUrl={editState.isEditing ? editState.draft.coverImageUrl : undefined}
-        onChangeCover={(url) => editState.patch({ coverImageUrl: url || null })}
-      />
+      <div className="mb-2">
+        <ProjectHero
+          project={project}
+          onEdit={editState.startEditing}
+          onArchive={handleArchive}
+          onDelete={() => setDeleteOpen(true)}
+          editMode={editState.isEditing}
+          coverImageUrl={editState.isEditing ? editState.draft.coverImageUrl : undefined}
+          onChangeCover={(url) => editState.patch({ coverImageUrl: url || null })}
+        />
+      </div>
 
       <div className="flex items-start justify-between gap-4">
         {editState.isEditing ? (
@@ -170,22 +171,22 @@ export function ProjectDetailPage() {
         )}
       </div>
 
-      {(editState.isEditing || project.description) && (
-        <ProjectSection eyebrow="Description" tone="solid">
-          {editState.isEditing ? (
-            <Textarea
-              value={editState.draft.description ?? ""}
-              onChange={(event) => editState.patch({ description: event.target.value })}
-              placeholder="What is this project about?"
-            />
-          ) : (
-            <p className="text-[15px] leading-relaxed text-text-secondary">{project.description}</p>
+      <div className="grid grid-cols-1 gap-5 board:grid-cols-[1fr_300px]">
+        <div className="order-2 flex flex-col gap-4 board:order-1">
+          {(editState.isEditing || project.description) && (
+            <ProjectSection eyebrow="Description" tone="solid">
+              {editState.isEditing ? (
+                <Textarea
+                  value={editState.draft.description ?? ""}
+                  onChange={(event) => editState.patch({ description: event.target.value })}
+                  placeholder="What is this project about?"
+                />
+              ) : (
+                <p className="text-[15px] leading-relaxed text-text-secondary">{project.description}</p>
+              )}
+            </ProjectSection>
           )}
-        </ProjectSection>
-      )}
 
-      <div className="grid grid-cols-1 gap-8 board:grid-cols-[1fr_300px]">
-        <div className="order-2 flex flex-col gap-6 board:order-1">
           <ProjectEmbeddedContent
             projectId={project.id}
             boards={scopedBoards}
@@ -203,10 +204,10 @@ export function ProjectDetailPage() {
             onChange={(externalLinks) => editState.patch({ externalLinks })}
           />
 
-          <ProjectAttachmentsSection
-            attachments={editState.isEditing ? editState.draft.attachments : project.attachments}
+          <AttachmentsSection
+            parentType="project"
+            parentId={project.id}
             editMode={editState.isEditing}
-            onChange={(attachments) => editState.patch({ attachments })}
           />
 
           <ProjectNotesTextSection

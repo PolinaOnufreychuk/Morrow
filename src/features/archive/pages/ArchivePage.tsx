@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -69,12 +70,8 @@ export function ArchivePage() {
   };
 
   return (
-    <PageShell narrow>
-      <PageHeader
-        title="Archive"
-        titleClassName="mt-2 text-[44px]"
-        description="Deleted projects, inspiration boards, notes and resources land here first. Restore what you need, or delete it for good — nothing is lost until you say so."
-      />
+    <PageShell>
+      <PageHeader title="Archive" titleClassName="mt-2 text-[44px]" />
 
       <div className="flex items-center gap-2">
         <SearchInput
@@ -112,8 +109,8 @@ export function ArchivePage() {
         </div>
       ) : entries.length === 0 ? (
         <EmptyState
-          title="Nothing archived"
-          description="Archived projects, boards, notes, and resources will appear here."
+          title="Nothing to review here just yet."
+          illustration={<EmptyStateIllustration variant="archive" />}
         />
       ) : filteredEntries.length === 0 ? (
         <NoSearchResultsState query={query || typeFilter} />

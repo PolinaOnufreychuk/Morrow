@@ -3,6 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
+import { ImageDropzone } from "@/components/shared/ImageDropzone";
+import { FormField } from "@/components/shared/FormField";
+import { ModalSection } from "@/components/shared/ModalSection";
+import { uploadCoverImage } from "@/lib/supabase/storage";
 import { useCreateBoard } from "../hooks/useInspiration";
 import { INSPIRATION_CATEGORY_OPTIONS as CATEGORY_OPTIONS } from "../types";
 
@@ -36,56 +40,45 @@ export function BoardQuickCreateForm({ projectId, onCreated }: BoardQuickCreateF
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="board-quick-title" className="eyebrow text-text-tertiary">
-          Title
-        </label>
-        <Input
-          id="board-quick-title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="e.g. Morning color studies"
-        />
-      </div>
+    <div className="flex flex-col gap-6">
+      <ModalSection tone="primary">
+        <FormField htmlFor="board-quick-title" label="Title">
+          <Input
+            id="board-quick-title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="e.g. Morning color studies"
+          />
+        </FormField>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="board-quick-notes" className="eyebrow text-text-tertiary">
-          Description
-        </label>
-        <Textarea
-          id="board-quick-notes"
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          placeholder="What's this collection about?"
-        />
-      </div>
+        <FormField htmlFor="board-quick-notes" label="Description" optional>
+          <Textarea
+            id="board-quick-notes"
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="What's this collection about?"
+          />
+        </FormField>
+      </ModalSection>
 
-      <PropertyDropdown
-        label="Category"
-        options={CATEGORY_SELECT_OPTIONS}
-        value={category}
-        onValueChange={setCategory}
-      />
+      <ModalSection tone="secondary">
+        <PropertyDropdown label="Category" options={CATEGORY_SELECT_OPTIONS} value={category} onValueChange={setCategory} />
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="board-quick-cover" className="eyebrow text-text-tertiary">
-          Cover image URL
-        </label>
-        <Input
-          id="board-quick-cover"
-          type="url"
-          value={coverImageUrl}
-          onChange={(event) => setCoverImageUrl(event.target.value)}
-          placeholder="https://…"
-        />
-      </div>
+        <FormField label="Cover image" optional>
+          <ImageDropzone
+            value={coverImageUrl || null}
+            onChange={(url) => setCoverImageUrl(url ?? "")}
+            onUpload={(file) => uploadCoverImage("inspiration-board", file)}
+          />
+        </FormField>
+      </ModalSection>
 
       <Button
         type="button"
+        size="lg"
+        fullWidth
         onClick={handleSubmit}
         disabled={!title.trim() || createBoard.isPending}
-        className="self-end"
       >
         Save collection
       </Button>

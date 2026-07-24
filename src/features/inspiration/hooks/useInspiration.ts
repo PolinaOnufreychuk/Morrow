@@ -1,28 +1,42 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/queryKeys";
+import { useRemoveFromListMutation } from "@/lib/api/useRemoveFromListMutation";
+import type { InspirationBoard } from "@/types/entities";
+import type { UpdateBoardInput } from "../schema";
 import {
   addReferences,
   archiveBoard,
   createBoard,
-  fetchBoardById,
-  fetchBoardReferences,
-  fetchBoards,
+  deleteBoard,
+  getBoard,
+  listArchivedBoards,
+  listBoards,
+  listReferences,
   removeReferences,
+  unarchiveBoard,
   updateBoard,
   type AddReferenceInput,
-} from "../api/inspirationApi";
+} from "../api/inspiration.service";
 
 export function useBoards() {
   return useQuery({
     queryKey: queryKeys.inspirationBoards.all(),
-    queryFn: fetchBoards,
+    queryFn: listBoards,
+  });
+}
+
+/** Backs the Archive screen's Inspiration board rows. */
+export function useArchivedBoards() {
+  return useQuery({
+    queryKey: queryKeys.archive.all(),
+    queryFn: listArchivedBoards,
   });
 }
 
 export function useBoard(id: string) {
   return useQuery({
     queryKey: queryKeys.inspirationBoards.byId(id),
-    queryFn: () => fetchBoardById(id),
+    queryFn: () => getBoard(id),
     enabled: Boolean(id),
   });
 }
@@ -30,7 +44,7 @@ export function useBoard(id: string) {
 export function useBoardReferences(boardId: string) {
   return useQuery({
     queryKey: queryKeys.inspirationBoards.references(boardId),
-    queryFn: () => fetchBoardReferences(boardId),
+    queryFn: () => listReferences(boardId),
     enabled: Boolean(boardId),
   });
 }
@@ -48,7 +62,7 @@ export function useCreateBoard() {
 export function useUpdateBoard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateBoard,
+    mutationFn: (input: UpdateBoardInput) => updateBoard(input),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.byId(variables.id) });
@@ -57,9 +71,24 @@ export function useUpdateBoard() {
 }
 
 export function useArchiveBoard() {
+  return useRemoveFromListMutation<InspirationBoard, string>(
+    queryKeys.inspirationBoards.all(),
+    (id) => archiveBoard(id),
+  );
+}
+
+export function useDeleteBoard() {
+  return useRemoveFromListMutation<InspirationBoard, string>(
+    queryKeys.inspirationBoards.all(),
+    (id) => deleteBoard(id),
+  );
+}
+
+/** Restore a board from the Archive screen — not a list-removal shape. */
+export function useUnarchiveBoard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: archiveBoard,
+    mutationFn: (id: string) => unarchiveBoard(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inspirationBoards.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.archive.all() });

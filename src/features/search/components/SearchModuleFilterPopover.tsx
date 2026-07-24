@@ -15,8 +15,8 @@ export interface SearchModuleFilterPopoverProps<T extends string> {
 }
 
 /**
- * Module filter for Search Results — same trigger/popover chrome as
- * `InspirationFilterPopover`, but a single-select module list only (no sort
+ * Module filter for Search Results — same trigger chrome as
+ * `EntityFilterPopover`, but a single-select module list only (no sort
  * section), replacing the always-visible tab strip with a tucked-away filter
  * icon to match the rest of the app's list-page pattern.
  */

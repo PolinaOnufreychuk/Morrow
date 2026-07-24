@@ -70,7 +70,7 @@
 
   .masonry3 {
     column-count: 3;
-    column-gap: 20px;
+    column-gap: 32px;
   }
   .masonry4 {
     column-count: 4;
@@ -82,6 +82,11 @@
     }
     .masonry3 {
       column-count: 2;
+    }
+  }
+  @media (max-width: 760px) {
+    .masonry3 {
+      column-count: 1;
     }
   }
   .masonry-item {

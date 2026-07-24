@@ -5,6 +5,7 @@ import { PageShell } from "@/components/shared/PageShell";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { EmptyStateIllustration } from "@/components/shared/EmptyStateIllustration";
 import { NoSearchResultsState } from "@/components/shared/NoSearchResultsState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { notify } from "@/components/shared/Toast";
@@ -12,17 +13,22 @@ import { Icon } from "@/design-system/icons/Icon";
 import { PinnableItem } from "@/components/shared/PinnableItem";
 import { usePinned } from "@/context/PinnedContext";
 import type { Note, NoteType } from "@/types/entities";
-import { useArchiveNote, useNotes } from "../hooks/useNotes";
+import { useArchiveNote, useDeleteNote, useNotes } from "../hooks/useNotes";
 import { NoteCard } from "../components/NoteCard";
 import { NoteTypePickerModal } from "../components/NoteTypePickerModal";
 import { NoteEditorModal } from "../components/NoteEditorModal";
-import { NotesFilterPopover } from "../components/NotesFilterPopover";
+import { NoteTypeIcon } from "../components/NoteTypeIcon";
+import { EntityFilterPopover, type EntityFilterOption } from "@/components/shared/EntityFilterPopover";
 import { NOTE_TYPE_META, NOTE_TYPE_ORDER } from "../noteTypeMeta";
 import type { NoteSort } from "../types";
 
-const TYPE_OPTIONS: { value: NoteType | "all"; label: string }[] = [
+const TYPE_OPTIONS: EntityFilterOption[] = [
   { value: "all", label: "All" },
-  ...NOTE_TYPE_ORDER.map((type) => ({ value: type, label: NOTE_TYPE_META[type].label })),
+  ...NOTE_TYPE_ORDER.map((type) => ({
+    value: type,
+    label: NOTE_TYPE_META[type].label,
+    icon: <NoteTypeIcon type={type} size={16} />,
+  })),
 ];
 
 const SORT_OPTIONS: { value: NoteSort; label: string }[] = [
@@ -34,6 +40,7 @@ const SORT_OPTIONS: { value: NoteSort; label: string }[] = [
 export function NotesPage() {
   const { data: notes = [] } = useNotes();
   const archiveNote = useArchiveNote();
+  const deleteNote = useDeleteNote();
   const { pin } = usePinned();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
@@ -90,7 +97,7 @@ export function NotesPage() {
     <PageShell>
       <PageHeader
         title="Notes"
-        titleClassName="text-[44px]"
+        titleClassName="mt-3 text-[44px]"
         actions={
           <Button onClick={() => setPickerOpen(true)}>
             <Icon name="plus" size={17} />
@@ -107,25 +114,39 @@ export function NotesPage() {
           variant="flat"
           className="flex-1"
         />
-        <NotesFilterPopover
-          categories={TYPE_OPTIONS}
-          category={type}
-          onCategoryChange={setType}
-          sortOptions={SORT_OPTIONS}
-          sort={sort}
-          onSortChange={setSort}
+        <EntityFilterPopover
+          isActive={type !== "all" || sort !== "recent"}
           onClear={() => {
             setType("all");
             setSort("recent");
           }}
+          sections={[
+            {
+              eyebrow: "Note type",
+              options: TYPE_OPTIONS,
+              selected: type,
+              onChange: (value) => setType(value as NoteType | "all"),
+            },
+            {
+              eyebrow: "Sort by",
+              options: SORT_OPTIONS,
+              selected: sort,
+              onChange: (value) => setSort(value as NoteSort),
+            },
+          ]}
         />
       </div>
 
       {notes.length === 0 ? (
         <EmptyState
-          title="No notes yet"
-          description="Capture a thought, a checklist, or a snippet of code."
-          action={<Button onClick={() => setPickerOpen(true)}>New note</Button>}
+          title="How about capturing a thought right now?"
+          action={
+            <Button onClick={() => setPickerOpen(true)}>
+              <Icon name="plus" size={16} />
+              New note
+            </Button>
+          }
+          illustration={<EmptyStateIllustration variant="note" />}
         />
       ) : filtered.length === 0 ? (
         <NoSearchResultsState query={query} />
@@ -180,7 +201,13 @@ export function NotesPage() {
         confirmLabel="Delete note"
         destructive
         onConfirm={() => {
-          // TODO: wire to useDeleteNote()
+          if (!pendingDelete) return;
+          const target = pendingDelete;
+          deleteNote.mutate(target.id, {
+            onSuccess: () => notify.success(`"${target.title}" deleted`),
+            onError: () => notify.error("Couldn't delete this note."),
+          });
+          setPendingDelete(null);
         }}
       />
     </PageShell>

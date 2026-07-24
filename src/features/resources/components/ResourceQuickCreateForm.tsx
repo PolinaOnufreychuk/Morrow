@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/shared/FormField";
+import { ModalSection } from "@/components/shared/ModalSection";
 import { useCreateResource } from "../hooks/useResources";
 
 export interface ResourceQuickCreateFormProps {
@@ -37,49 +39,43 @@ export function ResourceQuickCreateForm({ projectId, onCreated }: ResourceQuickC
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="resource-quick-title" className="eyebrow text-text-tertiary">
-          Title
-        </label>
-        <Input
-          id="resource-quick-title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="Resource title"
-        />
-      </div>
+    <div className="flex flex-col gap-6">
+      <ModalSection tone="primary">
+        <FormField htmlFor="resource-quick-title" label="Title">
+          <Input
+            id="resource-quick-title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Resource title"
+          />
+        </FormField>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="resource-quick-url" className="eyebrow text-text-tertiary">
-          URL
-        </label>
-        <Input
-          id="resource-quick-url"
-          type="url"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          placeholder="https://…"
-        />
-      </div>
+        <FormField htmlFor="resource-quick-url" label="URL">
+          <Input
+            id="resource-quick-url"
+            type="url"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            placeholder="https://…"
+          />
+        </FormField>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="resource-quick-description" className="eyebrow text-text-tertiary">
-          Description
-        </label>
-        <Textarea
-          id="resource-quick-description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="What is this resource about?"
-        />
-      </div>
+        <FormField htmlFor="resource-quick-description" label="Description" optional>
+          <Textarea
+            id="resource-quick-description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="What is this resource about?"
+          />
+        </FormField>
+      </ModalSection>
 
       <Button
         type="button"
+        size="lg"
+        fullWidth
         onClick={handleSubmit}
         disabled={!title.trim() || !url.trim() || createResource.isPending}
-        className="self-end"
       >
         Create resource
       </Button>

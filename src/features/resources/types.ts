@@ -3,7 +3,7 @@ import { CATEGORY_OPTIONS } from "@/lib/categories";
 
 export type { Resource, ResourceKind };
 
-export type ResourceSort = "recent" | "title";
+export type ResourceSort = "recent" | "created" | "title";
 
 /** Fixed category list for the Resources filter popover — matched against `resource.tags`. */
 export const RESOURCE_CATEGORY_OPTIONS = CATEGORY_OPTIONS;
@@ -21,3 +21,23 @@ export type CreateResourceInput = DistributiveOmit<
 >;
 
 export type UpdateResourceInput = Partial<Resource> & { id: string };
+
+/** A domain-level error the service layer can throw — distinct from
+ * unexpected/transport failures, so the UI can render a field-aware or
+ * user-facing message instead of a generic "something went wrong". */
+export class ResourceValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly fieldErrors: Record<string, string[]>,
+  ) {
+    super(message);
+    this.name = "ResourceValidationError";
+  }
+}
+
+export class ResourceNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Resource "${id}" was not found.`);
+    this.name = "ResourceNotFoundError";
+  }
+}

@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PropertyDropdown } from "@/components/shared/PropertyDropdown";
 import { ImageDropzone } from "@/components/shared/ImageDropzone";
+import { FormField } from "@/components/shared/FormField";
+import { ModalSection } from "@/components/shared/ModalSection";
+import { uploadCoverImage } from "@/lib/supabase/storage";
 import { INSPIRATION_CATEGORY_OPTIONS as CATEGORY_OPTIONS } from "../types";
 import type { InspirationBoard } from "@/types/entities";
 
@@ -24,9 +27,11 @@ export interface BoardFormProps {
   formId: string;
   defaultValues?: Partial<InspirationBoard>;
   onSubmit: (values: BoardFormValues) => void;
+  /** Server/mutation-level error not tied to a specific field. */
+  submitError?: string | null;
 }
 
-export function BoardForm({ formId, defaultValues, onSubmit }: BoardFormProps) {
+export function BoardForm({ formId, defaultValues, onSubmit, submitError }: BoardFormProps) {
   const { register, handleSubmit, setValue, watch, formState } = useForm<BoardFormValues>({
     resolver: zodResolver(boardFormSchema),
     defaultValues: {
@@ -40,45 +45,49 @@ export function BoardForm({ formId, defaultValues, onSubmit }: BoardFormProps) {
   const category = watch("category");
 
   return (
-    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${formId}-title`} className="eyebrow text-text-tertiary">
-          Title
-        </label>
-        <Input
-          id={`${formId}-title`}
-          placeholder="e.g. Morning color studies"
-          autoFocus
-          {...register("title")}
+    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      {submitError && (
+        <p role="alert" className="rounded-chip bg-blush-100 px-3 py-2 text-[13px] text-blush-600">
+          {submitError}
+        </p>
+      )}
+
+      <ModalSection tone="primary">
+        <FormField
+          htmlFor={`${formId}-title`}
+          label="Title"
+          error={formState.errors.title?.message}
+        >
+          <Input
+            id={`${formId}-title`}
+            placeholder="e.g. Morning color studies"
+            autoFocus
+            {...register("title")}
+          />
+        </FormField>
+
+        <FormField htmlFor={`${formId}-notes`} label="Description" optional>
+          <Textarea id={`${formId}-notes`} placeholder="What's this collection about?" {...register("notes")} />
+        </FormField>
+      </ModalSection>
+
+      <ModalSection tone="secondary">
+        <PropertyDropdown
+          label="Category"
+          options={CATEGORY_SELECT_OPTIONS}
+          value={category}
+          onValueChange={(value) => setValue("category", value, { shouldDirty: true })}
         />
-        {formState.errors.title && (
-          <p className="text-[12px] text-blush-600">{formState.errors.title.message}</p>
-        )}
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${formId}-notes`} className="eyebrow text-text-tertiary">
-          Description
-        </label>
-        <Textarea id={`${formId}-notes`} placeholder="What's this collection about?" {...register("notes")} />
-      </div>
-
-      <PropertyDropdown
-        label="Category"
-        options={CATEGORY_SELECT_OPTIONS}
-        value={category}
-        onValueChange={(value) => setValue("category", value, { shouldDirty: true })}
-        triggerClassName="h-10"
-      />
-
-      <div className="flex flex-col gap-1.5">
-        <span className="eyebrow text-text-tertiary">Cover image</span>
-        <ImageDropzone
-          value={watch("coverImageUrl") || null}
-          onChange={(url) => setValue("coverImageUrl", url ?? "", { shouldDirty: true })}
-          label="Drop images, or click to upload"
-        />
-      </div>
+        <FormField label="Cover image" optional>
+          <ImageDropzone
+            value={watch("coverImageUrl") || null}
+            onChange={(url) => setValue("coverImageUrl", url ?? "", { shouldDirty: true })}
+            onUpload={(file) => uploadCoverImage("inspiration-board", file)}
+            label="Drop a cover image, or click to browse"
+          />
+        </FormField>
+      </ModalSection>
     </form>
   );
 }

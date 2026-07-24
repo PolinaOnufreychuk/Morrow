@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@/design-system/icons/Icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
   useAddReferences,
   useBoard,
   useBoardReferences,
+  useDeleteBoard,
   useRemoveReferences,
 } from "../hooks/useInspiration";
 import { useBoardEditState } from "../hooks/useBoardEditState";
@@ -59,6 +60,8 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
 
   const addReferences = useAddReferences(boardId);
   const removeReferences = useRemoveReferences(boardId);
+  const deleteBoard = useDeleteBoard();
+  const navigate = useNavigate();
   // Hooks must run unconditionally — `board` may still be undefined here.
   const editState = useBoardEditState(board ?? EMPTY_BOARD);
 
@@ -246,9 +249,12 @@ function BoardDetailPageContent({ boardId }: { boardId: string }) {
         title="Delete board?"
         description={`"${board.title}" and all its references will be permanently removed.`}
         confirmLabel="Delete board"
+        pendingLabel="Deleting…"
         destructive
-        onConfirm={() => {
-          // TODO: wire to a delete-board mutation (not yet in useInspiration.ts)
+        onConfirm={async () => {
+          await deleteBoard.mutateAsync(board.id);
+          notify.success(`"${board.title}" deleted`);
+          navigate("/inspiration");
         }}
       />
     </PageShell>

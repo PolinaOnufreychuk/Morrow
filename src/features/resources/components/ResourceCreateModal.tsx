@@ -4,6 +4,7 @@ import { notify } from "@/components/shared/Toast";
 import { useCreateResource } from "../hooks/useResources";
 import { ResourceForm, type ResourceFormValues } from "./ResourceForm";
 import type { CreateResourceInput } from "../types";
+import glassLeafSage from "@/assets/grain-gradient-sage-blush.png";
 
 export interface ResourceCreateModalProps {
   open: boolean;
@@ -46,7 +47,7 @@ function toCreateInput(values: ResourceFormValues): CreateResourceInput {
         pageCount: null,
       };
     case "image":
-      return { ...shared, kind: "image", coverImageUrl: values.url };
+      return { ...shared, kind: "image", coverImageUrl: values.coverImageUrl || values.url };
     case "link":
     default:
       return { ...shared, kind: "link", readingMinutes: null };
@@ -71,8 +72,10 @@ export function ResourceCreateModal({ open, onOpenChange }: ResourceCreateModalP
       open={open}
       onOpenChange={onOpenChange}
       title="New resource"
+      heroImage={glassLeafSage}
+      footerAlign="stretch"
       footer={
-        <Button type="submit" form={FORM_ID} disabled={createResource.isPending}>
+        <Button size="lg" fullWidth type="submit" form={FORM_ID} disabled={createResource.isPending}>
           Save resource
         </Button>
       }

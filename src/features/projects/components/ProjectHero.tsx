@@ -106,8 +106,8 @@ export function ProjectHero({
             />
           </div>
 
-          {/* Status + category — overlaid ON the image, bottom-left. */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+          {/* Status + category — overlaid ON the image, top-left. */}
+          <div className="absolute left-3 top-3 flex items-center gap-1.5">
             <StatusPill status={project.status} />
             {project.category && (
               <Badge variant="outline" className="bg-surface-card/80 backdrop-blur-sm">

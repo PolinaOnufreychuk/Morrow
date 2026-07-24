@@ -82,7 +82,7 @@ export function InspirationCard({
           {/* Top collage card */}
           <div
             className={cn(
-              "relative col-start-1 row-start-1 grid grid-cols-[1.6fr_1fr] grid-rows-2 gap-1.5 overflow-hidden bg-surface-card p-2 shadow-resting transition-transform duration-medium ease-out group-hover:-translate-y-0.5",
+              "relative col-start-1 row-start-1 grid grid-cols-[1.6fr_1fr] grid-rows-2 gap-1.5 overflow-hidden bg-surface-card/70 p-2 shadow-resting transition-transform duration-medium ease-out group-hover:-translate-y-0.5",
               isPinned ? "rounded-[10px]" : "rounded-card",
               isFull ? "aspect-[16/10]" : "aspect-[4/3]",
             )}

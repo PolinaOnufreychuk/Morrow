@@ -3,8 +3,6 @@ import { cn } from "@/lib/utils";
 
 export interface PageShellProps {
   children: ReactNode;
-  /** Archive uses a narrower column than the other list pages. */
-  narrow?: boolean;
   className?: string;
 }
 
@@ -13,12 +11,11 @@ export interface PageShellProps {
  * Inspiration, Notes, Resources, Archive, and their detail pages). Only the
  * Dashboard builds its own bespoke layout and skips this.
  */
-export function PageShell({ children, narrow = false, className }: PageShellProps) {
+export function PageShell({ children, className }: PageShellProps) {
   return (
     <div
       className={cn(
-        "mx-auto flex w-full flex-col gap-6 px-[clamp(24px,3.2vw,44px)] pb-24 pt-10",
-        narrow ? "max-w-[1120px]" : "max-w-[1440px]",
+        "mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-[clamp(24px,3.2vw,44px)] pb-24 pt-6",
         className,
       )}
     >

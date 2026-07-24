@@ -16,6 +16,8 @@ export interface PropertyOption<T extends string> {
 
 export interface PropertyDropdownProps<T extends string> {
   label?: string;
+  /** Renders a quiet "Optional" suffix next to the label — presentation only. */
+  optional?: boolean;
   options: PropertyOption<T>[];
   value: T;
   onValueChange: (value: T) => void;
@@ -32,6 +34,7 @@ export interface PropertyDropdownProps<T extends string> {
  */
 export function PropertyDropdown<T extends string>({
   label,
+  optional,
   options,
   value,
   onValueChange,
@@ -40,10 +43,19 @@ export function PropertyDropdown<T extends string>({
   triggerClassName,
 }: PropertyDropdownProps<T>) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      {label && <span className="eyebrow text-text-tertiary">{label}</span>}
+    <div className={cn("flex flex-col gap-2", className)}>
+      {label && (
+        <span className="text-[12.5px] font-medium normal-case tracking-normal text-text-tertiary">
+          {label}
+          {optional && (
+            <span className="ml-1.5 text-[10.5px] font-normal normal-case tracking-normal text-text-tertiary/70">
+              Optional
+            </span>
+          )}
+        </span>
+      )}
       <Select value={value} onValueChange={(v) => onValueChange(v as T)}>
-        <SelectTrigger className={cn("h-9 bg-transparent", triggerClassName)}>
+        <SelectTrigger className={triggerClassName}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

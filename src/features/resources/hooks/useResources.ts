@@ -1,25 +1,38 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/queryKeys";
+import { useRemoveFromListMutation } from "@/lib/api/useRemoveFromListMutation";
+import type { Resource } from "@/types/entities";
+import type { UpdateResourceInput } from "../types";
 import {
   archiveResource,
   createResource,
   deleteResource,
-  fetchResourceById,
-  fetchResources,
+  getResource,
+  listArchivedResources,
+  listResources,
+  unarchiveResource,
   updateResource,
-} from "../api/resourcesApi";
+} from "../api/resources.service";
 
 export function useResources() {
   return useQuery({
     queryKey: queryKeys.resources.all(),
-    queryFn: fetchResources,
+    queryFn: listResources,
+  });
+}
+
+/** Backs the Archive screen's Resource rows. */
+export function useArchivedResources() {
+  return useQuery({
+    queryKey: queryKeys.archive.all(),
+    queryFn: listArchivedResources,
   });
 }
 
 export function useResource(id: string) {
   return useQuery({
     queryKey: queryKeys.resources.byId(id),
-    queryFn: () => fetchResourceById(id),
+    queryFn: () => getResource(id),
     enabled: Boolean(id),
   });
 }
@@ -37,7 +50,7 @@ export function useCreateResource() {
 export function useUpdateResource() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateResource,
+    mutationFn: (input: UpdateResourceInput) => updateResource(input),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.resources.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.resources.byId(variables.id) });
@@ -46,22 +59,25 @@ export function useUpdateResource() {
 }
 
 export function useArchiveResource() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: archiveResource,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.resources.all() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.archive.all() });
-    },
-  });
+  return useRemoveFromListMutation<Resource, string>(queryKeys.resources.all(), (id) =>
+    archiveResource(id),
+  );
 }
 
 export function useDeleteResource() {
+  return useRemoveFromListMutation<Resource, string>(queryKeys.resources.all(), (id) =>
+    deleteResource(id),
+  );
+}
+
+/** Restore a resource from the Archive screen — not a list-removal shape. */
+export function useUnarchiveResource() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteResource,
+    mutationFn: (id: string) => unarchiveResource(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.resources.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.archive.all() });
     },
   });
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/queryKeys";
+import { useRemoveFromListMutation } from "@/lib/api/useRemoveFromListMutation";
 import type { Project } from "@/types/entities";
 import type { CreateProjectInput, UpdateProjectInput } from "../schema";
 import {
@@ -123,44 +124,28 @@ export function useUpdateProject() {
   });
 }
 
-/** Optimistically drops a set of ids from the active (non-archived) list cache. */
-function useRemoveFromListMutation<TVariables extends string | string[]>(
-  mutationFn: (variables: TVariables) => Promise<unknown>,
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn,
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.projects.all() });
-      const context = snapshotList(queryClient);
-      const ids = new Set(Array.isArray(variables) ? variables : [variables]);
-      queryClient.setQueryData<Project[]>(queryKeys.projects.all(), (old = []) =>
-        old.filter((project) => !ids.has(project.id)),
-      );
-      return context;
-    },
-    onError: (_error, _variables, context) => rollbackList(queryClient, context),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.archive.all() });
-    },
-  });
-}
-
 export function useArchiveProject() {
-  return useRemoveFromListMutation<string>((id) => archiveProject(id));
+  return useRemoveFromListMutation<Project, string>(queryKeys.projects.all(), (id) =>
+    archiveProject(id),
+  );
 }
 
 export function useDeleteProject() {
-  return useRemoveFromListMutation<string>((id) => deleteProject(id));
+  return useRemoveFromListMutation<Project, string>(queryKeys.projects.all(), (id) =>
+    deleteProject(id),
+  );
 }
 
 export function useBulkArchiveProjects() {
-  return useRemoveFromListMutation<string[]>((ids) => bulkArchiveProjects(ids));
+  return useRemoveFromListMutation<Project, string[]>(queryKeys.projects.all(), (ids) =>
+    bulkArchiveProjects(ids),
+  );
 }
 
 export function useBulkDeleteProjects() {
-  return useRemoveFromListMutation<string[]>((ids) => bulkDeleteProjects(ids));
+  return useRemoveFromListMutation<Project, string[]>(queryKeys.projects.all(), (ids) =>
+    bulkDeleteProjects(ids),
+  );
 }
 
 /** Restore a project from the Archive screen — not a list-removal shape. */

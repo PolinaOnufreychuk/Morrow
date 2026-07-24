@@ -190,11 +190,10 @@ export function Sidebar() {
           background: "rgba(247,246,243,.52)",
           backdropFilter: "blur(28px) saturate(1.25)",
           WebkitBackdropFilter: "blur(28px) saturate(1.25)",
-          // Right edge is a glass highlight (reads on the Dashboard's photo)
-          // layered with a border-subtle hairline + soft shadow (reads on the
-          // flat cream background every other page uses) — visible either way.
-          boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,.58), 1px 0 0 rgba(255,255,255,.55), 2px 0 0 rgba(36,38,33,.09), 8px 0 20px -12px hsl(30 25% 20% / .16)",
+          // A single subtle hairline on the right edge, using the app's
+          // border-subtle token — reads on both the Dashboard's photo and
+          // the flat cream background every other page uses.
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,.58), 1px 0 0 rgba(36,38,33,.09)",
         }}
       >
         {/* Brand — lockup / icon crossfade */}

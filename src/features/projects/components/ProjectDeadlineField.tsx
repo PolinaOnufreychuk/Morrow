@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/shared/FormField";
 import type { ISODateString } from "@/types/entities";
 
 export interface ProjectDeadlineFieldProps {
@@ -19,16 +20,13 @@ export function ProjectDeadlineField({
   label = "Deadline",
 }: ProjectDeadlineFieldProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="eyebrow text-text-tertiary">
-        {label}
-      </label>
+    <FormField htmlFor={id} label={label} optional>
       <Input
         id={id}
         type="date"
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value || null)}
       />
-    </div>
+    </FormField>
   );
 }

@@ -6,6 +6,7 @@ import { ProjectForm, type ProjectFormValues } from "./ProjectForm";
 import { useUpdateProject } from "../hooks/useProjects";
 import { ProjectValidationError } from "../types";
 import type { Project } from "@/types/entities";
+import heroMeadow from "@/assets/grain-gradient-sage-blush.png";
 
 export interface ProjectEditModalProps {
   open: boolean;
@@ -52,8 +53,17 @@ export function ProjectEditModal({ open, onOpenChange, project }: ProjectEditMod
         onOpenChange(next);
       }}
       title="Edit project"
+      heroImage={heroMeadow}
+      footerAlign="stretch"
       footer={
-        <Button type="submit" form={FORM_ID} disabled={updateProject.isPending} aria-busy={updateProject.isPending}>
+        <Button
+          size="lg"
+          fullWidth
+          type="submit"
+          form={FORM_ID}
+          disabled={updateProject.isPending}
+          aria-busy={updateProject.isPending}
+        >
           {updateProject.isPending ? "Saving…" : "Save changes"}
         </Button>
       }

@@ -3,6 +3,7 @@ import type { Project } from "@/types/entities";
 import { createProjectSchema, updateProjectSchema } from "../schema";
 import { ProjectValidationError } from "../types";
 import { projectsRepository } from "./projects.repository";
+import { deleteAllForParent } from "@/features/attachments/api/attachments.service";
 
 /**
  * Business layer: the ONLY thing hooks import. Validates input against the
@@ -54,7 +55,10 @@ export async function unarchiveProject(id: string): Promise<Project> {
   return projectsRepository.unarchive(id);
 }
 
+/** Cleans up the project's attachments first — the polymorphic
+ * `attachments` table has no DB-level cascade tied to `projects`. */
 export async function deleteProject(id: string): Promise<void> {
+  await deleteAllForParent("project", id);
   return projectsRepository.remove(id);
 }
 
@@ -63,5 +67,6 @@ export async function bulkArchiveProjects(ids: string[]): Promise<Project[]> {
 }
 
 export async function bulkDeleteProjects(ids: string[]): Promise<void> {
+  await Promise.all(ids.map((id) => deleteAllForParent("project", id)));
   return projectsRepository.bulkRemove(ids);
 }

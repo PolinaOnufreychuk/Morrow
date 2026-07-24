@@ -47,18 +47,18 @@ export function TagInput({
   };
 
   return (
-    <div className="glass-control flex flex-wrap items-center gap-1.5 rounded-button px-2.5 py-2">
+    <div className="flex min-h-11 flex-wrap items-center gap-1.5 rounded-button border border-transparent bg-cream-100/60 px-3 py-2.5 transition-shadow duration-fast ease-out focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-ring">
       {value.map((tag) => (
         <span
           key={tag}
-          className="inline-flex items-center gap-1 rounded-chip bg-sage-100 px-2 py-1 text-[12px] font-medium text-sage-900"
+          className="inline-flex items-center gap-1 rounded-chip bg-sage-100 px-2.5 py-1.5 text-[12.5px] font-medium text-sage-900"
         >
           {tag}
           <button
             type="button"
             onClick={() => removeTag(tag)}
             aria-label={`Remove tag ${tag}`}
-            className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-sage-700 transition-colors duration-fast ease-out hover:bg-sage-200 hover:text-sage-900"
+            className="flex h-4 w-4 items-center justify-center rounded-chip text-sage-700 transition-colors duration-fast ease-out hover:bg-sage-200 hover:text-sage-900"
           >
             <Icon name="close" size={9} />
           </button>

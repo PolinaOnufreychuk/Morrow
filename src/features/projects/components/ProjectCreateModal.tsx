@@ -5,6 +5,7 @@ import { notify } from "@/components/shared/Toast";
 import { ProjectForm, type ProjectFormValues } from "./ProjectForm";
 import { useCreateProject } from "../hooks/useProjects";
 import { ProjectValidationError } from "../types";
+import heroMeadow from "@/assets/grain-gradient-sage-blush.png";
 
 export interface ProjectCreateModalProps {
   open: boolean;
@@ -44,8 +45,17 @@ export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalPro
       }}
       title="New project"
       description="Create a new project workspace."
+      heroImage={heroMeadow}
+      footerAlign="stretch"
       footer={
-        <Button type="submit" form={FORM_ID} disabled={createProject.isPending} aria-busy={createProject.isPending}>
+        <Button
+          size="lg"
+          fullWidth
+          type="submit"
+          form={FORM_ID}
+          disabled={createProject.isPending}
+          aria-busy={createProject.isPending}
+        >
           {createProject.isPending ? "Creating…" : "Create project"}
         </Button>
       }

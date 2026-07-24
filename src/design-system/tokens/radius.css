@@ -3,7 +3,7 @@
  * tiny status dots and progress bars. docs/DESIGN.md § "Design Tokens".
  */
 :root {
-  --radius-card: 20px;
+  --radius-card: 16px;
   --radius-card-image: 14px;
   --radius-card-image-sidebar: 10px; /* sidebar-pinned variant */
   --radius-search: 16px;

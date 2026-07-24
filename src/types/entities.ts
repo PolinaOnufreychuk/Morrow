@@ -26,12 +26,6 @@ export interface ExternalLink {
 
 export type ProjectStatus = "in-progress" | "review" | "done";
 
-export interface ProjectAttachment {
-  id: string;
-  name: string;
-  sizeBytes: number;
-}
-
 export interface Project extends BaseEntity {
   title: string;
   coverImageUrl: string | null;
@@ -41,7 +35,6 @@ export interface Project extends BaseEntity {
   category: string | null;
   tags: string[];
   externalLinks: ExternalLink[];
-  attachments: ProjectAttachment[];
   notes: string | null;
 }
 
@@ -224,6 +217,23 @@ export type Resource =
   | PdfResource
   | PreviewResource
   | ImageResource;
+
+/* -------------------------------------------------------------------------- */
+/* Attachments — shared by Projects and Inspiration boards (see              */
+/* docs/DATABASE.md's Storage section)                                        */
+/* -------------------------------------------------------------------------- */
+
+export type AttachmentParentType = "project" | "inspiration_board";
+
+export interface Attachment {
+  id: string;
+  parentType: AttachmentParentType;
+  parentId: string;
+  storagePath: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: ISOTimestamp;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Archive                                                                     */

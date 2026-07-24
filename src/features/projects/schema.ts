@@ -59,12 +59,6 @@ export const projectTagSchema = z
   .min(1)
   .max(32, "Tags must be 32 characters or fewer");
 
-export const projectAttachmentSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().trim().min(1, "File name is required"),
-  sizeBytes: z.number().int().nonnegative(),
-});
-
 /** Shape shared by create and update — update layers `.partial()` on top. */
 export const projectInputSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(120, "Title is too long"),
@@ -81,7 +75,6 @@ export const projectInputSchema = z.object({
   category: projectCategorySchema,
   tags: z.array(projectTagSchema).max(20, "Too many tags"),
   externalLinks: z.array(externalLinkSchema).max(20, "Too many links"),
-  attachments: z.array(projectAttachmentSchema).max(20, "Too many attachments"),
   notes: z.preprocess(emptyToNull, z.string().trim().max(4000, "Notes are too long").nullable()),
 });
 

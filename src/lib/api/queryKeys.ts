@@ -1,3 +1,5 @@
+import type { AttachmentParentType } from "@/types/entities";
+
 /**
  * Centralized TanStack Query key factory — one entry per entity so
  * mutations' `invalidateQueries` calls never hand-roll key arrays.
@@ -22,5 +24,9 @@ export const queryKeys = {
   },
   archive: {
     all: () => ["archive"] as const,
+  },
+  attachments: {
+    forParent: (parentType: AttachmentParentType, parentId: string) =>
+      ["attachments", parentType, parentId] as const,
   },
 } as const;

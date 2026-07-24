@@ -1,18 +1,25 @@
-import type { ArchiveEntry, ArchiveSourceType, Project } from "@/types/entities";
-import { archiveFixtures } from "../archive.fixtures";
+import type { ArchiveEntry, ArchiveSourceType, InspirationBoard, Note, Project, Resource } from "@/types/entities";
 import {
   deleteProject,
   listArchivedProjects,
   unarchiveProject,
 } from "@/features/projects/api/projects.service";
+import {
+  deleteBoard,
+  listArchivedBoards,
+  unarchiveBoard,
+} from "@/features/inspiration/api/inspiration.service";
+import { deleteNote, listArchivedNotes, unarchiveNote } from "@/features/notes/api/notes.service";
+import {
+  deleteResource,
+  listArchivedResources,
+  unarchiveResource,
+} from "@/features/resources/api/resources.service";
 
 /**
  * The Archive screen is inherently cross-feature (docs/DATABASE.md: it
- * unions all four archivable tables), so depending on the Projects service
- * here is expected, not a layering violation. Projects is real; Inspiration
- * boards/Notes/Resources still only have fixture data until those modules
- * get their own data layer (see Module 1 stop condition), so their archive
- * rows stay stubbed for now and are merged in alongside the live ones.
+ * unions all four archivable tables), so depending on all four feature
+ * services here is expected, not a layering violation.
  */
 
 function projectToArchiveEntry(project: Project): ArchiveEntry {
@@ -25,34 +32,97 @@ function projectToArchiveEntry(project: Project): ArchiveEntry {
   };
 }
 
-export async function fetchArchive(): Promise<ArchiveEntry[]> {
-  const archivedProjects = await listArchivedProjects();
-  const stubbedOtherTypes = archiveFixtures.filter((entry) => entry.sourceType !== "project");
-  return [...archivedProjects.map(projectToArchiveEntry), ...stubbedOtherTypes].sort((a, b) =>
-    b.archivedAt.localeCompare(a.archivedAt),
-  );
+function boardToArchiveEntry(board: InspirationBoard): ArchiveEntry {
+  return {
+    sourceType: "inspiration_board",
+    id: board.id,
+    title: board.title,
+    thumbnailUrl: board.coverImageUrl,
+    archivedAt: board.updatedAt,
+  };
 }
 
-function notYetSupported(sourceType: ArchiveSourceType): never {
-  const label = sourceType === "inspiration_board" ? "inspiration board" : sourceType;
-  throw new Error(`Restoring or deleting a ${label} isn't available yet in this build.`);
+/** Only some note types carry an image; the rest fall back to `null`, which
+ * ArchiveCard already renders as a type icon instead of a thumbnail. */
+function noteToArchiveEntry(note: Note): ArchiveEntry {
+  const thumbnailUrl =
+    note.type === "image" ? note.coverImageUrl : note.type === "moodboard" ? note.images[0] : null;
+  return {
+    sourceType: "note",
+    id: note.id,
+    title: note.title,
+    thumbnailUrl,
+    archivedAt: note.updatedAt,
+  };
+}
+
+/** Only some resource kinds carry an image; the rest fall back to `null`. */
+function resourceToArchiveEntry(resource: Resource): ArchiveEntry {
+  const thumbnailUrl =
+    resource.kind === "image"
+      ? resource.coverImageUrl
+      : resource.kind === "video"
+        ? resource.thumbnailUrl
+        : resource.kind === "preview"
+          ? resource.previewImageUrl
+          : null;
+  return {
+    sourceType: "resource",
+    id: resource.id,
+    title: resource.title,
+    thumbnailUrl,
+    archivedAt: resource.updatedAt,
+  };
+}
+
+export async function fetchArchive(): Promise<ArchiveEntry[]> {
+  const [projects, boards, notes, resources] = await Promise.all([
+    listArchivedProjects(),
+    listArchivedBoards(),
+    listArchivedNotes(),
+    listArchivedResources(),
+  ]);
+  return [
+    ...projects.map(projectToArchiveEntry),
+    ...boards.map(boardToArchiveEntry),
+    ...notes.map(noteToArchiveEntry),
+    ...resources.map(resourceToArchiveEntry),
+  ].sort((a, b) => b.archivedAt.localeCompare(a.archivedAt));
 }
 
 export async function restoreEntry(sourceType: ArchiveSourceType, id: string): Promise<void> {
-  if (sourceType === "project") {
-    await unarchiveProject(id);
-    return;
+  switch (sourceType) {
+    case "project":
+      await unarchiveProject(id);
+      return;
+    case "inspiration_board":
+      await unarchiveBoard(id);
+      return;
+    case "note":
+      await unarchiveNote(id);
+      return;
+    case "resource":
+      await unarchiveResource(id);
+      return;
   }
-  notYetSupported(sourceType);
 }
 
 export async function deleteEntryPermanently(
   sourceType: ArchiveSourceType,
   id: string,
 ): Promise<void> {
-  if (sourceType === "project") {
-    await deleteProject(id);
-    return;
+  switch (sourceType) {
+    case "project":
+      await deleteProject(id);
+      return;
+    case "inspiration_board":
+      await deleteBoard(id);
+      return;
+    case "note":
+      await deleteNote(id);
+      return;
+    case "resource":
+      await deleteResource(id);
+      return;
   }
-  notYetSupported(sourceType);
 }
