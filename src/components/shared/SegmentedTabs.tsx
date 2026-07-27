@@ -24,8 +24,8 @@ export function SegmentedTabs<T extends string>({
   className,
 }: SegmentedTabsProps<T>) {
   return (
-    <Tabs value={value} onValueChange={(v) => onValueChange(v as T)} className={className}>
-      <TabsList>
+    <Tabs value={value} onValueChange={(v) => onValueChange(v as T)}>
+      <TabsList className={className}>
         {options.map((option) => (
           <TabsTrigger key={option.value} value={option.value}>
             {option.label}

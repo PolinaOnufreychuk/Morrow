@@ -8,12 +8,11 @@ import { ImageDropzone } from "@/components/shared/ImageDropzone";
 import { notify } from "@/components/shared/Toast";
 import { useConfirmDiscard } from "@/hooks/useConfirmDiscard";
 import { uploadCoverImage } from "@/lib/supabase/storage";
-import type { ChecklistItem, MeetingAttendee, Note, NoteType } from "@/types/entities";
+import type { ChecklistItem, Note, NoteType } from "@/types/entities";
 import { NOTE_TYPE_META } from "../noteTypeMeta";
 import { NoteValidationError } from "../types";
 import { useCreateNote, useUpdateNote } from "../hooks/useNotes";
 import { ChecklistItemsField } from "./fields/ChecklistItemsField";
-import { StringListField } from "./fields/StringListField";
 
 export interface NoteEditorModalProps {
   open: boolean;
@@ -27,17 +26,11 @@ export interface NoteEditorModalProps {
 }
 
 const FORM_ID = "note-editor-form";
-const EMPTY_MOODBOARD: [string | null, string | null, string | null, string | null] = [
-  null,
-  null,
-  null,
-  null,
-];
 
 /** Routes to the right type-specific field set and wires the form to real
  * create/update mutations. Local `useState` per field (rather than a single
  * typed object) keeps each control trivially controlled regardless of which
- * of the 10 discriminated note variants is active. */
+ * of the 5 discriminated note variants is active. */
 export function NoteEditorModal({ open, onOpenChange, note, type, initialProjectIds }: NoteEditorModalProps) {
   const meta = NOTE_TYPE_META[type];
   const isEditing = Boolean(note);
@@ -56,29 +49,15 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
   const [items, setItems] = useState<ChecklistItem[]>(
     note?.type === "checklist" ? note.items : [{ text: "", done: false }],
   );
-  const [url, setUrl] = useState(note?.type === "bookmark" ? note.url : "");
-  const [snippet, setSnippet] = useState(note?.type === "bookmark" ? (note.snippet ?? "") : "");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(
     note?.type === "image" ? note.coverImageUrl : null,
   );
-  const [images, setImages] = useState<[string | null, string | null, string | null, string | null]>(
-    note?.type === "moodboard" ? note.images : EMPTY_MOODBOARD,
-  );
-  const [language, setLanguage] = useState(note?.type === "code" ? note.language : "");
-  const [code, setCode] = useState(note?.type === "code" ? note.code : "");
   const [quote, setQuote] = useState(note?.type === "quote" ? note.quote : "");
   const [author, setAuthor] = useState(note?.type === "quote" ? (note.author ?? "") : "");
-  const [ingredients, setIngredients] = useState<string[]>(
-    note?.type === "recipe" ? note.ingredients : [""],
-  );
   const [filename, setFilename] = useState(note?.type === "pdf" ? note.filename : "");
   const [pageCount, setPageCount] = useState(
     note?.type === "pdf" && note.pageCount != null ? String(note.pageCount) : "",
   );
-  const [attendeeNames, setAttendeeNames] = useState<string[]>(
-    note?.type === "meeting" ? note.attendees.map((attendee) => attendee.name) : [""],
-  );
-  const [agenda, setAgenda] = useState<string[]>(note?.type === "meeting" ? note.agenda : [""]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -87,10 +66,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
       setSubmitError("Title is required.");
-      return;
-    }
-    if (type === "moodboard" && images.some((image) => !image)) {
-      setSubmitError("Add all four images.");
       return;
     }
 
@@ -105,34 +80,11 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
       case "checklist":
         payload = { type, ...base, items: items.filter((item) => item.text.trim().length > 0) };
         break;
-      case "bookmark":
-        payload = {
-          type,
-          ...base,
-          url,
-          faviconUrl: null,
-          domain: null,
-          snippet: snippet.trim() || null,
-        };
-        break;
       case "image":
         payload = { type, ...base, coverImageUrl: coverImageUrl ?? "" };
         break;
-      case "moodboard":
-        payload = { type, ...base, images };
-        break;
-      case "code":
-        payload = { type, ...base, language, code };
-        break;
       case "quote":
         payload = { type, ...base, quote, author: author.trim() || null };
-        break;
-      case "recipe":
-        payload = {
-          type,
-          ...base,
-          ingredients: ingredients.map((item) => item.trim()).filter(Boolean),
-        };
         break;
       case "pdf":
         payload = {
@@ -142,19 +94,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
           pageCount: pageCount.trim() ? Number(pageCount) : null,
         };
         break;
-      case "meeting": {
-        const attendees: MeetingAttendee[] = attendeeNames
-          .map((name) => name.trim())
-          .filter(Boolean)
-          .map((name) => ({ name, avatarUrl: null }));
-        payload = {
-          type,
-          ...base,
-          attendees,
-          agenda: agenda.map((item) => item.trim()).filter(Boolean),
-        };
-        break;
-      }
     }
 
     const onError = (error: unknown) => {
@@ -183,15 +122,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
         onError,
       });
     }
-  };
-
-  const updateImageAt = (index: number, value: string | null) => {
-    setImages((current) => {
-      const next = [...current] as typeof current;
-      next[index] = value;
-      return next;
-    });
-    markDirty();
   };
 
   const { guardedOnOpenChange, discardDialog } = useConfirmDiscard(isDirty, (next) => {
@@ -252,34 +182,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
           </FormField>
         )}
 
-        {type === "bookmark" && (
-          <>
-            <FormField htmlFor="note-url" label="URL">
-              <Input
-                id="note-url"
-                type="url"
-                value={url}
-                onChange={(event) => {
-                  setUrl(event.target.value);
-                  markDirty();
-                }}
-                placeholder="https://…"
-              />
-            </FormField>
-            <FormField htmlFor="note-snippet" label="Snippet" optional>
-              <Textarea
-                id="note-snippet"
-                value={snippet}
-                onChange={(event) => {
-                  setSnippet(event.target.value);
-                  markDirty();
-                }}
-                placeholder="A short excerpt or description…"
-              />
-            </FormField>
-          </>
-        )}
-
         {type === "image" && (
           <FormField label="Image">
             <ImageDropzone
@@ -291,50 +193,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
               onUpload={(file) => uploadCoverImage("note", file)}
             />
           </FormField>
-        )}
-
-        {type === "moodboard" && (
-          <FormField label="Images">
-            <div className="grid grid-cols-2 gap-3">
-              {images.map((image, index) => (
-                <ImageDropzone
-                  key={index}
-                  value={image}
-                  onChange={(value) => updateImageAt(index, value)}
-                  onUpload={(file) => uploadCoverImage("note", file)}
-                  label={`Image ${index + 1}`}
-                />
-              ))}
-            </div>
-          </FormField>
-        )}
-
-        {type === "code" && (
-          <>
-            <FormField htmlFor="note-language" label="Language">
-              <Input
-                id="note-language"
-                value={language}
-                onChange={(event) => {
-                  setLanguage(event.target.value);
-                  markDirty();
-                }}
-                placeholder="e.g. TypeScript"
-              />
-            </FormField>
-            <FormField htmlFor="note-code" label="Code">
-              <Textarea
-                id="note-code"
-                value={code}
-                onChange={(event) => {
-                  setCode(event.target.value);
-                  markDirty();
-                }}
-                placeholder="Paste a snippet…"
-                className="min-h-[160px] font-mono text-[13px]"
-              />
-            </FormField>
-          </>
         )}
 
         {type === "quote" && (
@@ -364,20 +222,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
           </>
         )}
 
-        {type === "recipe" && (
-          <FormField label="Ingredients">
-            <StringListField
-              value={ingredients}
-              onChange={(value) => {
-                setIngredients(value);
-                markDirty();
-              }}
-              itemLabel="Ingredient"
-              addLabel="Add ingredient"
-            />
-          </FormField>
-        )}
-
         {type === "pdf" && (
           <>
             <FormField htmlFor="note-filename" label="Filename">
@@ -402,33 +246,6 @@ export function NoteEditorModal({ open, onOpenChange, note, type, initialProject
                   markDirty();
                 }}
                 placeholder="e.g. 12"
-              />
-            </FormField>
-          </>
-        )}
-
-        {type === "meeting" && (
-          <>
-            <FormField label="Attendees">
-              <StringListField
-                value={attendeeNames}
-                onChange={(value) => {
-                  setAttendeeNames(value);
-                  markDirty();
-                }}
-                itemLabel="Attendee"
-                addLabel="Add attendee"
-              />
-            </FormField>
-            <FormField label="Agenda">
-              <StringListField
-                value={agenda}
-                onChange={(value) => {
-                  setAgenda(value);
-                  markDirty();
-                }}
-                itemLabel="Agenda item"
-                addLabel="Add agenda item"
               />
             </FormField>
           </>

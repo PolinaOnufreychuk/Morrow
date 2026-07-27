@@ -4,16 +4,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type {
-  BookmarkNote,
   ChecklistNote,
-  CodeNote,
   ImageNote,
-  MeetingNote,
-  MoodboardNote,
   Note,
   PdfNote,
   QuoteNote,
-  RecipeNote,
   TextNote,
 } from "@/types/entities";
 import { NOTE_TYPE_META } from "../noteTypeMeta";
@@ -34,7 +29,17 @@ export interface NoteCardProps {
 }
 
 /** Note types whose body is a media/preview block — title renders below it, matching Inspiration cards. */
-const MEDIA_TYPES: NoteType[] = ["image", "moodboard", "code", "bookmark", "pdf"];
+const MEDIA_TYPES: NoteType[] = ["image", "pdf"];
+
+/** Whether a note's title renders after its body instead of above it. */
+export function isMediaNoteType(type: NoteType): boolean {
+  return MEDIA_TYPES.includes(type);
+}
+
+/** Quote notes render their own quote styling in place of a title. */
+export function showsNoteTitle(type: NoteType): boolean {
+  return type !== "quote";
+}
 
 /**
  * ONE polymorphic note card. The body is chosen by an exhaustive
@@ -50,8 +55,8 @@ export function NoteCard({
   onUnpin,
 }: NoteCardProps) {
   const meta = NOTE_TYPE_META[note.type];
-  const isMedia = MEDIA_TYPES.includes(note.type);
-  const showTitle = note.type !== "quote";
+  const isMedia = isMediaNoteType(note.type);
+  const showTitle = showsNoteTitle(note.type);
   const isPinned = variant === "pinned";
 
   const overflowMenu = (
@@ -95,7 +100,7 @@ export function NoteCard({
   );
 }
 
-function NoteBody({
+export function NoteBody({
   note,
   variant,
   isPinned,
@@ -113,22 +118,12 @@ function NoteBody({
       return <TextBody note={note} isFull={isFull} isPinned={isPinned} />;
     case "checklist":
       return <ChecklistBody note={note} isFull={isFull} isPinned={isPinned} />;
-    case "bookmark":
-      return <BookmarkBody note={note} isPinned={isPinned} mediaRadius={mediaRadius} />;
     case "image":
       return <ImageBody note={note} isFull={isFull} isPinned={isPinned} mediaRadius={mediaRadius} />;
-    case "moodboard":
-      return <MoodboardBody note={note} mediaRadius={mediaRadius} />;
-    case "code":
-      return <CodeBody note={note} isFull={isFull} isPinned={isPinned} mediaRadius={mediaRadius} />;
     case "quote":
       return <QuoteBody note={note} isPinned={isPinned} />;
-    case "recipe":
-      return <RecipeBody note={note} isFull={isFull} isPinned={isPinned} />;
     case "pdf":
       return <PdfBody note={note} mediaRadius={mediaRadius} />;
-    case "meeting":
-      return <MeetingBody note={note} isFull={isFull} isPinned={isPinned} />;
     default: {
       // Exhaustiveness guard — a new NoteType will fail to compile here.
       const _exhaustive: never = note;
@@ -185,49 +180,6 @@ function ChecklistBody({
   );
 }
 
-function BookmarkBody({
-  note,
-  isPinned,
-  mediaRadius,
-}: {
-  note: BookmarkNote;
-  isPinned: boolean;
-  mediaRadius: string;
-}) {
-  const domain = note.domain ?? note.url;
-  return (
-    <a
-      href={note.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "flex flex-col gap-1 border border-border-subtle bg-surface-card/60",
-        mediaRadius,
-        isPinned ? "p-2" : "p-3",
-      )}
-    >
-      <span
-        className={cn(
-          "flex items-center gap-2 font-medium text-text-primary",
-          isPinned ? pinnedText : "text-[13px]",
-        )}
-      >
-        {note.faviconUrl ? (
-          <img src={note.faviconUrl} alt="" draggable={false} className="h-4 w-4 rounded-[4px]" />
-        ) : (
-          <span className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-border-subtle text-[9px] font-semibold uppercase text-text-tertiary">
-            {domain.charAt(0)}
-          </span>
-        )}
-        <span className="truncate">{domain}</span>
-      </span>
-      {!isPinned && note.snippet && (
-        <span className="line-clamp-2 text-[12px] text-text-secondary">{note.snippet}</span>
-      )}
-    </a>
-  );
-}
-
 function ImageBody({
   note,
   isFull,
@@ -242,46 +194,6 @@ function ImageBody({
   return (
     <div className={cn("overflow-hidden", mediaRadius, isPinned ? "h-[86px]" : isFull ? "h-56" : "h-36")}>
       <img src={note.coverImageUrl} alt="" draggable={false} className="h-full w-full object-cover" />
-    </div>
-  );
-}
-
-function MoodboardBody({ note, mediaRadius }: { note: MoodboardNote; mediaRadius: string }) {
-  return (
-    <div className="grid grid-cols-2 gap-1.5">
-      {note.images.map((src, index) => (
-        <div key={index} className={cn("overflow-hidden", mediaRadius)}>
-          <img src={src} alt="" draggable={false} className="aspect-square w-full object-cover" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CodeBody({
-  note,
-  isFull,
-  isPinned,
-  mediaRadius,
-}: {
-  note: CodeNote;
-  isFull: boolean;
-  isPinned: boolean;
-  mediaRadius: string;
-}) {
-  return (
-    <div className={cn("overflow-hidden bg-sage-900", mediaRadius)}>
-      <pre
-        className={cn(
-          "overflow-x-auto leading-relaxed text-cream-50",
-          isPinned ? "max-h-[86px] p-2 text-[10.5px]" : "p-3 text-[12px]",
-          !isFull && !isPinned && "max-h-32",
-        )}
-      >
-        <code style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
-          {note.code}
-        </code>
-      </pre>
     </div>
   );
 }
@@ -305,20 +217,6 @@ function QuoteBody({ note, isPinned }: { note: QuoteNote; isPinned: boolean }) {
   );
 }
 
-function RecipeBody({ note, isFull, isPinned }: { note: RecipeNote; isFull: boolean; isPinned: boolean }) {
-  const items = isFull ? note.ingredients : note.ingredients.slice(0, isPinned ? 3 : 4);
-  return (
-    <ul className={cn("flex flex-col gap-1 text-text-secondary", isPinned ? pinnedText : "text-[13px]")}>
-      {items.map((ingredient, index) => (
-        <li key={index} className="flex items-start gap-2">
-          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-sage-400" />
-          <span className="truncate">{ingredient}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function PdfBody({ note, mediaRadius }: { note: PdfNote; mediaRadius: string }) {
   return (
     <div className={cn("flex items-center gap-3 border border-border-subtle bg-surface-card/60 p-3", mediaRadius)}>
@@ -329,50 +227,6 @@ function PdfBody({ note, mediaRadius }: { note: PdfNote; mediaRadius: string }) 
           <span className="text-[12px] text-text-tertiary">{note.pageCount} pages</span>
         )}
       </div>
-    </div>
-  );
-}
-
-function MeetingBody({ note, isFull, isPinned }: { note: MeetingNote; isFull: boolean; isPinned: boolean }) {
-  const agenda = isFull ? note.agenda : note.agenda.slice(0, isPinned ? 2 : 3);
-  return (
-    <div className={cn("flex flex-col gap-3", isPinned && "gap-2")}>
-      <div className="flex items-center -space-x-1.5">
-        {note.attendees.map((attendee) =>
-          attendee.avatarUrl ? (
-            <img
-              key={attendee.name}
-              src={attendee.avatarUrl}
-              alt={attendee.name}
-              title={attendee.name}
-              draggable={false}
-              className={cn(
-                "rounded-full border-2 border-surface-card object-cover",
-                isPinned ? "h-6 w-6" : "h-7 w-7",
-              )}
-            />
-          ) : (
-            <span
-              key={attendee.name}
-              title={attendee.name}
-              className={cn(
-                "flex items-center justify-center rounded-full border-2 border-surface-card bg-sage-200 font-medium text-sage-700",
-                isPinned ? "h-6 w-6 text-[11px]" : "h-7 w-7 text-[12px]",
-              )}
-            >
-              {attendee.name.charAt(0).toUpperCase()}
-            </span>
-          ),
-        )}
-      </div>
-      <ul className={cn("flex flex-col gap-1 text-text-secondary", isPinned ? pinnedText : "text-[13px]")}>
-        {agenda.map((item, index) => (
-          <li key={index} className="flex items-start gap-2">
-            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-sage-400" />
-            <span className="truncate">{item}</span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

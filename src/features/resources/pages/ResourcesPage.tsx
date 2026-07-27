@@ -63,7 +63,7 @@ export function ResourcesPage() {
     <PageShell>
       <PageHeader
         title="Resources"
-        titleClassName="mt-3 text-[44px]"
+        titleClassName="relative top-2 text-[40px]"
         actions={
           <Button onClick={() => setCreateOpen(true)}>
             <Icon name="plus" size={17} />

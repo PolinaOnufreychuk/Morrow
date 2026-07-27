@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { ModalShell } from "@/components/shared/ModalShell";
 import { Button } from "@/components/ui/button";
+import { DialogClose } from "@/components/ui/dialog";
 import { notify } from "@/components/shared/Toast";
 import { ProjectForm, type ProjectFormValues } from "./ProjectForm";
 import { useCreateProject } from "../hooks/useProjects";
 import { ProjectValidationError } from "../types";
-import heroMeadow from "@/assets/grain-gradient-sage-blush.png";
+import bgNewProject from "@/assets/bg-new-project.png";
 
 export interface ProjectCreateModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ const FORM_ID = "project-create-form";
 export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalProps) {
   const createProject = useCreateProject();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   const handleSubmit = (values: ProjectFormValues) => {
     setSubmitError(null);
@@ -44,23 +46,43 @@ export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalPro
         onOpenChange(next);
       }}
       title="New project"
-      description="Create a new project workspace."
-      heroImage={heroMeadow}
-      footerAlign="stretch"
+      heroImage={bgNewProject}
+      heroTitleOverlay
+      footerAlign="split"
       footer={
-        <Button
-          size="lg"
-          fullWidth
-          type="submit"
-          form={FORM_ID}
-          disabled={createProject.isPending}
-          aria-busy={createProject.isPending}
-        >
-          {createProject.isPending ? "Creating…" : "Create project"}
-        </Button>
+        <>
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="h-[50px] basis-[36%] rounded-[16px] text-[16px]"
+              disabled={createProject.isPending}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="hero"
+            size="lg"
+            className="h-[50px] flex-1 rounded-[16px] text-[16px]"
+            type="submit"
+            form={FORM_ID}
+            disabled={!canSubmit || createProject.isPending}
+            aria-busy={createProject.isPending}
+          >
+            {createProject.isPending ? "Creating…" : "Create project"}
+          </Button>
+        </>
       }
     >
-      <ProjectForm formId={FORM_ID} mode="create" onSubmit={handleSubmit} submitError={submitError} />
+      <ProjectForm
+        formId={FORM_ID}
+        mode="create"
+        visualStyle="v2"
+        onSubmit={handleSubmit}
+        onCanSubmitChange={setCanSubmit}
+        submitError={submitError}
+      />
     </ModalShell>
   );
 }

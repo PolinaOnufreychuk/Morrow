@@ -81,7 +81,7 @@ export function ArchivePage() {
     <PageShell>
       <PageHeader
         title="Archive"
-        titleClassName="mt-2 text-[44px]"
+        titleClassName="relative top-2 text-[40px]"
         actions={
           entries.length > 0 ? (
             <Button variant="secondary" onClick={() => setEmptyArchiveOpen(true)}>

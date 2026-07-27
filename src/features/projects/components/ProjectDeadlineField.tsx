@@ -24,20 +24,15 @@ export function ProjectDeadlineField({
 }: ProjectDeadlineFieldProps) {
   return (
     <FormField htmlFor={id} label={label} optional>
-      <div className="relative">
-        <Input
-          id={id}
-          type="date"
-          value={value ?? ""}
-          onChange={(event) => onChange(event.target.value || null)}
-          className="pr-10 [&::-webkit-calendar-picker-indicator]:pointer-events-none [&::-webkit-calendar-picker-indicator]:opacity-0"
-        />
-        <Icon
-          name="calendar"
-          size={16}
-          className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-tertiary"
-        />
-      </div>
+      <Input
+        id={id}
+        type="date"
+        value={value ?? ""}
+        onChange={(event) => onChange(event.target.value || null)}
+        icon={<Icon name="calendar" size={16} />}
+        iconPosition="right"
+        className="[&::-webkit-calendar-picker-indicator]:pointer-events-none [&::-webkit-calendar-picker-indicator]:opacity-0"
+      />
     </FormField>
   );
 }

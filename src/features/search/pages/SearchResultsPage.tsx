@@ -71,7 +71,7 @@ export function SearchResultsPage() {
       <div className="flex flex-col gap-3">
         <BackLink to="/" label="dashboard" />
 
-        <PageHeader title="Search results" titleClassName="text-[44px]" />
+        <PageHeader title="Search results" titleClassName="relative top-2 text-[40px]" />
 
         <div className="flex items-center gap-2">
           <form

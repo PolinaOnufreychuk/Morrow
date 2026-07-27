@@ -20,6 +20,7 @@ export function ProjectStatusTabs({ value, onValueChange, counts }: ProjectStatu
       options={OPTIONS.map((option) => ({ ...option, count: counts?.[option.value] }))}
       value={value}
       onValueChange={onValueChange}
+      className="h-11 bg-surface-muted"
     />
   );
 }

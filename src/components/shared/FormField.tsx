@@ -17,6 +17,10 @@ export interface FormFieldProps {
   error?: string;
   /** Right-aligned char counter next to the label, e.g. { current: 120, max: 2000 }. */
   counter?: { current: number; max: number };
+  /** "subtle" (default) is the small tertiary-gray label every form uses.
+   * "prominent" is the larger, darker label from the "New project" mockup —
+   * opt in per-form, don't flip the default. */
+  labelTone?: "subtle" | "prominent";
   children: ReactNode;
   className?: string;
 }
@@ -35,36 +39,44 @@ export function FormField({
   helperText,
   error,
   counter,
+  labelTone = "subtle",
   children,
   className,
 }: FormFieldProps) {
   const counterOverMax = counter ? counter.current > counter.max : false;
 
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex items-baseline justify-between gap-2">
-        <label
-          htmlFor={htmlFor}
-          className="text-[12.5px] font-medium normal-case tracking-normal text-text-tertiary"
-        >
-          {label}
-          {optional && (
-            <span className="ml-1.5 text-[10.5px] font-normal normal-case tracking-normal text-text-tertiary/70">
-              Optional
-            </span>
-          )}
-        </label>
-        {counter && (
-          <span
+    <div className={cn("flex flex-col", labelTone === "prominent" ? "gap-1.5" : "gap-2", className)}>
+      {label && (
+        <div className="flex items-baseline justify-between gap-2">
+          <label
+            htmlFor={htmlFor}
             className={cn(
-              "text-[11px] tabular-nums text-text-tertiary",
-              counterOverMax && "text-blush-600",
+              "normal-case tracking-normal",
+              labelTone === "prominent"
+                ? "text-[15px] font-normal text-[#525150]"
+                : "text-[12.5px] font-medium text-text-tertiary",
             )}
           >
-            {counter.current}/{counter.max}
-          </span>
-        )}
-      </div>
+            {label}
+            {optional && (
+              <span className="ml-1.5 text-[10.5px] font-normal normal-case tracking-normal text-text-tertiary/70">
+                Optional
+              </span>
+            )}
+          </label>
+          {counter && (
+            <span
+              className={cn(
+                "text-[11px] tabular-nums text-text-tertiary",
+                counterOverMax && "text-blush-600",
+              )}
+            >
+              {counter.current}/{counter.max}
+            </span>
+          )}
+        </div>
+      )}
       {children}
       {(error || helperText) && (
         <p className={cn("text-[12px]", error ? "text-blush-600" : "text-text-tertiary")}>

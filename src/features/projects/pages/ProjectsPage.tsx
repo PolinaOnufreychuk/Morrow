@@ -54,7 +54,7 @@ export function ProjectsPage() {
     <PageShell>
       <PageHeader
         title="Projects"
-        titleClassName="mt-3 text-[44px]"
+        titleClassName="relative top-2 text-[40px]"
         actions={
           <Button onClick={() => setCreateOpen(true)}>
             <Icon name="plus" size={17} />

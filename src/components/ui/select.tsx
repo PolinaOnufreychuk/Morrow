@@ -10,21 +10,30 @@ export const SelectValue = SelectPrimitive.Value;
 
 export const SelectTrigger = forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
+    /** Extra classes on the inner value wrapper. Used to paint it as a second,
+     * raised "layer" (white box) inside the trigger — see the layered v2
+     * Status/Category fields in PropertyDropdown. Default: plain value span. */
+    innerClassName?: string;
+    /** Extra classes on the chevron icon (e.g. a small vertical nudge to keep
+     * it optically level with a taller value). Default: unchanged. */
+    iconClassName?: string;
+  }
+>(({ className, children, innerClassName, iconClassName, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
       "flex h-11 w-full items-center justify-between gap-2 rounded-button border border-transparent bg-cream-100/60 px-3.5 text-[14px] font-body text-text-primary transition-shadow duration-fast ease-out",
+      "aria-invalid:border-blush-400 aria-invalid:bg-blush-100/40",
       "focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
   >
-    <span className="min-w-0 flex-1 truncate text-left">{children}</span>
+    <span className={cn("min-w-0 flex-1 truncate text-left", innerClassName)}>{children}</span>
     <SelectPrimitive.Icon asChild>
-      <Icon name="chevron-down" size={16} className="shrink-0 text-text-tertiary" />
+      <Icon name="chevron-down" size={16} className={cn("shrink-0 text-text-tertiary", iconClassName)} />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));

@@ -14,6 +14,7 @@ export type IconName =
   | "plus"
   | "overflow-dots"
   | "arrow-left"
+  | "arrow-right"
   | "alert"
   | "sliders"
   | "check"
@@ -25,7 +26,8 @@ export type IconName =
   | "link"
   | "external-link"
   | "upload"
-  | "calendar";
+  | "calendar"
+  | "grid";
 
 const paths: Record<IconName, ReactNode> = {
   search: (
@@ -59,6 +61,12 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <path d="M15 9.5H4" />
       <path d="M9 4.5 4 9.5 9 14.5" />
+    </>
+  ),
+  "arrow-right": (
+    <>
+      <path d="M4 9.5h11" />
+      <path d="M10 4.5 15 9.5 10 14.5" />
     </>
   ),
   alert: (
@@ -135,6 +143,14 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M2.5 8h14" />
       <path d="M6 2.5v3" />
       <path d="M13 2.5v3" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.8" />
+      <rect x="10.8" y="2.6" width="5.6" height="5.6" rx="1.8" />
+      <rect x="2.6" y="10.8" width="5.6" height="5.6" rx="1.8" />
+      <rect x="10.8" y="10.8" width="5.6" height="5.6" rx="1.8" />
     </>
   ),
 };

@@ -18,11 +18,11 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     <div
       className={cn(
         "group flex items-center gap-2 rounded-search px-3",
-        variant === "glass" ? "glass-control h-11" : "h-12 bg-surface-muted px-4",
+        variant === "glass" ? "glass-control h-10" : "h-11 bg-surface-muted px-4",
         className,
       )}
     >
-      <Icon name="search" size={17} className="shrink-0 text-text-tertiary" />
+      <Icon name="search" size={16} className="shrink-0 text-text-tertiary" />
       <input
         ref={ref}
         type="search"

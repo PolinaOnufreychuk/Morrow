@@ -32,8 +32,12 @@ DialogOverlay.displayName = "DialogOverlay";
 
 export const DialogContent = forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    /** Hides the built-in circular X — used when the modal supplies its own
+     * explicit Cancel action (e.g. the "New project" mockup). */
+    hideCloseButton?: boolean;
+  }
+>(({ className, children, hideCloseButton = false, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -50,16 +54,18 @@ export const DialogContent = forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close
-        className={cn(
-          "absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-chip bg-cream-100 text-text-secondary",
-          "transition-colors duration-fast ease-out hover:bg-cream-200 hover:text-text-primary",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-        )}
-      >
-        <Icon name="close" size={16} />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      {!hideCloseButton && (
+        <DialogPrimitive.Close
+          className={cn(
+            "absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-chip bg-cream-100 text-text-secondary",
+            "transition-colors duration-fast ease-out hover:bg-cream-200 hover:text-text-primary",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+          )}
+        >
+          <Icon name="close" size={16} />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      )}
     </DialogPrimitive.Content>
   </DialogPortal>
 ));

@@ -39,6 +39,10 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
   const [url, setUrl] = useState("");
   const [pending, setPending] = useState<PendingReference[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Removal is immediate in `pending` (so submitting mid-transition can't
+  // include a "removed" item) — these just keep the thumbnail rendered a
+  // moment longer, purely for the fade+scale-out.
+  const [fadingItems, setFadingItems] = useState<PendingReference[]>([]);
 
   const addUrl = () => {
     const trimmed = url.trim();
@@ -70,10 +74,17 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
     multiple: true,
   });
 
+  /** Removes the item from `pending` immediately; the thumbnail lingers
+   * briefly via `fadingItems` to play a fade+scale-out. */
   const removePending = (id: string) => {
     setPending((current) => {
       const removed = current.find((item) => item.id === id);
-      if (removed?.imageUrl) URL.revokeObjectURL(removed.imageUrl);
+      if (!removed) return current;
+      setFadingItems((fading) => [...fading, removed]);
+      window.setTimeout(() => {
+        if (removed.imageUrl) URL.revokeObjectURL(removed.imageUrl);
+        setFadingItems((fading) => fading.filter((item) => item.id !== id));
+      }, 160);
       return current.filter((item) => item.id !== id);
     });
   };
@@ -107,11 +118,13 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
-      // Discarded without adding — release any pending upload previews.
-      pending.forEach((item) => {
+      // Discarded without adding — release any pending upload previews,
+      // including ones still mid-fade-out.
+      [...pending, ...fadingItems].forEach((item) => {
         if (item.imageUrl) URL.revokeObjectURL(item.imageUrl);
       });
       setPending([]);
+      setFadingItems([]);
       setUrl("");
     }
     onOpenChange(next);
@@ -122,7 +135,6 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
       open={open}
       onOpenChange={handleOpenChange}
       title="Add references"
-      titleClassName="text-[28px]"
       footerAlign="stretch"
       footer={
         <Button size="lg" fullWidth onClick={handleAdd} disabled={pending.length === 0 || isSubmitting}>
@@ -168,33 +180,43 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
         <input {...inputProps} />
       </div>
 
-      {pending.length > 0 && (
+      {(pending.length > 0 || fadingItems.length > 0) && (
         <div className="flex flex-col gap-2">
           <span className="text-[12.5px] font-medium normal-case tracking-normal text-text-tertiary">
             Ready to add ({pending.length})
           </span>
           <div className="flex flex-wrap gap-2">
-            {pending.map((item) => (
-              <div key={item.id} className="relative h-20 w-20">
-                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-card-image border border-border-subtle bg-surface-card">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="px-1.5 text-center text-[11px] text-text-tertiary">
-                      {hostnameOf(item.sourceUrl ?? "")}
-                    </span>
+            {[...pending, ...fadingItems].map((item) => {
+              const fading = !pending.some((p) => p.id === item.id);
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    "relative h-20 w-20 transition-all duration-fast ease-out",
+                    fading ? "scale-90 opacity-0" : "scale-100 opacity-100",
                   )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removePending(item.id)}
-                  aria-label="Remove"
-                  className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-chip border border-border-default bg-surface-card text-text-secondary shadow-resting transition-colors duration-fast ease-out hover:text-blush-600"
                 >
-                  <Icon name="close" size={11} />
-                </button>
-              </div>
-            ))}
+                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-card-image border border-border-subtle bg-surface-card">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="px-1.5 text-center text-[11px] text-text-tertiary">
+                        {hostnameOf(item.sourceUrl ?? "")}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removePending(item.id)}
+                    disabled={fading}
+                    aria-label="Remove"
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-chip border border-border-default bg-surface-card text-text-secondary shadow-resting transition-colors duration-fast ease-out hover:text-blush-600"
+                  >
+                    <Icon name="close" size={11} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

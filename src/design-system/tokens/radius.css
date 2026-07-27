@@ -3,15 +3,15 @@
  * tiny status dots and progress bars. docs/DESIGN.md § "Design Tokens".
  */
 :root {
-  --radius-card: 16px;
-  --radius-card-image: 14px;
-  --radius-card-image-sidebar: 10px; /* sidebar-pinned variant */
-  --radius-search: 16px;
-  --radius-button: 13px; /* midpoint of the 12–14px button/CTA range */
-  --radius-tab-container: 13px;
-  --radius-tab-button: 9px;
-  --radius-chip: 8px;
-  --radius-nav-item: 13px;
-  --radius-avatar: 12px;
+  --radius-card: 14px;
+  --radius-card-image: 12px;
+  --radius-card-image-sidebar: 9px; /* sidebar-pinned variant */
+  --radius-search: 12px;
+  --radius-button: 10px;
+  --radius-tab-container: 11px;
+  --radius-tab-button: 8px;
+  --radius-chip: 6px;
+  --radius-nav-item: 11px;
+  --radius-avatar: 10px;
   --radius-full: 9999px; /* status dots / progress bars only */
 }

@@ -51,8 +51,7 @@ function boardToArchiveEntry(board: InspirationBoard): ArchiveEntry {
 /** Only some note types carry an image; the rest fall back to `null`, which
  * ArchiveCard already renders as a type icon instead of a thumbnail. */
 function noteToArchiveEntry(note: Note): ArchiveEntry {
-  const thumbnailUrl =
-    note.type === "image" ? note.coverImageUrl : note.type === "moodboard" ? note.images[0] : null;
+  const thumbnailUrl = note.type === "image" ? note.coverImageUrl : null;
   return {
     sourceType: "note",
     id: note.id,

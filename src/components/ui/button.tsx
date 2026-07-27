@@ -18,6 +18,9 @@ const buttonVariants = cva(
           "bg-surface-card text-text-primary border border-border-default hover:bg-cream-100 hover:-translate-y-px",
         ghost: "text-text-secondary hover:bg-cream-100 hover:text-text-primary",
         destructive: "bg-blush-600 text-cream-50 hover:bg-blush-600/90",
+        /** Gradient-textured CTA reserved for the "New project" mockup's
+         * hero modal; every other primary CTA stays flat sage-900. */
+        hero: "bg-gradient-to-r from-sage-600 to-sage-400 text-cream-50 hover:brightness-105 hover:-translate-y-px",
       },
       size: {
         sm: "h-8 px-3 text-[13px]",

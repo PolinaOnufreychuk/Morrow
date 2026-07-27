@@ -1,7 +1,10 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Icon } from "@/design-system/icons/Icon";
 import { hostnameOf } from "@/lib/format";
 import type { InspirationReference } from "@/types/entities";
+
+const FOCUSABLE_SELECTOR =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 export interface RefPreviewLightboxProps {
   references: InspirationReference[];
@@ -23,6 +26,9 @@ export function RefPreviewLightbox({
   onClose,
 }: RefPreviewLightboxProps) {
   const isOpen = activeIndex !== null;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   const goPrev = useCallback(() => {
     if (activeIndex === null) return;
@@ -34,12 +40,41 @@ export function RefPreviewLightbox({
     onNavigate((activeIndex + 1) % references.length);
   }, [activeIndex, references.length, onNavigate]);
 
+  // Focus trap: move focus in on open, cycle Tab within the overlay, and
+  // restore focus to whatever opened the lightbox on close — this is a
+  // hand-rolled overlay (not Radix Dialog), so none of that comes for free.
+  useEffect(() => {
+    if (!isOpen) return;
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    return () => {
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
       if (event.key === "ArrowLeft") goPrev();
       if (event.key === "ArrowRight") goNext();
+      if (event.key === "Tab") {
+        const focusable = containerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+        if (!focusable || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -51,6 +86,7 @@ export function RefPreviewLightbox({
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 backdrop-blur-xl"
       onClick={onClose}
       role="dialog"
@@ -58,10 +94,11 @@ export function RefPreviewLightbox({
       aria-label="Reference preview"
     >
       <button
+        ref={closeButtonRef}
         type="button"
         onClick={onClose}
         aria-label="Close preview"
-        className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-surface-card/85 text-text-primary backdrop-blur-sm transition-colors duration-fast ease-out hover:bg-surface-card focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-button bg-surface-card/85 text-text-primary backdrop-blur-sm transition-colors duration-fast ease-out hover:bg-surface-card focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Icon name="close" size={18} />
       </button>
@@ -118,7 +155,7 @@ function NavButton({ side, onClick }: { side: "left" | "right"; onClick: () => v
         onClick();
       }}
       aria-label={side === "left" ? "Previous reference" : "Next reference"}
-      className={`absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface-card/85 text-text-primary backdrop-blur-sm transition-colors duration-fast ease-out hover:bg-surface-card focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-button bg-surface-card/85 text-text-primary backdrop-blur-sm transition-colors duration-fast ease-out hover:bg-surface-card focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         side === "left" ? "left-5" : "right-5"
       }`}
     >

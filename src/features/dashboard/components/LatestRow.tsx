@@ -8,8 +8,9 @@ import { useProjects } from "@/features/projects/hooks/useProjects";
 import { GithubMark } from "@/design-system/icons/GithubMark";
 import { useBoardReferences, useBoards } from "@/features/inspiration/hooks/useInspiration";
 import { useNotes } from "@/features/notes/hooks/useNotes";
+import { NoteBody, isMediaNoteType, showsNoteTitle } from "@/features/notes/components/NoteCard";
 import { useResources } from "@/features/resources/hooks/useResources";
-import type { ChecklistNote, RepoResource, Resource } from "@/types/entities";
+import type { Note, RepoResource, Resource } from "@/types/entities";
 import projectCoverFallback from "@/assets/petal-macro-1.png";
 
 /**
@@ -54,7 +55,7 @@ function PreviewShell({
 }
 
 export interface LatestRowProps {
-  onPreviewNote: (note: ChecklistNote) => void;
+  onPreviewNote: (note: Note) => void;
   onPreviewResource: (resource: Resource) => void;
   onCreateProject: () => void;
   onCreateBoard: () => void;
@@ -79,9 +80,7 @@ export function LatestRow({
 
   const latestProject = sortByRecency(projects)[0];
   const latestBoard = sortByRecency(boards)[0];
-  const latestChecklistNote = sortByRecency(
-    notes.filter((note): note is ChecklistNote => note.type === "checklist"),
-  )[0];
+  const latestNote = sortByRecency(notes)[0];
   const latestResource = sortByRecency(resources)[0];
 
   const { data: boardReferences = [] } = useBoardReferences(latestBoard?.id ?? "");
@@ -145,10 +144,10 @@ export function LatestRow({
           </PreviewShell>
         )}
 
-        {/* Note — latest checklist */}
-        {latestChecklistNote ? (
+        {/* Note — real most-recently-added note, whatever its type */}
+        {latestNote ? (
           <PreviewShell
-            onClick={() => onPreviewNote(latestChecklistNote)}
+            onClick={() => onPreviewNote(latestNote)}
             className="gap-[9px] px-[18px] py-4"
             style={{
               background: "linear-gradient(168deg,rgba(255,252,243,.78),rgba(255,255,255,.5))",
@@ -157,24 +156,23 @@ export function LatestRow({
             <div className="flex items-center justify-between">
               <TypeChip label="Note" bg="#FEFFFEE6" />
               <span className="text-[11.5px] text-text-tertiary">
-                {formatRelativeUpdated(latestChecklistNote.updatedAt)}
+                {formatRelativeUpdated(latestNote.updatedAt)}
               </span>
             </div>
-            <span className="mt-1 font-display text-[22px] font-light italic leading-[1.1] text-text-primary">
-              Today&rsquo;s focus
-            </span>
+            {showsNoteTitle(latestNote.type) && !isMediaNoteType(latestNote.type) && (
+              <span className="mt-1 line-clamp-1 font-display text-[22px] font-light italic leading-[1.1] text-text-primary">
+                {latestNote.title}
+              </span>
+            )}
             <div className="border-b border-dashed border-ink-900/[.14]" />
-            <div className="flex flex-col gap-[9px]">
-              {latestChecklistNote.items.slice(0, 4).map((item) => (
-                <ChecklistRow key={item.text} done={item.done}>
-                  {item.text}
-                </ChecklistRow>
-              ))}
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <NoteBody note={latestNote} variant="pinned" isPinned />
             </div>
-            <span className="mt-auto text-[12px] text-text-tertiary">
-              {latestChecklistNote.items.filter((item) => item.done).length} of{" "}
-              {latestChecklistNote.items.length} done
-            </span>
+            {showsNoteTitle(latestNote.type) && isMediaNoteType(latestNote.type) && (
+              <span className="line-clamp-1 font-display text-[16px] font-light italic leading-[1.1] text-text-primary">
+                {latestNote.title}
+              </span>
+            )}
           </PreviewShell>
         ) : (
           <PreviewShell
@@ -203,7 +201,9 @@ export function LatestRow({
           >
             <div className="flex items-center justify-between">
               <TypeChip label="Inspiration" bg="#F3F6F0FA" />
-              <span className="text-[11.5px] text-text-tertiary">{boardReferences.length} items</span>
+              <span className="text-[11.5px] text-text-tertiary">
+                {formatRelativeUpdated(latestBoard.updatedAt)}
+              </span>
             </div>
             <div className="relative mb-[13px] mt-3 flex-1">
               <div className="absolute inset-x-[5px] bottom-px top-2 -rotate-2 rounded-[14px] border border-white/70 bg-cream-50 shadow-[0_6px_16px_-10px_hsl(30_25%_20%_/_.2)]" />
@@ -245,7 +245,7 @@ export function LatestRow({
                 {latestBoard.title}
               </span>
               <span className="text-[12px] text-text-tertiary">
-                Updated {formatRelativeUpdated(latestBoard.updatedAt).toLowerCase()}
+                {boardReferences.length} items
               </span>
             </div>
           </PreviewShell>
@@ -359,25 +359,6 @@ function GenericResourceMedia({ resource }: { resource: Resource }) {
         <path d="M9 12.5a3.5 3.5 0 0 0 5 3.1l3-3a3.5 3.5 0 0 0-5-5l-1.2 1.2" />
         <path d="M15 11.5a3.5 3.5 0 0 0-5-3.1l-3 3a3.5 3.5 0 0 0 5 5l1.2-1.2" />
       </svg>
-    </div>
-  );
-}
-
-function ChecklistRow({ children, done = false }: { children: ReactNode; done?: boolean }) {
-  return (
-    <div className="flex items-center gap-[10px]">
-      {done ? (
-        <span className="flex h-[17px] w-[17px] flex-shrink-0 items-center justify-center rounded-[5px] bg-brand-primary text-white">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="m5 12 5 5 9-11" />
-          </svg>
-        </span>
-      ) : (
-        <span className="h-[17px] w-[17px] flex-shrink-0 rounded-[5px] border-[1.5px] border-ink-900/[.22]" />
-      )}
-      <span className={done ? "text-[13px] text-text-tertiary line-through" : "text-[13px] text-text-primary"}>
-        {children}
-      </span>
     </div>
   );
 }

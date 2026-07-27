@@ -8,10 +8,9 @@ import { ProjectCreateModal } from "@/features/projects/components/ProjectCreate
 import { BoardCreateModal } from "@/features/inspiration/components/BoardCreateModal";
 import { NoteTypePickerModal } from "@/features/notes/components/NoteTypePickerModal";
 import { NoteEditorModal } from "@/features/notes/components/NoteEditorModal";
-import { NotePreviewModal } from "@/features/notes/components/NotePreviewModal";
 import { ResourceCreateModal } from "@/features/resources/components/ResourceCreateModal";
 import { ResourcePreviewModal } from "@/features/resources/components/ResourcePreviewModal";
-import type { ChecklistNote, NoteType, Resource } from "@/types/entities";
+import type { Note, NoteType, Resource } from "@/types/entities";
 
 function formatToday(): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -43,7 +42,7 @@ export function DashboardPage() {
   const [editorNoteType, setEditorNoteType] = useState<NoteType | null>(null);
 
   // Note/Resource preview popups opened from the Latest row
-  const [previewNote, setPreviewNote] = useState<ChecklistNote | null>(null);
+  const [previewNote, setPreviewNote] = useState<Note | null>(null);
   const [previewResource, setPreviewResource] = useState<Resource | null>(null);
 
   const openNoteEditorFor = (type: NoteType) => {
@@ -120,11 +119,14 @@ export function DashboardPage() {
       )}
 
       {/* Preview popups opened from the Latest row */}
-      <NotePreviewModal
-        note={previewNote}
-        open={previewNote !== null}
-        onOpenChange={(open) => !open && setPreviewNote(null)}
-      />
+      {previewNote && (
+        <NoteEditorModal
+          open={previewNote !== null}
+          onOpenChange={(open) => !open && setPreviewNote(null)}
+          note={previewNote}
+          type={previewNote.type}
+        />
+      )}
       <ResourcePreviewModal
         resource={previewResource}
         open={previewResource !== null}

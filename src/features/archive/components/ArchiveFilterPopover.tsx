@@ -37,12 +37,12 @@ export function ArchiveFilterPopover({
           type="button"
           aria-label="Filters"
           className={cn(
-            "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-search text-text-tertiary transition-colors duration-fast ease-out",
+            "relative flex h-11 w-11 shrink-0 items-center justify-center rounded-search text-text-tertiary transition-colors duration-fast ease-out",
             "bg-surface-muted hover:bg-cream-200 hover:text-text-primary",
             "data-[state=open]:bg-cream-200 data-[state=open]:text-text-primary",
           )}
         >
-          <Icon name="sliders" size={17} />
+          <Icon name="sliders" size={16} />
           {isActive && (
             <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-sage-600" />
           )}

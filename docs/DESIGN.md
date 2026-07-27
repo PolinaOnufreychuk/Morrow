@@ -28,7 +28,7 @@ This is the finalized visual/interaction rulebook. Treat it as source of truth f
 
 Extracted from the approved hi-fi export (`designer-workspace-wireframes/project/Dashboard.dc.html` + its design-system bundle). These are the literal values `tailwind.config.ts` and `src/design-system/tokens/*.css` must encode — this section supersedes any general color/spacing prose elsewhere in this file if the two ever disagree.
 
-**Radius family** (law — no pill/fully-rounded controls anywhere except tiny status dots and progress bars): cards `20px`; card inner images `14px` (`10px` in the sidebar-pinned variant); search field `16px`; buttons/CTAs `12–14px`; tab container `13px` / tab buttons `9px`; small chips/badges `8px`; nav items `13px`; avatar tile `12px`.
+**Radius family** (law — no pill/fully-rounded controls anywhere except tiny status dots and progress bars): cards `14px`; card inner images `12px` (`9px` in the sidebar-pinned variant); search field `12px`; buttons/CTAs `10px`; tab container `11px` / tab buttons `8px`; small chips/badges `6px`; nav items `11px`; avatar tile `10px`.
 
 **Colors** (base palette from the design-system token file, with the hi-fi build's page-level overrides applied — the overrides win):
 ```
@@ -71,10 +71,23 @@ Primary CTA is always `sage-900 #2F4635`. Interface stays mostly neutral; imager
 
 ## Modals
 
-- One interaction pattern for every modal.
+- One interaction pattern for every modal — every modal routes through `ModalShell` (`src/components/shared/ModalShell.tsx`), even lightweight preview popups (e.g. Resource preview): consistent title typography, close button, and footer chrome matter more than saving a few lines by hand-rolling `Dialog`.
 - Always include a close icon (X).
 - Never include a redundant Cancel button if a close icon already exists.
 - The close button has a subtle light-gray circular/square background — never a bare floating icon.
+- Title size is tied to the modal's content, not picked per-instance: 22px light for standard modals, 28px only when a `heroImage` cover is present. Don't override `titleClassName` to fake the hero size on a modal without one.
+- A small uppercase context row (a tag + hostname, a category label) can render above the title via `ModalShell`'s `eyebrow` slot — never invent a one-off header row per modal.
+- **Sanctioned exception**: a fullscreen, custom (non-`Dialog`) overlay is allowed only for fullscreen media/reference viewing (e.g. `RefPreviewLightbox` — blurred backdrop, image navigation, close), per the Inspiration rules below. Even as an exception it must implement a real focus trap (focus moves in on open, Tab cycles within the overlay, focus returns to the trigger on close) and Escape/arrow-key navigation — it does not get a lighter accessibility bar just because it isn't a `Dialog`.
+
+## Forms & Inputs
+
+- Inputs are filled, not outlined, by default: transparent border over a soft warm fill (`bg-cream-100/60`). Focus adds both a ring and a border-color change to `brand-primary` — never rely on the ring alone.
+- Invalid state is driven by `aria-invalid` (already set by every RHF-wired field via `aria-invalid={Boolean(errors.field)}`) — the control itself picks up a blush-tinted border/fill automatically; pair it with the error message under the field, never both an error and a helper text at once.
+- Labels sit above the control in the shared eyebrow style, handled by `FormField` (`src/components/shared/FormField.tsx`) — it never clones props onto its children, so callers stay in control of wiring `id`/`aria-describedby`/`aria-invalid`.
+- Field hierarchy inside a form comes from `ModalSection`'s primary/secondary/optional tiers (`src/components/shared/ModalSection.tsx`) — spacing and order only, never color or size.
+- An input can carry a leading or trailing icon via `Input`'s `icon`/`iconPosition` prop (`src/components/ui/input.tsx`) — don't hand-roll another `relative`/`absolute` icon wrapper per field.
+- There is no dedicated radio component. A choice between a small set of options always goes through `Select`, `SegmentedTabs`, or `PropertyDropdown` — never introduce a new control for this.
+- Dates are a plain `<input type="date">` with the native calendar-picker button suppressed — no calendar UI (see Project Details Page below and FEATURES.md).
 
 ## Cards
 

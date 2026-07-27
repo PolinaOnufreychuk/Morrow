@@ -64,29 +64,14 @@ export interface InspirationReference {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Notes — discriminated union on `type` (10 variants)                         */
+/* Notes — discriminated union on `type` (5 variants)                          */
 /* -------------------------------------------------------------------------- */
 
-export type NoteType =
-  | "text"
-  | "checklist"
-  | "bookmark"
-  | "image"
-  | "moodboard"
-  | "code"
-  | "quote"
-  | "recipe"
-  | "pdf"
-  | "meeting";
+export type NoteType = "text" | "checklist" | "image" | "quote" | "pdf";
 
 export interface ChecklistItem {
   text: string;
   done: boolean;
-}
-
-export interface MeetingAttendee {
-  name: string;
-  avatarUrl: string | null;
 }
 
 /** Fields common to every note variant. */
@@ -105,28 +90,9 @@ export interface ChecklistNote extends NoteBase {
   items: ChecklistItem[];
 }
 
-export interface BookmarkNote extends NoteBase {
-  type: "bookmark";
-  url: string;
-  faviconUrl: string | null;
-  domain: string | null;
-  snippet: string | null;
-}
-
 export interface ImageNote extends NoteBase {
   type: "image";
   coverImageUrl: string;
-}
-
-export interface MoodboardNote extends NoteBase {
-  type: "moodboard";
-  images: [string, string, string, string]; // exactly 4
-}
-
-export interface CodeNote extends NoteBase {
-  type: "code";
-  language: string;
-  code: string;
 }
 
 export interface QuoteNote extends NoteBase {
@@ -135,34 +101,13 @@ export interface QuoteNote extends NoteBase {
   author: string | null;
 }
 
-export interface RecipeNote extends NoteBase {
-  type: "recipe";
-  ingredients: string[];
-}
-
 export interface PdfNote extends NoteBase {
   type: "pdf";
   filename: string;
   pageCount: number | null;
 }
 
-export interface MeetingNote extends NoteBase {
-  type: "meeting";
-  attendees: MeetingAttendee[];
-  agenda: string[];
-}
-
-export type Note =
-  | TextNote
-  | ChecklistNote
-  | BookmarkNote
-  | ImageNote
-  | MoodboardNote
-  | CodeNote
-  | QuoteNote
-  | RecipeNote
-  | PdfNote
-  | MeetingNote;
+export type Note = TextNote | ChecklistNote | ImageNote | QuoteNote | PdfNote;
 
 /* -------------------------------------------------------------------------- */
 /* Resources — discriminated union on `kind` (6 variants)                      */

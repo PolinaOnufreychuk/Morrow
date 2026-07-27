@@ -1,4 +1,4 @@
-import type { ChecklistItem, MeetingAttendee, Note, NoteType } from "@/types/entities";
+import type { ChecklistItem, Note, NoteType } from "@/types/entities";
 import type { CreateNoteInput } from "../types";
 import { NoteNotFoundError } from "../types";
 import { supabase } from "@/lib/supabase/client";
@@ -27,21 +27,11 @@ interface NoteRow {
   title: string;
   body: string | null;
   items: ChecklistItem[] | null;
-  url: string | null;
-  favicon_url: string | null;
-  domain: string | null;
-  snippet: string | null;
   cover_image_url: string | null;
-  images: string[] | null;
-  language: string | null;
-  code: string | null;
   quote: string | null;
   author: string | null;
-  ingredients: string[] | null;
   filename: string | null;
   page_count: number | null;
-  attendees: MeetingAttendee[] | null;
-  agenda: string[] | null;
   is_archived: boolean;
   archived_at: string | null;
   created_at: string;
@@ -50,7 +40,7 @@ interface NoteRow {
 }
 
 /** Switches on `row.type` to build only that variant's fields — the
- * trickiest mapper in the app since one wide table backs a 10-member
+ * trickiest mapper in the app since one wide table backs a 5-member
  * discriminated union. */
 function rowToNote(row: NoteRow): Note {
   const base = {
@@ -68,42 +58,16 @@ function rowToNote(row: NoteRow): Note {
       return { ...base, type: "text", body: row.body ?? "" };
     case "checklist":
       return { ...base, type: "checklist", items: row.items ?? [] };
-    case "bookmark":
-      return {
-        ...base,
-        type: "bookmark",
-        url: row.url ?? "",
-        faviconUrl: row.favicon_url,
-        domain: row.domain,
-        snippet: row.snippet,
-      };
     case "image":
       return { ...base, type: "image", coverImageUrl: row.cover_image_url ?? "" };
-    case "moodboard":
-      return {
-        ...base,
-        type: "moodboard",
-        images: (row.images ?? ["", "", "", ""]).slice(0, 4) as [string, string, string, string],
-      };
-    case "code":
-      return { ...base, type: "code", language: row.language ?? "", code: row.code ?? "" };
     case "quote":
       return { ...base, type: "quote", quote: row.quote ?? "", author: row.author };
-    case "recipe":
-      return { ...base, type: "recipe", ingredients: row.ingredients ?? [] };
     case "pdf":
       return {
         ...base,
         type: "pdf",
         filename: row.filename ?? "",
         pageCount: row.page_count,
-      };
-    case "meeting":
-      return {
-        ...base,
-        type: "meeting",
-        attendees: row.attendees ?? [],
-        agenda: row.agenda ?? [],
       };
   }
 }
@@ -126,42 +90,28 @@ function noteToRow(input: Partial<Note>): Record<string, unknown> {
     case "checklist":
       row.items = input.items;
       break;
-    case "bookmark":
-      row.url = input.url;
-      row.favicon_url = input.faviconUrl;
-      row.domain = input.domain;
-      row.snippet = input.snippet;
-      break;
     case "image":
       row.cover_image_url = input.coverImageUrl;
-      break;
-    case "moodboard":
-      row.images = input.images;
-      break;
-    case "code":
-      row.language = input.language;
-      row.code = input.code;
       break;
     case "quote":
       row.quote = input.quote;
       row.author = input.author;
       break;
-    case "recipe":
-      row.ingredients = input.ingredients;
-      break;
     case "pdf":
       row.filename = input.filename;
       row.page_count = input.pageCount;
-      break;
-    case "meeting":
-      row.attendees = input.attendees;
-      row.agenda = input.agenda;
       break;
   }
   return row;
 }
 
 const NOTE_SELECT = "*, project_notes(project_id)";
+
+/** Note types the app still supports. Legacy rows of removed types (e.g. a
+ * note created before the type set was trimmed) are skipped so they never
+ * reach the UI as `undefined`. */
+const KNOWN_NOTE_TYPES = new Set<NoteType>(["text", "checklist", "image", "quote", "pdf"]);
+const isKnownNoteRow = (row: NoteRow) => KNOWN_NOTE_TYPES.has(row.type);
 
 class SupabaseNotesRepository implements NotesRepository {
   async list(): Promise<Note[]> {
@@ -171,7 +121,7 @@ class SupabaseNotesRepository implements NotesRepository {
       .eq("is_archived", false)
       .order("created_at", { ascending: false });
     if (error) throw toSupabaseError(error);
-    return (data as NoteRow[]).map(rowToNote);
+    return (data as NoteRow[]).filter(isKnownNoteRow).map(rowToNote);
   }
 
   async listArchived(): Promise<Note[]> {
@@ -181,7 +131,7 @@ class SupabaseNotesRepository implements NotesRepository {
       .eq("is_archived", true)
       .order("archived_at", { ascending: false });
     if (error) throw toSupabaseError(error);
-    return (data as NoteRow[]).map(rowToNote);
+    return (data as NoteRow[]).filter(isKnownNoteRow).map(rowToNote);
   }
 
   async getById(id: string): Promise<Note | null> {
@@ -191,7 +141,8 @@ class SupabaseNotesRepository implements NotesRepository {
       .eq("id", id)
       .maybeSingle();
     if (error) throw toSupabaseError(error);
-    return data ? rowToNote(data as NoteRow) : null;
+    if (!data || !isKnownNoteRow(data as NoteRow)) return null;
+    return rowToNote(data as NoteRow);
   }
 
   async create(input: CreateNoteInput): Promise<Note> {
