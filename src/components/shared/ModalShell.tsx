@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -67,12 +67,41 @@ export function ModalShell({
   heroTitleInImage = false,
   className,
 }: ModalShellProps) {
+  // Fade the hero-overlay body's edges so content dissolves under the banner
+  // (top) and above the footer buttons (bottom) instead of hard-clipping —
+  // each edge only fades when there's hidden content past it.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [fade, setFade] = useState({ top: false, bottom: false });
+
+  const updateFade = (el: HTMLDivElement) => {
+    const top = el.scrollTop > 4;
+    const bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 4;
+    setFade((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => {
+      if (bodyRef.current) updateFade(bodyRef.current);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open]);
+
+  // Top edge dissolves fully (content tucks under the banner); the bottom is a
+  // gentler, shorter dim (partial alpha) so it reads subtly, not as a heavy wash.
+  const bodyMask =
+    fade.top || fade.bottom
+      ? `linear-gradient(to bottom, ${fade.top ? "transparent, #000 32px" : "#000 0"}, ${
+          fade.bottom ? "#000 calc(100% - 18px), rgba(0,0,0,0.45) 100%" : "#000 100%"
+        })`
+      : undefined;
+
   if (heroImage && heroTitleOverlay) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           hideCloseButton
-          className={cn("max-w-[500px] rounded-[32px] p-5", className)}
+          className={cn("max-w-[500px] rounded-[30px] p-4", className)}
         >
           <div className="relative h-28 overflow-hidden rounded-[22px]">
             <img src={heroImage} alt="" className="h-full w-full object-cover" />
@@ -88,12 +117,19 @@ export function ModalShell({
             )}
           </div>
 
-          <div className="max-h-[62vh] overflow-y-auto px-0 pb-1 pt-5">{children}</div>
+          <div
+            ref={bodyRef}
+            className="max-h-[62vh] overflow-y-auto px-0 pb-1 pt-3"
+            onScroll={(e) => updateFade(e.currentTarget)}
+            style={bodyMask ? { maskImage: bodyMask, WebkitMaskImage: bodyMask } : undefined}
+          >
+            {children}
+          </div>
 
           {footer && (
             <div
               className={cn(
-                "flex gap-3 px-0 pb-2 pt-3",
+                "flex gap-3 px-0 pb-0 pt-3",
                 footerAlign === "end" && "justify-end",
                 footerAlign === "stretch" && "flex-col",
               )}
