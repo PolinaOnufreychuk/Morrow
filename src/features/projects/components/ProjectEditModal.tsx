@@ -64,6 +64,7 @@ export function ProjectEditModal({ open, onOpenChange, project }: ProjectEditMod
           <Button
             size="lg"
             fullWidth
+            className="h-[48px] rounded-[15px]"
             type="submit"
             form={FORM_ID}
             disabled={updateProject.isPending}

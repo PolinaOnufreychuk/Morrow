@@ -31,10 +31,10 @@ export function ResourcePreviewModal({ resource, open, onOpenChange }: ResourceP
       className="max-w-md"
       footer={
         <>
-          <Button variant="secondary" onClick={() => navigate("/resources")}>
+          <Button variant="secondary" className="h-[48px] rounded-[15px]" onClick={() => navigate("/resources")}>
             View in Resources →
           </Button>
-          <Button onClick={() => window.open(resource.url, "_blank", "noopener,noreferrer")}>
+          <Button className="h-[48px] rounded-[15px]" onClick={() => window.open(resource.url, "_blank", "noopener,noreferrer")}>
             Open resource ↗
           </Button>
         </>

@@ -219,14 +219,22 @@ function QuoteBody({ note, isPinned }: { note: QuoteNote; isPinned: boolean }) {
 
 function PdfBody({ note, mediaRadius }: { note: PdfNote; mediaRadius: string }) {
   return (
-    <div className={cn("flex items-center gap-3 border border-border-subtle bg-surface-card/60 p-3", mediaRadius)}>
+    <a
+      href={note.fileUrl || undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "flex items-center gap-3 border border-border-subtle bg-surface-card/60 p-3",
+        mediaRadius,
+      )}
+    >
       <NoteTypeIcon type="pdf" size={22} className="text-blush-600" />
       <div className="flex min-w-0 flex-col">
         <span className="truncate text-[13px] font-medium text-text-primary">{note.filename}</span>
-        {note.pageCount !== null && (
-          <span className="text-[12px] text-text-tertiary">{note.pageCount} pages</span>
+        {note.description && (
+          <span className="truncate text-[12px] text-text-tertiary">{note.description}</span>
         )}
       </div>
-    </div>
+    </a>
   );
 }

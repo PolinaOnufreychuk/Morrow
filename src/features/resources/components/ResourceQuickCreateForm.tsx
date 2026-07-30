@@ -14,8 +14,8 @@ const FORM_ID = "resource-quick-create-form";
 /**
  * Inline "create new resource, pre-linked to this project" form for the
  * project-details Link-or-Create modal. Same fields/logic as the Resources
- * page's ResourceCreateModal — including the inline Type picker grid and
- * kind-conditional fields.
+ * page's ResourceCreateModal — the resource's type is auto-detected from the
+ * URL and metadata auto-filled, so there's no manual Type picker.
  */
 export function ResourceQuickCreateForm({ projectId, onCreated }: ResourceQuickCreateFormProps) {
   const createResource = useCreateResource();

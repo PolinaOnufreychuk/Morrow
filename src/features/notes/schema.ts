@@ -50,8 +50,9 @@ const quoteNoteSchema = z.object({
 const pdfNoteSchema = z.object({
   type: z.literal("pdf"),
   ...baseNoteFields,
+  description: z.string().nullable(),
+  fileUrl: z.string().trim().url("Upload a PDF file"),
   filename: z.string().trim().min(1, "Filename is required"),
-  pageCount: z.number().int().positive().nullable(),
 });
 
 export const createNoteSchema = z.discriminatedUnion("type", [

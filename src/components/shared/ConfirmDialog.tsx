@@ -63,11 +63,17 @@ export function ConfirmDialog({
       className="max-w-sm"
       footer={
         <>
-          <Button variant="secondary" onClick={() => handleOpenChange(false)} disabled={isPending}>
+          <Button
+            variant="secondary"
+            className="h-[48px] rounded-[15px]"
+            onClick={() => handleOpenChange(false)}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <Button
             variant={destructive ? "destructive" : "primary"}
+            className="h-[48px] rounded-[15px]"
             onClick={handleConfirm}
             disabled={isPending}
             aria-busy={isPending}

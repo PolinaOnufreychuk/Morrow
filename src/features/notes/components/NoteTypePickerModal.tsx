@@ -24,7 +24,9 @@ export function NoteTypePickerModal({ open, onOpenChange, onSelectType }: NoteTy
       open={open}
       onOpenChange={onOpenChange}
       title="New note"
+      className="max-w-[392px]"
       heroImage={bgNewNote}
+      heroImageClassName="h-auto aspect-[4/1]"
       heroTitleOverlay
       heroTitleInImage
       footerAlign="stretch"
@@ -34,7 +36,7 @@ export function NoteTypePickerModal({ open, onOpenChange, onSelectType }: NoteTy
           variant="secondary"
           fullWidth
           onClick={() => onOpenChange(false)}
-          className="h-[54px] rounded-[16px] border-sage-300/70 text-[16px] text-text-primary"
+          className="h-[48px] rounded-[15px] border-sage-300/70 text-[16px] text-text-primary"
         >
           Cancel
         </Button>

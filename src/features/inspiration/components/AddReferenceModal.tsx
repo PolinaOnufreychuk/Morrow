@@ -137,7 +137,7 @@ export function AddReferenceModal({ open, onOpenChange, onAdd }: AddReferenceMod
       title="Add references"
       footerAlign="stretch"
       footer={
-        <Button size="lg" fullWidth onClick={handleAdd} disabled={pending.length === 0 || isSubmitting}>
+        <Button size="lg" fullWidth className="h-[48px] rounded-[15px]" onClick={handleAdd} disabled={pending.length === 0 || isSubmitting}>
           {isSubmitting
             ? "Adding…"
             : `Add ${pending.length} reference${pending.length === 1 ? "" : "s"}`}

@@ -10,7 +10,7 @@ export function getNoteSearchText(note: Note): string {
     case "quote":
       return [note.quote, note.author].filter(Boolean).join(" ");
     case "pdf":
-      return note.filename;
+      return [note.filename, note.description].filter(Boolean).join(" ");
     case "image":
       return "";
   }

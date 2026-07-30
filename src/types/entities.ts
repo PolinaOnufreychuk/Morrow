@@ -103,8 +103,9 @@ export interface QuoteNote extends NoteBase {
 
 export interface PdfNote extends NoteBase {
   type: "pdf";
+  description: string | null;
+  fileUrl: string;
   filename: string;
-  pageCount: number | null;
 }
 
 export type Note = TextNote | ChecklistNote | ImageNote | QuoteNote | PdfNote;

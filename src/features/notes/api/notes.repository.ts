@@ -30,8 +30,11 @@ interface NoteRow {
   cover_image_url: string | null;
   quote: string | null;
   author: string | null;
+  // `pdf` reuses columns freed when the `bookmark` type was removed: `url`
+  // holds the uploaded file's public URL, `snippet` its description.
+  url: string | null;
+  snippet: string | null;
   filename: string | null;
-  page_count: number | null;
   is_archived: boolean;
   archived_at: string | null;
   created_at: string;
@@ -66,8 +69,9 @@ function rowToNote(row: NoteRow): Note {
       return {
         ...base,
         type: "pdf",
+        description: row.snippet,
+        fileUrl: row.url ?? "",
         filename: row.filename ?? "",
-        pageCount: row.page_count,
       };
   }
 }
@@ -98,8 +102,9 @@ function noteToRow(input: Partial<Note>): Record<string, unknown> {
       row.author = input.author;
       break;
     case "pdf":
+      row.url = input.fileUrl;
+      row.snippet = input.description;
       row.filename = input.filename;
-      row.page_count = input.pageCount;
       break;
   }
   return row;

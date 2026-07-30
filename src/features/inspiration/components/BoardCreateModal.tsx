@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ModalShell } from "@/components/shared/ModalShell";
 import { Button } from "@/components/ui/button";
+import { DialogClose } from "@/components/ui/dialog";
 import { notify } from "@/components/shared/Toast";
 import { uploadCoverImage } from "@/lib/supabase/storage";
 import { queryKeys } from "@/lib/api/queryKeys";
@@ -9,7 +10,7 @@ import { BoardForm, type BoardFormValues } from "./BoardForm";
 import { useCreateBoard } from "../hooks/useInspiration";
 import { addReferences } from "../api/inspiration.service";
 import { InspirationValidationError } from "../types";
-import glassFlowerPink from "@/assets/grain-gradient-green.png";
+import bgNewCollection from "@/assets/bg-new-collection.png";
 
 export interface BoardCreateModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export function BoardCreateModal({ open, onOpenChange }: BoardCreateModalProps) 
   const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   const handleSubmit = async (values: BoardFormValues, photos: File[]) => {
     setSubmitError(null);
@@ -69,22 +71,44 @@ export function BoardCreateModal({ open, onOpenChange }: BoardCreateModalProps) 
         onOpenChange(next);
       }}
       title="New collection"
-      heroImage={glassFlowerPink}
-      footerAlign="stretch"
+      heroImage={bgNewCollection}
+      heroTitleOverlay
+      heroImageClassName="h-auto aspect-[595/127]"
+      className="max-w-[496px]"
+      footerAlign="split"
       footer={
-        <Button
-          size="lg"
-          fullWidth
-          type="submit"
-          form={FORM_ID}
-          disabled={isSaving}
-          aria-busy={isSaving}
-        >
-          {isSaving ? "Creating…" : "Save collection"}
-        </Button>
+        <>
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="h-[48px] basis-[36%] rounded-[15px] text-[16px]"
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="hero"
+            size="lg"
+            className="h-[48px] flex-1 rounded-[15px] text-[16px]"
+            type="submit"
+            form={FORM_ID}
+            disabled={!canSubmit || isSaving}
+            aria-busy={isSaving}
+          >
+            {isSaving ? "Creating…" : "Create collection"}
+          </Button>
+        </>
       }
     >
-      <BoardForm formId={FORM_ID} onSubmit={handleSubmit} submitError={submitError} showPhotoUpload />
+      <BoardForm
+        formId={FORM_ID}
+        onSubmit={handleSubmit}
+        onCanSubmitChange={setCanSubmit}
+        submitError={submitError}
+        showPhotoUpload
+      />
     </ModalShell>
   );
 }

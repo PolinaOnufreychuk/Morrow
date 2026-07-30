@@ -44,6 +44,16 @@ export interface ModalShellProps {
    * overlay so it isn't doubled, while still emitting a screen-reader-only
    * `DialogTitle` for accessibility. Only meaningful with `heroTitleOverlay`. */
   heroTitleInImage?: boolean;
+  /** Overrides the hero banner box (defaults to `h-28`). Use to give a
+   * baked-in-wordmark banner its artwork's own aspect ratio (e.g.
+   * `h-auto aspect-[4/1]`) so the text never crops at a narrower modal width.
+   * Only meaningful with `heroTitleOverlay`. */
+  heroImageClassName?: string;
+  /** Custom content rendered over the hero banner in place of the default
+   * centered title (e.g. the checklist editor's eyebrow + inline-editable
+   * title). A screen-reader-only `DialogTitle` is still emitted from `title`
+   * for accessibility. Only meaningful with `heroTitleOverlay`. */
+  heroOverlay?: ReactNode;
   className?: string;
 }
 
@@ -65,6 +75,8 @@ export function ModalShell({
   heroImage,
   heroTitleOverlay = false,
   heroTitleInImage = false,
+  heroImageClassName,
+  heroOverlay,
   className,
 }: ModalShellProps) {
   // Fade the hero-overlay body's edges so content dissolves under the banner
@@ -101,18 +113,25 @@ export function ModalShell({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           hideCloseButton
-          className={cn("max-w-[500px] rounded-[30px] p-4", className)}
+          className={cn("max-w-[500px] !rounded-[32px] p-4", className)}
         >
-          <div className="relative h-28 overflow-hidden rounded-[22px]">
+          <div className={cn("relative h-28 overflow-hidden rounded-[24px]", heroImageClassName)}>
             <img src={heroImage} alt="" className="h-full w-full object-cover" />
             {heroTitleInImage ? (
               <DialogTitle className="sr-only">{title}</DialogTitle>
+            ) : heroOverlay ? (
+              <>
+                <DialogTitle className="sr-only">{title}</DialogTitle>
+                <div className="absolute inset-0">{heroOverlay}</div>
+              </>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-7 text-center">
                 {eyebrow && <div className="flex items-center gap-2">{eyebrow}</div>}
-                <h2 className={cn("font-display text-[30px] font-normal text-white/90", titleClassName)}>
-                  {title}
-                </h2>
+                <DialogTitle asChild>
+                  <h2 className={cn("font-display text-[30px] font-normal text-white/90", titleClassName)}>
+                    {title}
+                  </h2>
+                </DialogTitle>
               </div>
             )}
           </div>

@@ -55,7 +55,7 @@ export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalPro
             <Button
               variant="secondary"
               size="lg"
-              className="h-[50px] basis-[36%] rounded-[16px] text-[16px]"
+              className="h-[48px] basis-[36%] rounded-[15px] text-[16px]"
               disabled={createProject.isPending}
             >
               Cancel
@@ -64,7 +64,7 @@ export function ProjectCreateModal({ open, onOpenChange }: ProjectCreateModalPro
           <Button
             variant="hero"
             size="lg"
-            className="h-[50px] flex-1 rounded-[16px] text-[16px]"
+            className="h-[48px] flex-1 rounded-[15px] text-[16px]"
             type="submit"
             form={FORM_ID}
             disabled={!canSubmit || createProject.isPending}
